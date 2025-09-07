@@ -135,10 +135,10 @@ export default function ItemsPage() {
       render: (tags: Item['tags']) => (
         <Space wrap>
           {tags.slice(0, 2).map(tag => (
-            <Tag key={tag.id} size="small">{tag.name}</Tag>
+            <Tag key={tag.id}>{tag.name}</Tag>
           ))}
           {tags.length > 2 && (
-            <Tag size="small" color="default">+{tags.length - 2}</Tag>
+            <Tag color="default">+{tags.length - 2}</Tag>
           )}
         </Space>
       ),
