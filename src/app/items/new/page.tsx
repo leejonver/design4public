@@ -85,4 +85,198 @@ export default function NewItemPage() {
       
     } catch (error) {
       message.error('아이템 추가 중 오류가 발생했습니다.');
-    } finally {\n      setLoading(false);\n    }\n  };\n\n  const handleCancel = () => {\n    router.back();\n  };\n\n  return (\n    <MainLayout>\n      <div>\n        {/* 헤더 */}\n        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>\n          <Space>\n            <Button \n              icon={<ArrowLeftOutlined />} \n              onClick={handleCancel}\n            >\n              돌아가기\n            </Button>\n            <Title level={2} style={{ margin: 0 }}>\n              새 아이템 추가\n            </Title>\n          </Space>\n        </div>\n\n        <Form\n          form={form}\n          layout=\"vertical\"\n          onFinish={handleSubmit}\n          initialValues={{\n            status: 'available'\n          }}\n        >\n          <Row gutter={[24, 0]}>\n            {/* 기본 정보 */}\n            <Col xs={24} lg={14}>\n              <Card title=\"기본 정보\" style={{ marginBottom: '24px' }}>\n                <Form.Item\n                  label=\"아이템명\"\n                  name=\"name\"\n                  rules={[\n                    { required: true, message: '아이템명을 입력해주세요.' },\n                    { min: 2, max: 100, message: '아이템명은 2-100자 사이여야 합니다.' }\n                  ]}\n                >\n                  <Input \n                    placeholder=\"아이템명을 입력하세요\"\n                    prefix={<AppstoreOutlined />}\n                    showCount\n                    maxLength={100}\n                  />\n                </Form.Item>\n\n                <Form.Item\n                  label=\"아이템 설명\"\n                  name=\"description\"\n                  rules={[\n                    { required: true, message: '아이템 설명을 입력해주세요.' },\n                    { min: 10, max: 1000, message: '설명은 10-1000자 사이여야 합니다.' }\n                  ]}\n                >\n                  <TextArea\n                    rows={4}\n                    placeholder=\"아이템에 대한 자세한 설명을 입력하세요\"\n                    showCount\n                    maxLength={1000}\n                  />\n                </Form.Item>\n\n                <Form.Item\n                  label=\"나라장터 URL\"\n                  name=\"mallUrl\"\n                  rules={[\n                    { type: 'url', message: '올바른 URL을 입력해주세요.' }\n                  ]}\n                >\n                  <Input \n                    placeholder=\"https://mall.g2b.go.kr/...\"\n                    prefix={<LinkOutlined />}\n                  />\n                </Form.Item>\n              </Card>\n\n              {/* 이미지 업로드 */}\n              <Card title=\"아이템 이미지\">\n                <Form.Item\n                  label=\"이미지 업로드\"\n                  extra=\"여러 장의 이미지를 업로드할 수 있습니다. 첫 번째 이미지가 대표 이미지로 설정됩니다.\"\n                >\n                  <Upload {...uploadProps}>\n                    <div>\n                      <PlusOutlined />\n                      <div style={{ marginTop: 8 }}>이미지 업로드</div>\n                    </div>\n                  </Upload>\n                </Form.Item>\n              </Card>\n            </Col>\n\n            {/* 분류 및 상태 */}\n            <Col xs={24} lg={10}>\n              <Card title=\"분류 및 상태\" style={{ marginBottom: '24px' }}>\n                <Form.Item\n                  label=\"브랜드\"\n                  name=\"brandId\"\n                  rules={[\n                    { required: true, message: '브랜드를 선택해주세요.' }\n                  ]}\n                >\n                  <Select\n                    placeholder=\"브랜드를 선택하세요\"\n                    showSearch\n                    optionFilterProp=\"children\"\n                    filterOption={(input, option) =>\n                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())\n                    }\n                    options={dummyBrands.map(brand => ({\n                      value: brand.id,\n                      label: brand.name\n                    }))}\n                  />\n                </Form.Item>\n\n                <Form.Item\n                  label=\"태그\"\n                  name=\"tags\"\n                  rules={[\n                    { required: true, message: '최소 1개의 태그를 선택해주세요.' }\n                  ]}\n                >\n                  <Select\n                    mode=\"multiple\"\n                    placeholder=\"태그를 선택하세요\"\n                    showSearch\n                    optionFilterProp=\"children\"\n                    filterOption={(input, option) =>\n                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())\n                    }\n                    options={dummyTags.map(tag => ({\n                      value: tag.id,\n                      label: tag.name\n                    }))}\n                  />\n                </Form.Item>\n\n                <Divider />\n\n                <Form.Item\n                  label=\"상태\"\n                  name=\"status\"\n                  rules={[\n                    { required: true, message: '상태를 선택해주세요.' }\n                  ]}\n                >\n                  <Select\n                    options={[\n                      { value: 'available', label: '구입가능' },\n                      { value: 'discontinued', label: '단종' },\n                      { value: 'hidden', label: '숨김' },\n                    ]}\n                  />\n                </Form.Item>\n              </Card>\n\n              {/* 저장 버튼 */}\n              <Card>\n                <Space direction=\"vertical\" style={{ width: '100%' }}>\n                  <Button\n                    type=\"primary\"\n                    htmlType=\"submit\"\n                    loading={loading}\n                    icon={<SaveOutlined />}\n                    style={{ width: '100%' }}\n                    size=\"large\"\n                  >\n                    {loading ? '저장 중...' : '아이템 저장'}\n                  </Button>\n                  \n                  <Button\n                    onClick={handleCancel}\n                    style={{ width: '100%' }}\n                  >\n                    취소\n                  </Button>\n                </Space>\n              </Card>\n            </Col>\n          </Row>\n        </Form>\n      </div>\n    </MainLayout>\n  );\n}"
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    router.back();
+  };
+
+  return (
+    <MainLayout>
+      <div>
+        {/* 헤더 */}
+        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Space>
+            <Button 
+              icon={<ArrowLeftOutlined />} 
+              onClick={handleCancel}
+            >
+              돌아가기
+            </Button>
+            <Title level={2} style={{ margin: 0 }}>
+              새 아이템 추가
+            </Title>
+          </Space>
+        </div>
+
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleSubmit}
+          initialValues={{
+            status: 'available'
+          }}
+        >
+          <Row gutter={[24, 0]}>
+            {/* 기본 정보 */}
+            <Col xs={24} lg={14}>
+              <Card title="기본 정보" style={{ marginBottom: '24px' }}>
+                <Form.Item
+                  label="아이템명"
+                  name="name"
+                  rules={[
+                    { required: true, message: '아이템명을 입력해주세요.' },
+                    { min: 2, max: 100, message: '아이템명은 2-100자 사이여야 합니다.' }
+                  ]}
+                >
+                  <Input 
+                    placeholder="아이템명을 입력하세요"
+                    prefix={<AppstoreOutlined />}
+                    showCount
+                    maxLength={100}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="아이템 설명"
+                  name="description"
+                  rules={[
+                    { required: true, message: '아이템 설명을 입력해주세요.' },
+                    { min: 10, max: 1000, message: '설명은 10-1000자 사이여야 합니다.' }
+                  ]}
+                >
+                  <TextArea
+                    rows={4}
+                    placeholder="아이템에 대한 자세한 설명을 입력하세요"
+                    showCount
+                    maxLength={1000}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="나라장터 URL"
+                  name="mallUrl"
+                  rules={[
+                    { type: 'url', message: '올바른 URL을 입력해주세요.' }
+                  ]}
+                >
+                  <Input 
+                    placeholder="https://mall.g2b.go.kr/..."
+                    prefix={<LinkOutlined />}
+                  />
+                </Form.Item>
+              </Card>
+
+              {/* 이미지 업로드 */}
+              <Card title="아이템 이미지">
+                <Form.Item
+                  label="이미지 업로드"
+                  extra="여러 장의 이미지를 업로드할 수 있습니다. 첫 번째 이미지가 대표 이미지로 설정됩니다."
+                >
+                  <Upload {...uploadProps}>
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>이미지 업로드</div>
+                    </div>
+                  </Upload>
+                </Form.Item>
+              </Card>
+            </Col>
+
+            {/* 분류 및 상태 */}
+            <Col xs={24} lg={10}>
+              <Card title="분류 및 상태" style={{ marginBottom: '24px' }}>
+                <Form.Item
+                  label="브랜드"
+                  name="brandId"
+                  rules={[
+                    { required: true, message: '브랜드를 선택해주세요.' }
+                  ]}
+                >
+                  <Select
+                    placeholder="브랜드를 선택하세요"
+                    showSearch
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={dummyBrands.map(brand => ({
+                      value: brand.id,
+                      label: brand.name
+                    }))}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="태그"
+                  name="tags"
+                  rules={[
+                    { required: true, message: '최소 1개의 태그를 선택해주세요.' }
+                  ]}
+                >
+                  <Select
+                    mode="multiple"
+                    placeholder="태그를 선택하세요"
+                    showSearch
+                    optionFilterProp="children"
+                    filterOption={(input, option) =>
+                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                    }
+                    options={dummyTags.map(tag => ({
+                      value: tag.id,
+                      label: tag.name
+                    }))}
+                  />
+                </Form.Item>
+
+                <Divider />
+
+                <Form.Item
+                  label="상태"
+                  name="status"
+                  rules={[
+                    { required: true, message: '상태를 선택해주세요.' }
+                  ]}
+                >
+                  <Select
+                    options={[
+                      { value: 'available', label: '구입가능' },
+                      { value: 'discontinued', label: '단종' },
+                      { value: 'hidden', label: '숨김' },
+                    ]}
+                  />
+                </Form.Item>
+              </Card>
+
+              {/* 저장 버튼 */}
+              <Card>
+                <Space direction="vertical" style={{ width: '100%' }}>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    icon={<SaveOutlined />}
+                    style={{ width: '100%' }}
+                    size="large"
+                  >
+                    {loading ? '저장 중...' : '아이템 저장'}
+                  </Button>
+                  
+                  <Button
+                    onClick={handleCancel}
+                    style={{ width: '100%' }}
+                  >
+                    취소
+                  </Button>
+                </Space>
+              </Card>
+            </Col>
+          </Row>
+        </Form>
+      </div>
+    </MainLayout>
+  );
+}"
