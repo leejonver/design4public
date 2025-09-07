@@ -107,9 +107,17 @@ export async function PUT(
         order: index
       }))
 
-      await supabaseAdmin
+      const { error: imageError } = await supabaseAdmin
         .from('project_images')
         .insert(imageInserts)
+      
+      if (imageError) {
+        console.error('Image insert error:', imageError)
+        return NextResponse.json(
+          { success: false, error: `이미지 저장에 실패했습니다: ${imageError.message}` },
+          { status: 500 }
+        )
+      }
     }
 
     // 기존 태그 연결 삭제
