@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 회원가입 함수
   const signup = async (name: string, email: string, password: string) => {
     try {
-      const response = await authApi.signup(name, email, password)
+      const response = await authApi.signup(name, email, password) as any
       
       if (!response.success) {
         throw new Error(response.error || '회원가입에 실패했습니다.')
