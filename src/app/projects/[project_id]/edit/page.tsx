@@ -64,15 +64,11 @@ export default function EditProjectPage() {
     const fetchProject = async () => {
       try {
         const response = await api.get(`/projects/${projectId}`);
-        if (response.success && response.data) {
+        if (response.success) {
           setProject(response.data);
-        } else {
-          console.error('프로젝트 조회 실패:', response.error);
-          setProject(null);
         }
       } catch (error) {
         console.error('프로젝트 조회 오류:', error);
-        setProject(null);
       } finally {
         setDataLoading(false);
       }
