@@ -12,39 +12,16 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 테스트 계정 체크 (개발 환경에서만)
+    // 마스터 계정 체크 (개발 환경에서만)
     if (process.env.NODE_ENV === 'development') {
-      if (email === 'admin@design4public.com' && password === 'password') {
+      if (email === 'design4public@gmail.com' && password === 'dfourp7!@#') {
         return NextResponse.json({
           success: true,
           data: {
             user: {
-              id: 'test-admin-id',
-              email: 'admin@design4public.com',
-              name: '테스트 관리자',
-              role: 'admin',
-              status: 'approved',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              lastLoginAt: new Date().toISOString()
-            },
-            session: {
-              access_token: 'test-token',
-              refresh_token: 'test-refresh-token'
-            }
-          },
-          message: '로그인에 성공했습니다.'
-        })
-      }
-      
-      if (email === 'master@design4public.com' && password === 'master123') {
-        return NextResponse.json({
-          success: true,
-          data: {
-            user: {
-              id: 'test-master-id',
-              email: 'master@design4public.com',
-              name: '테스트 마스터',
+              id: 'master-account-id',
+              email: 'design4public@gmail.com',
+              name: 'Design4Public',
               role: 'master',
               status: 'approved',
               createdAt: new Date().toISOString(),

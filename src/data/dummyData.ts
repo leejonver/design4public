@@ -450,51 +450,13 @@ export const dummyProjects: Project[] = [
 export const dummyManagers: Manager[] = [
   {
     id: '1',
-    name: '김마스터',
-    email: 'master@design4public.com',
+    name: 'Design4Public',
+    email: 'design4public@gmail.com',
     role: 'master',
     approvalStatus: 'approved',
     createdAt: '2024-01-01T00:00:00Z',
     updatedAt: '2024-01-01T00:00:00Z',
     lastLoginAt: '2024-01-15T09:00:00Z'
-  },
-  {
-    id: '2',
-    name: '이관리자',
-    email: 'admin@design4public.com',
-    role: 'admin',
-    approvalStatus: 'approved',
-    createdAt: '2024-01-02T00:00:00Z',
-    updatedAt: '2024-01-02T00:00:00Z',
-    lastLoginAt: '2024-01-14T14:30:00Z'
-  },
-  {
-    id: '3',
-    name: '박콘텐츠',
-    email: 'content@design4public.com',
-    role: 'content_manager',
-    approvalStatus: 'approved',
-    createdAt: '2024-01-03T00:00:00Z',
-    updatedAt: '2024-01-03T00:00:00Z',
-    lastLoginAt: '2024-01-13T11:15:00Z'
-  },
-  {
-    id: '4',
-    name: '최신입',
-    email: 'newbie@design4public.com',
-    role: 'content_manager',
-    approvalStatus: 'pending',
-    createdAt: '2024-01-10T00:00:00Z',
-    updatedAt: '2024-01-10T00:00:00Z'
-  },
-  {
-    id: '5',
-    name: '정대기',
-    email: 'waiting@design4public.com',
-    role: 'admin',
-    approvalStatus: 'pending',
-    createdAt: '2024-01-12T00:00:00Z',
-    updatedAt: '2024-01-12T00:00:00Z'
   }
 ];
 

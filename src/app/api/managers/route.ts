@@ -11,28 +11,12 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const offset = (page - 1) * limit
 
+    // 마스터 계정만 조회
     let query = supabase
       .from('profiles')
       .select('*')
+      .eq('email', 'design4public@gmail.com')
       .order('created_at', { ascending: false })
-
-    // 상태 필터
-    if (status && status !== 'all') {
-      query = query.eq('status', status)
-    }
-
-    // 권한 필터
-    if (role && role !== 'all') {
-      query = query.eq('role', role)
-    }
-
-    // 검색 필터
-    if (search) {
-      query = query.or(`name.ilike.%${search}%,email.ilike.%${search}%`)
-    }
-
-    // 페이지네이션
-    query = query.range(offset, offset + limit - 1)
 
     const { data: managers, error, count } = await query
 
