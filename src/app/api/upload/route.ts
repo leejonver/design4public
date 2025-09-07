@@ -34,7 +34,8 @@ export async function POST(request: NextRequest) {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
     
-    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    const fileExt = file.name.split('.').pop()?.toLowerCase()
+    const fileExtension = '.' + fileExt
     const isValidMimeType = allowedTypes.includes(file.type)
     const isValidExtension = allowedExtensions.includes(fileExtension)
     
@@ -49,7 +50,6 @@ export async function POST(request: NextRequest) {
     // 고유한 파일명 생성
     const timestamp = Date.now()
     const randomString = Math.random().toString(36).substring(2, 15)
-    const fileExt = file.name.split('.').pop()
     const fileName = `${timestamp}_${randomString}.${fileExt}`
 
     // Supabase Storage에 파일 업로드
