@@ -49,17 +49,22 @@ async function apiRequest<T>(
 
 // GET 요청
 export async function apiGet<T>(endpoint: string, params?: Record<string, string | number>): Promise<ApiResponse<T>> {
-  const url = new URL(`${API_BASE_URL}${endpoint}`)
+  let url = `${API_BASE_URL}${endpoint}`
   
   if (params) {
+    const searchParams = new URLSearchParams()
     Object.entries(params).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        url.searchParams.append(key, String(value))
+        searchParams.append(key, String(value))
       }
     })
+    const queryString = searchParams.toString()
+    if (queryString) {
+      url += `?${queryString}`
+    }
   }
 
-  return apiRequest<T>(url.pathname + url.search)
+  return apiRequest<T>(url)
 }
 
 // POST 요청
