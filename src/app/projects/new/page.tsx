@@ -95,11 +95,7 @@ export default function NewProjectPage() {
             Object.defineProperty(fileObj, 'type', { value: 'image/gif' });
           }
           
-          const formData = new FormData();
-          formData.append('file', fileObj);
-          formData.append('folder', 'projects');
-          
-          const uploadResponse = await api.upload('/upload', formData);
+          const uploadResponse = await api.upload(fileObj, 'projects');
           if (uploadResponse.success) {
             uploadedImages.push({
               url: uploadResponse.data.url,
