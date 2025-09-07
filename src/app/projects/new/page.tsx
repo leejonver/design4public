@@ -230,7 +230,7 @@ export default function NewProjectPage() {
                         min={1}
                         prefix={<ExpandAltOutlined />}
                         formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                        parser={value => value!.replace(/\$\s?|(,*)/g, '')}
+                        parser={value => parseFloat(value!.replace(/\$\s?|(,*)/g, '')) || 0}
                       />
                     </Form.Item>
                   </Col>
