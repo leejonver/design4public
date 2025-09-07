@@ -3,6 +3,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { 
   Card, 
   Descriptions, 
@@ -15,7 +16,8 @@ import {
   Divider,
   Row,
   Col,
-  Empty
+  Empty,
+  Spin
 } from 'antd';
 import { 
   EditOutlined, 
@@ -24,7 +26,7 @@ import {
   ShopOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyItems } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { ItemStatus } from '@/types';
 
 const { Title, Paragraph, Text } = Typography;
@@ -33,9 +35,38 @@ export default function ItemDetailPage() {
   const router = useRouter();
   const params = useParams();
   const itemId = params.item_id as string;
+  const [item, setItem] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // 아이템 데이터 조회
-  const item = dummyItems.find(item => item.id === itemId);
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        const response = await api.get(`/items/${itemId}`);
+        if (response.success) {
+          setItem(response.data);
+        }
+      } catch (error) {
+        console.error('아이템 조회 오류:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (itemId) {
+      fetchItem();
+    }
+  }, [itemId]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!item) {
     return (
@@ -73,7 +104,7 @@ export default function ItemDetailPage() {
     }
   };
 
-  const mainImage = item.images.find(img => img.isMain) || item.images[0];
+  const mainImage = item.images?.find((img: any) => img.isMain) || item.images?.[0];
 
   return (
     <MainLayout>
@@ -114,11 +145,11 @@ export default function ItemDetailPage() {
                     style={{ objectFit: 'cover', borderRadius: '8px' }}
                   />
                   
-                  {item.images.length > 1 && (
+                  {(item.images?.length || 0) > 1 && (
                     <div style={{ marginTop: '16px' }}>
                       <Text strong>추가 이미지</Text>
                       <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                        {item.images.filter(img => !img.isMain).map(img => (
+                        {item.images?.filter((img: any) => !img.isMain).map((img: any) => (
                           <Image
                             key={img.id}
                             width={80}
@@ -195,7 +226,7 @@ export default function ItemDetailPage() {
                 
                 <Descriptions.Item label="태그">
                   <Space wrap>
-                    {item.tags.map(tag => (
+                    {item.tags?.map((tag: any) => (
                       <Tag key={tag.id}>{tag.name}</Tag>
                     ))}
                   </Space>

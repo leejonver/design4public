@@ -3,6 +3,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { 
   Card, 
   Descriptions, 
@@ -15,7 +16,8 @@ import {
   Col,
   Empty,
   Avatar,
-  Divider
+  Divider,
+  Spin
 } from 'antd';
 import { 
   EditOutlined, 
@@ -24,7 +26,7 @@ import {
   ShopOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyBrands } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { BrandStatus } from '@/types';
 
 const { Title, Paragraph, Text } = Typography;
@@ -33,9 +35,38 @@ export default function BrandDetailPage() {
   const router = useRouter();
   const params = useParams();
   const brandId = params.brand_id as string;
+  const [brand, setBrand] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // 브랜드 데이터 조회
-  const brand = dummyBrands.find(brand => brand.id === brandId);
+  useEffect(() => {
+    const fetchBrand = async () => {
+      try {
+        const response = await api.get(`/brands/${brandId}`);
+        if (response.success) {
+          setBrand(response.data);
+        }
+      } catch (error) {
+        console.error('브랜드 조회 오류:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (brandId) {
+      fetchBrand();
+    }
+  }, [brandId]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!brand) {
     return (

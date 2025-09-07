@@ -17,7 +17,8 @@ import {
   Col,
   message,
   Divider,
-  Empty
+  Empty,
+  Spin
 } from 'antd';
 import { 
   ArrowLeftOutlined, 
@@ -28,7 +29,7 @@ import {
   DeleteOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyBrands } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { BrandFormData, BrandStatus, Brand } from '@/types';
 import type { UploadProps, UploadFile } from 'antd';
 
@@ -45,7 +46,27 @@ export default function EditBrandPage() {
   const [coverFileList, setCoverFileList] = useState<UploadFile[]>([]);
 
   // 브랜드 데이터 조회
-  const brand = dummyBrands.find(brand => brand.id === brandId);
+  const [brand, setBrand] = useState<any>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBrand = async () => {
+      try {
+        const response = await api.get(`/brands/${brandId}`);
+        if (response.success) {
+          setBrand(response.data);
+        }
+      } catch (error) {
+        console.error('브랜드 조회 오류:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    if (brandId) {
+      fetchBrand();
+    }
+  }, [brandId]);
 
   useEffect(() => {
     if (brand) {
@@ -82,6 +103,16 @@ export default function EditBrandPage() {
       }
     }
   }, [brand, form]);
+
+  if (dataLoading) {
+    return (
+      <MainLayout>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!brand) {
     return (

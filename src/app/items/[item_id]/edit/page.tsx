@@ -29,7 +29,7 @@ import {
   DeleteOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyBrands, dummyTags, dummyItems } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { ItemFormData, ItemStatus, Item } from '@/types';
 import type { UploadProps, UploadFile } from 'antd';
 
@@ -45,7 +45,27 @@ export default function EditItemPage() {
   const [fileList, setFileList] = useState<UploadFile[]>([]);
 
   // 아이템 데이터 조회
-  const item = dummyItems.find(item => item.id === itemId);
+  const [item, setItem] = useState<any>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchItem = async () => {
+      try {
+        const response = await api.get(`/items/${itemId}`);
+        if (response.success) {
+          setItem(response.data);
+        }
+      } catch (error) {
+        console.error('아이템 조회 오류:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    if (itemId) {
+      fetchItem();
+    }
+  }, [itemId]);
 
   useEffect(() => {
     if (item) {
@@ -55,12 +75,12 @@ export default function EditItemPage() {
         description: item.description,
         mallUrl: item.mallUrl,
         brandId: item.brand.id,
-        tags: item.tags.map(tag => tag.id),
+        tags: item.tags?.map((tag: any) => tag.id) || [],
         status: item.status,
       });
 
       // 기존 이미지를 fileList에 설정
-      const existingFiles: UploadFile[] = item.images.map((image, index) => ({
+      const existingFiles: UploadFile[] = item.images?.map((image: any, index: number) => ({
         uid: image.id,
         name: `image-${index + 1}.jpg`,
         status: 'done',
@@ -241,12 +261,9 @@ export default function EditItemPage() {
                     showSearch
                     optionFilterProp="children"
                     filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={dummyBrands.map(brand => ({
-                      value: brand.id,
-                      label: brand.name
-                    }))}
+                    options={[]}
                   />
                 </Form.Item>
 
@@ -263,12 +280,9 @@ export default function EditItemPage() {
                     showSearch
                     optionFilterProp="children"
                     filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={dummyTags.map(tag => ({
-                      value: tag.id,
-                      label: tag.name
-                    }))}
+                    options={[]}
                   />
                 </Form.Item>
 

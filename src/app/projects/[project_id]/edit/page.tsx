@@ -38,7 +38,7 @@ import {
   DeleteOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyTags, dummyItems, dummyProjects } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { ProjectFormData, ProjectStatus, Project } from '@/types';
 import type { UploadFile } from 'antd';
 
@@ -57,7 +57,27 @@ export default function EditProjectPage() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
 
   // 프로젝트 데이터 조회
-  const project = dummyProjects.find(project => project.id === projectId);
+  const [project, setProject] = useState<any>(null);
+  const [dataLoading, setDataLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await api.get(`/projects/${projectId}`);
+        if (response.success) {
+          setProject(response.data);
+        }
+      } catch (error) {
+        console.error('프로젝트 조회 오류:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchProject();
+    }
+  }, [projectId]);
 
   useEffect(() => {
     if (project) {
@@ -73,11 +93,11 @@ export default function EditProjectPage() {
       });
 
       // 태그와 연결된 아이템 설정
-      setSelectedTags(project.tags.map(tag => tag.id));
-      setSelectedItems(project.connectedItems.map(item => item.id));
+      setSelectedTags(project.tags?.map((tag: any) => tag.id) || []);
+      setSelectedItems(project.connectedItems?.map((item: any) => item.id) || []);
 
       // 기존 이미지를 fileList에 설정
-      const existingFiles: UploadFile[] = project.images.map((image, index) => ({
+      const existingFiles: UploadFile[] = project.images?.map((image: any, index: number) => ({
         uid: image.id,
         name: `image-${index + 1}.jpg`,
         status: 'done',
@@ -346,7 +366,7 @@ export default function EditProjectPage() {
                   <Text strong>선택된 태그: {selectedTags.length}개</Text>
                 </div>
                 <Space size={[0, 8]} wrap>
-                  {dummyTags.map(tag => (
+                  {[].map((tag: any) => (
                     <CheckableTag
                       key={tag.id}
                       checked={selectedTags.includes(tag.id)}
@@ -367,8 +387,8 @@ export default function EditProjectPage() {
                   <Text strong>선택된 아이템: {selectedItems.length}개</Text>
                 </div>
                 <List
-                  dataSource={dummyItems}
-                  renderItem={item => (
+                  dataSource={[]}
+                  renderItem={(item: any) => (
                     <List.Item style={{ padding: '8px 0' }}>
                       <Checkbox
                         checked={selectedItems.includes(item.id)}

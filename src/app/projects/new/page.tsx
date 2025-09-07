@@ -36,7 +36,7 @@ import {
   AppstoreOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyTags, dummyItems } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { ProjectFormData, ProjectStatus } from '@/types';
 
 const { Title, Text } = Typography;
@@ -273,7 +273,7 @@ export default function NewProjectPage() {
                   <Text type="secondary">프로젝트와 관련된 태그를 선택하세요</Text>
                 </div>
                 <div>
-                  {dummyTags.map(tag => (
+                  {[].map((tag: any) => (
                     <CheckableTag
                       key={tag.id}
                       checked={selectedTags.includes(tag.id)}
@@ -296,8 +296,8 @@ export default function NewProjectPage() {
                 
                 <List
                   size="small"
-                  dataSource={dummyItems}
-                  renderItem={item => (
+                  dataSource={[]}
+                  renderItem={(item: any) => (
                     <List.Item>
                       <Checkbox
                         checked={selectedItems.includes(item.id)}

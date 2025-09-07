@@ -3,6 +3,7 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { 
   Card, 
   Descriptions, 
@@ -18,7 +19,8 @@ import {
   List,
   Avatar,
   Popconfirm,
-  message
+  message,
+  Spin
 } from 'antd';
 import { 
   EditOutlined, 
@@ -29,7 +31,7 @@ import {
   AppstoreOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyProjects } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { ProjectStatus } from '@/types';
 
 const { Title, Paragraph, Text } = Typography;
@@ -38,9 +40,38 @@ export default function ProjectDetailPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.project_id as string;
+  const [project, setProject] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
   // 프로젝트 데이터 조회
-  const project = dummyProjects.find(project => project.id === projectId);
+  useEffect(() => {
+    const fetchProject = async () => {
+      try {
+        const response = await api.get(`/projects/${projectId}`);
+        if (response.success) {
+          setProject(response.data);
+        }
+      } catch (error) {
+        console.error('프로젝트 조회 오류:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (projectId) {
+      fetchProject();
+    }
+  }, [projectId]);
+
+  if (loading) {
+    return (
+      <MainLayout>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!project) {
     return (
@@ -83,7 +114,7 @@ export default function ProjectDetailPage() {
     router.push('/projects');
   };
 
-  const mainImage = project.images.find(img => img.isMain) || project.images[0];
+  const mainImage = project.images?.find((img: any) => img.isMain) || project.images?.[0];
 
   return (
     <MainLayout>
@@ -124,10 +155,10 @@ export default function ProjectDetailPage() {
         </div>
 
         {/* 프로젝트 이미지들 */}
-        {project.images.length > 0 && (
+        {(project.images?.length || 0) > 0 && (
           <Card title="프로젝트 이미지" style={{ marginBottom: '24px' }}>
             <Row gutter={[16, 16]}>
-              {project.images.map(image => (
+              {project.images?.map((image: any) => (
                 <Col key={image.id} xs={24} sm={12} md={8} lg={6}>
                   <Image
                     width="100%"
@@ -196,7 +227,7 @@ export default function ProjectDetailPage() {
                 
                 <Descriptions.Item label="태그">
                   <Space wrap>
-                    {project.tags.map(tag => (
+                    {project.tags?.map((tag: any) => (
                       <Tag key={tag.id}>{tag.name}</Tag>
                     ))}
                   </Space>
@@ -228,17 +259,17 @@ export default function ProjectDetailPage() {
                 )
               }
             >
-              {project.connectedItems.length > 0 ? (
+              {(project.connectedItems?.length || 0) > 0 ? (
                 <List
-                  dataSource={project.connectedItems}
-                  renderItem={item => (
+                  dataSource={project.connectedItems || []}
+                  renderItem={(item: any) => (
                     <List.Item>
                       <List.Item.Meta
                         avatar={
-                          item.images[0] ? (
+                          item.images?.[0] ? (
                             <Avatar 
                               size={40}
-                              src={item.images[0].url}
+                              src={item.images?.[0]?.url}
                               shape="square"
                             />
                           ) : (

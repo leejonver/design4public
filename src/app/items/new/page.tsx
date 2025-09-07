@@ -28,7 +28,7 @@ import {
   AppstoreOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyBrands, dummyTags } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { ItemFormData, ItemStatus } from '@/types';
 import type { UploadProps } from 'antd';
 
@@ -201,12 +201,9 @@ export default function NewItemPage() {
                     showSearch
                     optionFilterProp="children"
                     filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={dummyBrands.map(brand => ({
-                      value: brand.id,
-                      label: brand.name
-                    }))}
+                    options={[]}
                   />
                 </Form.Item>
 
@@ -223,12 +220,9 @@ export default function NewItemPage() {
                     showSearch
                     optionFilterProp="children"
                     filterOption={(input, option) =>
-                      (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
+                      ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={dummyTags.map(tag => ({
-                      value: tag.id,
-                      label: tag.name
-                    }))}
+                    options={[]}
                   />
                 </Form.Item>
 
