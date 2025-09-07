@@ -62,7 +62,7 @@ export default function ManagersPage() {
       setLoading(true);
       const response = await api.get('/managers');
       if (response.success) {
-        setManagers(response.data || []);
+        setManagers(response.data?.items || []);
       } else {
         message.error('관리자 목록을 불러오는데 실패했습니다.');
       }
