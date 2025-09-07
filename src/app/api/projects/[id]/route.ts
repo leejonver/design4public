@@ -10,19 +10,7 @@ export async function GET(
 
     const { data: project, error } = await supabaseAdmin
       .from('projects')
-      .select(`
-        *,
-        project_images(*),
-        project_tags(
-          tags(*)
-        ),
-        project_items(
-          items(
-            *,
-            brands(*)
-          )
-        )
-      `)
+      .select('*')
       .eq('id', id)
       .single()
 
@@ -42,18 +30,10 @@ export async function GET(
       location: project.location || '',
       completionYear: project.year || new Date().getFullYear(),
       area: project.area || 0,
-      images: project.project_images?.map((img: any, index: number) => ({
-        id: img.id,
-        url: img.image_url,
-        alt: img.alt_text || project.title,
-        isMain: img.is_main || index === 0
-      })) || [],
-      tags: project.project_tags?.map((pt: any) => pt.tags) || [],
-      connectedItems: project.project_items?.map((pi: any) => ({
-        ...pi.items,
-        brand: pi.items.brands
-      })) || [],
-      inquiryUrl: project.inquiry_url,
+      images: [], // 일단 빈 배열로 설정
+      tags: [], // 일단 빈 배열로 설정
+      connectedItems: [], // 일단 빈 배열로 설정
+      inquiryUrl: project.inquiry_url || '',
       status: project.status,
       createdAt: project.created_at,
       updatedAt: project.updated_at
