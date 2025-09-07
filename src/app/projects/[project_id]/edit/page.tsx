@@ -64,11 +64,15 @@ export default function EditProjectPage() {
     const fetchProject = async () => {
       try {
         const response = await api.get(`/projects/${projectId}`);
-        if (response.success) {
+        if (response.success && response.data) {
           setProject(response.data);
+        } else {
+          console.error('프로젝트 조회 실패:', response.error);
+          setProject(null);
         }
       } catch (error) {
         console.error('프로젝트 조회 오류:', error);
+        setProject(null);
       } finally {
         setDataLoading(false);
       }
@@ -107,6 +111,16 @@ export default function EditProjectPage() {
       setFileList(existingFiles);
     }
   }, [project, form]);
+
+  if (dataLoading) {
+    return (
+      <MainLayout>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Text>프로젝트 정보를 불러오는 중...</Text>
+        </div>
+      </MainLayout>
+    );
+  }
 
   if (!project) {
     return (
