@@ -36,8 +36,8 @@ export async function GET(
       images: project.project_images?.map((img: any, index: number) => ({
         id: img.id,
         url: img.image_url,
-        alt: img.alt_text || project.title,
-        isMain: img.is_main || index === 0
+        alt: project.title,
+        isMain: index === 0
       })) || [],
       tags: [], // 일단 빈 배열로 설정
       connectedItems: [], // 일단 빈 배열로 설정
@@ -104,8 +104,6 @@ export async function PUT(
       const imageInserts = images.map((img: any, index: number) => ({
         project_id: id,
         image_url: img.url,
-        alt_text: img.alt,
-        is_main: img.isMain || index === 0,
         order: index
       }))
 
