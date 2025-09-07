@@ -49,7 +49,7 @@ export default function ItemsPage() {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/items');
+      const response = await api.get<Item[]>('/items');
       if (response.success) {
         setItems(response.data || []);
       } else {

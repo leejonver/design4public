@@ -60,7 +60,7 @@ export default function ManagersPage() {
   const fetchManagers = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/managers');
+      const response = await api.get<{items: Manager[]}>('/managers');
       if (response.success) {
         setManagers(response.data?.items || []);
       } else {
@@ -240,7 +240,7 @@ export default function ManagersPage() {
                 <div>
                   <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
                     {record.name}
-                    {isMaster && record.id !== currentUser.id && (
+                    {isMaster && record.id !== user?.id && (
                       <Button
                         type="text"
                         size="small"
@@ -305,7 +305,7 @@ export default function ManagersPage() {
       render: (_, record: Manager) => (
         <Space wrap>
           {/* 권한 변경 */}
-          {record.id !== currentUser.id && (
+          {record.id !== user?.id && (
             <Select
               size="small"
               value={record.role}
@@ -341,7 +341,7 @@ export default function ManagersPage() {
           )}
 
           {/* 삭제 버튼 (자기 자신은 삭제 불가) */}
-          {record.id !== currentUser.id && (
+          {record.id !== user?.id && (
             <Popconfirm
               title="관리자 삭제"
               description="이 관리자를 삭제하시겠습니까?"

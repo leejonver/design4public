@@ -87,15 +87,6 @@ export default function Sidebar({ onNavigate, collapsed = false, counts }: Sideb
     }
   };
 
-  // 로그아웃 핸들러
-  const handleLogout = async () => {
-    try {
-      await logout();
-      router.push('/login');
-    } catch (error) {
-      console.error('로그아웃 오류:', error);
-    }
-  };
 
   // 메뉴 아이템 설정
   // 각 메뉴에 아이콘, 레이블, 배지 카운트, 클릭 이벤트 설정
@@ -159,13 +150,15 @@ export default function Sidebar({ onNavigate, collapsed = false, counts }: Sideb
 
   /**
    * 로그아웃 핸들러
-   * 현재는 로그인 페이지로 리다이렉트
-   * TODO: 실제 로그아웃 API 호출 및 토큰 제거 로직 추가 필요
+   * AuthContext의 logout 함수를 호출하여 로그아웃 처리
    */
-  const handleLogout = () => {
-    // 로그아웃 로직 (실제로는 API 호출)
-    // TODO: JWT 토큰 제거, 세션 정리 등
-    router.push('/login');
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+    }
   };
 
   return (

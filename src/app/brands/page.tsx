@@ -51,7 +51,7 @@ export default function BrandsPage() {
   const fetchBrands = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/brands');
+      const response = await api.get<Brand[]>('/brands');
       if (response.success) {
         setBrands(response.data || []);
       } else {

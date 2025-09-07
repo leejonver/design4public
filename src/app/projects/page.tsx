@@ -48,7 +48,7 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/projects');
+      const response = await api.get<Project[]>('/projects');
       if (response.success) {
         setProjects(response.data || []);
       } else {

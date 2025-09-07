@@ -2,11 +2,19 @@
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 
+// API 응답 타입 정의
+interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
 // 기본 fetch 래퍼
 async function apiRequest<T>(
   endpoint: string,
   options: RequestInit = {}
-): Promise<T> {
+): Promise<ApiResponse<T>> {
   const url = `${API_BASE_URL}${endpoint}`
   
   const defaultHeaders: { 'Content-Type': string; 'Authorization'?: string } = {
@@ -40,7 +48,7 @@ async function apiRequest<T>(
 }
 
 // GET 요청
-export async function apiGet<T>(endpoint: string, params?: Record<string, string | number>): Promise<T> {
+export async function apiGet<T>(endpoint: string, params?: Record<string, string | number>): Promise<ApiResponse<T>> {
   const url = new URL(`${API_BASE_URL}${endpoint}`)
   
   if (params) {
@@ -55,7 +63,7 @@ export async function apiGet<T>(endpoint: string, params?: Record<string, string
 }
 
 // POST 요청
-export async function apiPost<T>(endpoint: string, data?: any): Promise<T> {
+export async function apiPost<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
   return apiRequest<T>(endpoint, {
     method: 'POST',
     body: data ? JSON.stringify(data) : undefined,
@@ -63,7 +71,7 @@ export async function apiPost<T>(endpoint: string, data?: any): Promise<T> {
 }
 
 // PUT 요청
-export async function apiPut<T>(endpoint: string, data?: any): Promise<T> {
+export async function apiPut<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
   return apiRequest<T>(endpoint, {
     method: 'PUT',
     body: data ? JSON.stringify(data) : undefined,
@@ -71,14 +79,14 @@ export async function apiPut<T>(endpoint: string, data?: any): Promise<T> {
 }
 
 // DELETE 요청
-export async function apiDelete<T>(endpoint: string): Promise<T> {
+export async function apiDelete<T>(endpoint: string): Promise<ApiResponse<T>> {
   return apiRequest<T>(endpoint, {
     method: 'DELETE',
   })
 }
 
 // 파일 업로드
-export async function apiUpload(file: File, folder?: string): Promise<any> {
+export async function apiUpload(file: File, folder?: string): Promise<ApiResponse<any>> {
   const formData = new FormData()
   formData.append('file', file)
   if (folder) {
@@ -185,4 +193,19 @@ export const managersApi = {
   update: (id: string, data: any) => apiPut(`/managers/${id}`, data),
   
   delete: (id: string) => apiDelete(`/managers/${id}`),
+}
+
+// 통합 API 객체
+export const api = {
+  get: apiGet,
+  post: apiPost,
+  put: apiPut,
+  delete: apiDelete,
+  upload: apiUpload,
+  auth: authApi,
+  projects: projectsApi,
+  brands: brandsApi,
+  items: itemsApi,
+  tags: tagsApi,
+  managers: managersApi,
 }

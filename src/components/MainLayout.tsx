@@ -64,21 +64,21 @@ export default function MainLayout({ children }: MainLayoutProps) {
   useEffect(() => {
     const fetchCounts = async () => {
       try {
-        const [projectsRes, itemsRes, brandsRes, tagsRes, managersRes] = await Promise.all([
-          api.get('/projects'),
-          api.get('/items'),
-          api.get('/brands'),
-          api.get('/tags'),
-          api.get('/managers'),
-        ]);
+               const [projectsRes, itemsRes, brandsRes, tagsRes, managersRes] = await Promise.all([
+                 api.get<any[]>('/projects'),
+                 api.get<any[]>('/items'),
+                 api.get<any[]>('/brands'),
+                 api.get<any[]>('/tags'),
+                 api.get<{items: any[]}>('/managers'),
+               ]);
 
-        setCounts({
-          projects: projectsRes.data?.length || 0,
-          items: itemsRes.data?.length || 0,
-          brands: brandsRes.data?.length || 0,
-          tags: tagsRes.data?.length || 0,
-          managers: managersRes.data?.length || 0,
-        });
+               setCounts({
+                 projects: projectsRes.data?.length || 0,
+                 items: itemsRes.data?.length || 0,
+                 brands: brandsRes.data?.length || 0,
+                 tags: tagsRes.data?.length || 0,
+                 managers: managersRes.data?.items?.length || 0,
+               });
       } catch (error) {
         console.error('Failed to fetch counts:', error);
       }

@@ -47,7 +47,7 @@ export default function TagsPage() {
   const fetchTags = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/tags');
+      const response = await api.get<Tag[]>('/tags');
       if (response.success) {
         setTags(response.data || []);
       } else {
