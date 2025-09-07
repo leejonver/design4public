@@ -158,24 +158,63 @@ export default function EditProjectPage() {
     setLoading(true);
     
     try {
+      // 1. 새로 업로드된 이미지들을 Supabase Storage에 업로드
+      const uploadedImages = [];
+      const existingImages = [];
+      
+      for (const file of fileList) {
+        if (file.status === 'done' && file.url) {
+          // 기존 이미지 (이미 업로드된 것)
+          existingImages.push({
+            url: file.url,
+            alt: values.name,
+            isMain: false
+          });
+        } else if (file.originFileObj) {
+          // 새로 업로드된 이미지
+          const uploadResponse = await api.upload(file.originFileObj, 'projects');
+          if (uploadResponse.success && uploadResponse.data?.url) {
+            uploadedImages.push({
+              url: uploadResponse.data.url,
+              alt: values.name,
+              isMain: false
+            });
+          } else {
+            message.error(`이미지 업로드 실패: ${uploadResponse.error || '알 수 없는 오류'}`);
+            setLoading(false);
+            return;
+          }
+        }
+      }
+      
+      // 2. 모든 이미지를 합쳐서 프로젝트 데이터 구성
+      const allImages = [...existingImages, ...uploadedImages];
+      
       const projectData = {
-        ...values,
+        name: values.name,
+        description: values.description,
+        location: values.location || '',
+        completionYear: values.completionYear,
+        area: values.area,
+        status: values.status,
+        inquiryUrl: values.inquiryUrl || '',
+        images: allImages,
         tags: selectedTags,
         connectedItems: selectedItems
       };
       
-      // 실제로는 API 호출을 해야 함
-      console.log('프로젝트 수정 데이터:', projectData);
-      console.log('업로드된 파일들:', fileList);
-      console.log('기존 프로젝트 ID:', projectId);
+      // 3. 프로젝트 업데이트 API 호출
+      const response = await api.put(`/projects/${projectId}`, projectData);
       
-      // 성공 메시지
-      message.success('프로젝트가 성공적으로 수정되었습니다!');
-      
-      // 프로젝트 상세 페이지로 이동
-      router.push(`/projects/${projectId}`);
+      if (response.success) {
+        message.success('프로젝트가 성공적으로 수정되었습니다!');
+        router.push(`/projects/${projectId}`);
+      } else {
+        message.error(`프로젝트 수정 중 오류가 발생했습니다: ${response.error || '알 수 없는 오류'}`);
+      }
       
     } catch (error) {
+      console.error('프로젝트 수정 중 예외 발생:', error);
       message.error('프로젝트 수정 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
