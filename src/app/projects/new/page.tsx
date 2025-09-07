@@ -79,23 +79,66 @@ export default function NewProjectPage() {
     setLoading(true);
     
     try {
+      // 1. 먼저 이미지들을 Supabase Storage에 업로드
+      const uploadedImages = [];
+      for (const file of fileList) {
+        if (file.originFileObj) {
+          // 파일 타입을 명시적으로 설정
+          const fileObj = file.originFileObj;
+          if (file.name.toLowerCase().endsWith('.png')) {
+            Object.defineProperty(fileObj, 'type', { value: 'image/png' });
+          } else if (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg')) {
+            Object.defineProperty(fileObj, 'type', { value: 'image/jpeg' });
+          } else if (file.name.toLowerCase().endsWith('.webp')) {
+            Object.defineProperty(fileObj, 'type', { value: 'image/webp' });
+          } else if (file.name.toLowerCase().endsWith('.gif')) {
+            Object.defineProperty(fileObj, 'type', { value: 'image/gif' });
+          }
+          
+          const formData = new FormData();
+          formData.append('file', fileObj);
+          formData.append('folder', 'projects');
+          
+          const uploadResponse = await api.upload('/upload', formData);
+          if (uploadResponse.success) {
+            uploadedImages.push({
+              url: uploadResponse.data.url,
+              alt: file.name,
+              isMain: uploadedImages.length === 0 // 첫 번째 이미지를 대표 이미지로 설정
+            });
+          }
+        }
+      }
+
+      // 2. 프로젝트 데이터 준비
       const projectData = {
-        ...values,
+        name: values.name,
+        description: values.description,
+        location: values.location || '',
+        completionYear: values.completionYear,
+        area: values.area,
+        status: values.status,
+        inquiryUrl: values.inquiryUrl || '',
+        images: uploadedImages,
         tags: selectedTags,
         connectedItems: selectedItems
       };
       
-      // 실제로는 API 호출을 해야 함
       console.log('새 프로젝트 데이터:', projectData);
       console.log('업로드된 파일들:', fileList);
       
-      // 성공 메시지
-      message.success('프로젝트가 성공적으로 추가되었습니다!');
+      // 3. 프로젝트 생성 API 호출
+      const response = await api.post('/projects', projectData);
       
-      // 프로젝트 리스트로 이동
-      router.push('/projects');
+      if (response.success) {
+        message.success('프로젝트가 성공적으로 추가되었습니다!');
+        router.push('/projects');
+      } else {
+        message.error('프로젝트 추가 중 오류가 발생했습니다.');
+      }
       
     } catch (error) {
+      console.error('프로젝트 생성 오류:', error);
       message.error('프로젝트 추가 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);

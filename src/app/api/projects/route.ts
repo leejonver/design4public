@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabase, supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -100,15 +100,13 @@ export async function POST(request: NextRequest) {
     const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
 
     // 프로젝트 생성
-    const { data: project, error: projectError } = await supabase
+    const { data: project, error: projectError } = await supabaseAdmin
       .from('projects')
       .insert({
         title: name,
         description,
-        location,
-        completion_year: completionYear,
+        year: completionYear,
         area,
-        inquiry_url: inquiryUrl,
         status: status || 'draft'
       })
       .select()
@@ -117,7 +115,7 @@ export async function POST(request: NextRequest) {
     if (projectError) {
       console.error('Project creation error:', projectError)
       return NextResponse.json(
-        { success: false, error: '프로젝트 생성에 실패했습니다.' },
+        { success: false, error: `프로젝트 생성에 실패했습니다: ${projectError.message}` },
         { status: 500 }
       )
     }
@@ -132,7 +130,7 @@ export async function POST(request: NextRequest) {
         order: index
       }))
 
-      const { error: imageError } = await supabase
+      const { error: imageError } = await supabaseAdmin
         .from('project_images')
         .insert(imageInserts)
 
@@ -148,7 +146,7 @@ export async function POST(request: NextRequest) {
         tag_id: tagId
       }))
 
-      const { error: tagError } = await supabase
+      const { error: tagError } = await supabaseAdmin
         .from('project_tags')
         .insert(tagInserts)
 
@@ -164,7 +162,7 @@ export async function POST(request: NextRequest) {
         item_id: itemId
       }))
 
-      const { error: itemError } = await supabase
+      const { error: itemError } = await supabaseAdmin
         .from('project_items')
         .insert(itemInserts)
 

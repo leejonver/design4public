@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,11 +23,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 파일 타입 체크
+    // 파일 정보 로깅
+    console.log('File info:', {
+      name: file.name,
+      type: file.type,
+      size: file.size
+    })
+
+    // 파일 타입 체크 (MIME 타입 또는 확장자 기반)
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
-    if (!allowedTypes.includes(file.type)) {
+    const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
+    
+    const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase()
+    const isValidMimeType = allowedTypes.includes(file.type)
+    const isValidExtension = allowedExtensions.includes(fileExtension)
+    
+    if (!isValidMimeType && !isValidExtension) {
+      console.log('File type not allowed:', { type: file.type, extension: fileExtension })
       return NextResponse.json(
-        { success: false, error: '지원되지 않는 파일 형식입니다. JPG, PNG, WebP, GIF만 업로드 가능합니다.' },
+        { success: false, error: `지원되지 않는 파일 형식입니다. JPG, PNG, WebP, GIF만 업로드 가능합니다. (받은 타입: ${file.type}, 확장자: ${fileExtension})` },
         { status: 400 }
       )
     }
@@ -35,11 +49,11 @@ export async function POST(request: NextRequest) {
     // 고유한 파일명 생성
     const timestamp = Date.now()
     const randomString = Math.random().toString(36).substring(2, 15)
-    const fileExtension = file.name.split('.').pop()
-    const fileName = `${timestamp}_${randomString}.${fileExtension}`
+    const fileExt = file.name.split('.').pop()
+    const fileName = `${timestamp}_${randomString}.${fileExt}`
 
     // Supabase Storage에 파일 업로드
-    const { data, error } = await supabase.storage
+    const { data, error } = await supabaseAdmin.storage
       .from('images')
       .upload(`${folder}/${fileName}`, file, {
         cacheControl: '3600',
@@ -49,13 +63,13 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Upload error:', error)
       return NextResponse.json(
-        { success: false, error: '파일 업로드에 실패했습니다.' },
+        { success: false, error: `파일 업로드에 실패했습니다: ${error.message}` },
         { status: 500 }
       )
     }
 
     // 공개 URL 생성
-    const { data: urlData } = supabase.storage
+    const { data: urlData } = supabaseAdmin.storage
       .from('images')
       .getPublicUrl(data.path)
 
