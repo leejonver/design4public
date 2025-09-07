@@ -12,10 +12,9 @@ interface ApiResponse<T = any> {
 
 // 기본 fetch 래퍼
 async function apiRequest<T>(
-  endpoint: string,
+  url: string,
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
-  const url = `${API_BASE_URL}${endpoint}`
   
   const defaultHeaders: { 'Content-Type': string; 'Authorization'?: string } = {
     'Content-Type': 'application/json',
