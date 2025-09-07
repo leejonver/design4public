@@ -48,9 +48,9 @@ export default function ProjectsPage() {
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Project[]>('/projects');
+      const response = await api.get<{items: Project[]}>('/projects');
       if (response.success) {
-        setProjects(response.data || []);
+        setProjects(response.data?.items || []);
       } else {
         message.error('프로젝트 목록을 불러오는데 실패했습니다.');
       }

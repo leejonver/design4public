@@ -49,9 +49,9 @@ export default function ItemsPage() {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Item[]>('/items');
+      const response = await api.get<{items: Item[]}>('/items');
       if (response.success) {
-        setItems(response.data || []);
+        setItems(response.data?.items || []);
       } else {
         message.error('아이템 목록을 불러오는데 실패했습니다.');
       }

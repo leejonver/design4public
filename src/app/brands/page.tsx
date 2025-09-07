@@ -51,9 +51,9 @@ export default function BrandsPage() {
   const fetchBrands = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Brand[]>('/brands');
+      const response = await api.get<{items: Brand[]}>('/brands');
       if (response.success) {
-        setBrands(response.data || []);
+        setBrands(response.data?.items || []);
       } else {
         message.error('브랜드 목록을 불러오는데 실패했습니다.');
       }

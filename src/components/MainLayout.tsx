@@ -65,18 +65,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const fetchCounts = async () => {
       try {
                const [projectsRes, itemsRes, brandsRes, tagsRes, managersRes] = await Promise.all([
-                 api.get<any[]>('/projects'),
-                 api.get<any[]>('/items'),
-                 api.get<any[]>('/brands'),
-                 api.get<any[]>('/tags'),
+                 api.get<{items: any[]}>('/projects'),
+                 api.get<{items: any[]}>('/items'),
+                 api.get<{items: any[]}>('/brands'),
+                 api.get<{items: any[]}>('/tags'),
                  api.get<{items: any[]}>('/managers'),
                ]);
 
                setCounts({
-                 projects: projectsRes.data?.length || 0,
-                 items: itemsRes.data?.length || 0,
-                 brands: brandsRes.data?.length || 0,
-                 tags: tagsRes.data?.length || 0,
+                 projects: projectsRes.data?.items?.length || 0,
+                 items: itemsRes.data?.items?.length || 0,
+                 brands: brandsRes.data?.items?.length || 0,
+                 tags: tagsRes.data?.items?.length || 0,
                  managers: managersRes.data?.items?.length || 0,
                });
       } catch (error) {

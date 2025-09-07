@@ -47,9 +47,9 @@ export default function TagsPage() {
   const fetchTags = async () => {
     try {
       setLoading(true);
-      const response = await api.get<Tag[]>('/tags');
+      const response = await api.get<{items: Tag[]}>('/tags');
       if (response.success) {
-        setTags(response.data || []);
+        setTags(response.data?.items || []);
       } else {
         message.error('태그 목록을 불러오는데 실패했습니다.');
       }
