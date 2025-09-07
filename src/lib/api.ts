@@ -49,7 +49,8 @@ async function apiRequest<T>(
 
 // GET 요청
 export async function apiGet<T>(endpoint: string, params?: Record<string, string | number>): Promise<ApiResponse<T>> {
-  let url = `${API_BASE_URL}${endpoint}`
+  // API_BASE_URL이 이미 /api를 포함하고 있으면 중복 방지
+  let url = endpoint.startsWith('/api') ? endpoint : `${API_BASE_URL}${endpoint}`
   
   if (params) {
     const searchParams = new URLSearchParams()
@@ -69,7 +70,8 @@ export async function apiGet<T>(endpoint: string, params?: Record<string, string
 
 // POST 요청
 export async function apiPost<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-  return apiRequest<T>(endpoint, {
+  const url = endpoint.startsWith('/api') ? endpoint : `${API_BASE_URL}${endpoint}`
+  return apiRequest<T>(url, {
     method: 'POST',
     body: data ? JSON.stringify(data) : undefined,
   })
@@ -77,7 +79,8 @@ export async function apiPost<T>(endpoint: string, data?: any): Promise<ApiRespo
 
 // PUT 요청
 export async function apiPut<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
-  return apiRequest<T>(endpoint, {
+  const url = endpoint.startsWith('/api') ? endpoint : `${API_BASE_URL}${endpoint}`
+  return apiRequest<T>(url, {
     method: 'PUT',
     body: data ? JSON.stringify(data) : undefined,
   })
@@ -85,7 +88,8 @@ export async function apiPut<T>(endpoint: string, data?: any): Promise<ApiRespon
 
 // DELETE 요청
 export async function apiDelete<T>(endpoint: string): Promise<ApiResponse<T>> {
-  return apiRequest<T>(endpoint, {
+  const url = endpoint.startsWith('/api') ? endpoint : `${API_BASE_URL}${endpoint}`
+  return apiRequest<T>(url, {
     method: 'DELETE',
   })
 }
@@ -98,7 +102,7 @@ export async function apiUpload(file: File, folder?: string): Promise<ApiRespons
     formData.append('folder', folder)
   }
 
-  const url = `${API_BASE_URL}/upload`
+  const url = '/upload'.startsWith('/api') ? '/upload' : `${API_BASE_URL}/upload`
   
   // 토큰이 있으면 Authorization 헤더 추가
   const headers: Record<string, string> = {}
