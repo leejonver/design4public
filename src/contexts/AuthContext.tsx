@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // 로그인 함수
   const login = async (email: string, password: string) => {
     try {
-      const response = await authApi.login(email, password)
+      const response = await authApi.login(email, password) as any
       
       if (response.success) {
         setUser(response.data.user)
