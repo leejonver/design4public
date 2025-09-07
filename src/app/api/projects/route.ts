@@ -10,7 +10,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const offset = (page - 1) * limit
 
-    let query = supabase
+    let query = supabaseAdmin
       .from('projects')
       .select(`
         *,

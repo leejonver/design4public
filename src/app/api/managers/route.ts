@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const offset = (page - 1) * limit
 
     // 마스터 계정만 조회
-    let query = supabase
+    let query = supabaseAdmin
       .from('profiles')
       .select('*')
       .eq('email', 'design4public@gmail.com')
@@ -31,13 +31,13 @@ export async function GET(request: NextRequest) {
     // 데이터 변환
     const transformedManagers = managers?.map(manager => ({
       id: manager.id,
-      name: manager.name || '',
+      name: manager.email.split('@')[0] || '관리자', // 이메일에서 이름 추출
       email: manager.email,
       role: manager.role,
       approvalStatus: manager.status,
       createdAt: manager.created_at,
       updatedAt: manager.updated_at,
-      lastLoginAt: manager.last_login_at
+      lastLoginAt: null // profiles 테이블에 last_login_at 컬럼이 없음
     })) || []
 
     return NextResponse.json({
