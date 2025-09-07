@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Card, 
   Table, 
@@ -28,7 +28,8 @@ import {
   CloseOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyManagers, currentUser } from '@/data/dummyData';
+import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Manager, ManagerRole, ApprovalStatus } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -39,12 +40,39 @@ export default function ManagersPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState<ManagerRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<ApprovalStatus | 'all'>('all');
-  const [managers, setManagers] = useState(dummyManagers);
+  const [managers, setManagers] = useState<Manager[]>([]);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  const { user } = useAuth();
 
   // 마스터 권한 확인
-  const isMaster = currentUser.role === 'master';
+  const isMaster = user?.role === 'master';
+
+  // 관리자 목록 가져오기
+  useEffect(() => {
+    if (isMaster) {
+      fetchManagers();
+    }
+  }, [isMaster]);
+
+  const fetchManagers = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/managers');
+      if (response.success) {
+        setManagers(response.data || []);
+      } else {
+        message.error('관리자 목록을 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('관리자 목록 로딩 오류:', error);
+      message.error('관리자 목록을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 필터링된 관리자 목록
   const filteredManagers = managers.filter(manager => {
@@ -420,6 +448,7 @@ export default function ManagersPage() {
             columns={columns}
             dataSource={filteredManagers}
             rowKey="id"
+            loading={loading}
             pagination={{
               total: filteredManagers.length,
               pageSize: 10,

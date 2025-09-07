@@ -14,8 +14,7 @@ import {
   LogoutOutlined
 } from '@ant-design/icons';
 import { useRouter, usePathname } from 'next/navigation';
-import { currentUser } from '@/data/dummyData';
-import { dummyProjects, dummyItems, dummyBrands, dummyManagers, dummyTags } from '@/data/dummyData';
+import { useAuth } from '@/contexts/AuthContext';
 import type { MenuProps } from 'antd';
 
 const { Sider } = Layout;
@@ -26,10 +25,18 @@ const { Text, Title } = Typography;
  * @interface SidebarProps
  * @property {function} [onNavigate] - 외부 네비게이션 핸들러 (옵션)
  * @property {boolean} [collapsed] - 사이드바 접기 상태 (기본: false)
+ * @property {object} [counts] - 각 메뉴별 데이터 개수
  */
 interface SidebarProps {
   onNavigate?: (url: string) => void;
   collapsed?: boolean;
+  counts?: {
+    projects?: number;
+    items?: number;
+    brands?: number;
+    tags?: number;
+    managers?: number;
+  };
 }
 
 /**
@@ -50,9 +57,10 @@ interface SidebarProps {
  * @param {SidebarProps} props - 컴포넌트 props
  * @returns {JSX.Element} 사이드바 JSX
  */
-export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps) {
+export default function Sidebar({ onNavigate, collapsed = false, counts }: SidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
   // 현재 선택된 메뉴 키 계산
   // URL 경로에 따라 대응되는 메뉴 키를 반환
@@ -79,6 +87,16 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
     }
   };
 
+  // 로그아웃 핸들러
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push('/login');
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+    }
+  };
+
   // 메뉴 아이템 설정
   // 각 메뉴에 아이콘, 레이블, 배지 카운트, 클릭 이벤트 설정
   const menuItems: MenuProps['items'] = [
@@ -88,7 +106,7 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
       label: (
         <Space>
           프로젝트
-          <Badge count={dummyProjects.length} size="small" color="gold" />
+          <Badge count={counts?.projects || 0} size="small" color="gold" />
         </Space>
       ),
       onClick: () => handleNavigation('/projects'),
@@ -99,7 +117,7 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
       label: (
         <Space>
           아이템
-          <Badge count={dummyItems.length} size="small" color="gold" />
+          <Badge count={counts?.items || 0} size="small" color="gold" />
         </Space>
       ),
       onClick: () => handleNavigation('/items'),
@@ -110,7 +128,7 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
       label: (
         <Space>
           브랜드
-          <Badge count={dummyBrands.length} size="small" color="gold" />
+          <Badge count={counts?.brands || 0} size="small" color="gold" />
         </Space>
       ),
       onClick: () => handleNavigation('/brands'),
@@ -121,7 +139,7 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
       label: (
         <Space>
           태그
-          <Badge count={dummyTags.length} size="small" color="gold" />
+          <Badge count={counts?.tags || 0} size="small" color="gold" />
         </Space>
       ),
       onClick: () => handleNavigation('/tags'),
@@ -132,7 +150,7 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
       label: (
         <Space>
           관리자
-          <Badge count={dummyManagers.filter(m => m.approvalStatus === 'approved').length} size="small" color="gold" />
+          <Badge count={counts?.managers || 0} size="small" color="gold" />
         </Space>
       ),
       onClick: () => handleNavigation('/managers'),
@@ -213,15 +231,15 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
                   size="default" 
                   style={{ backgroundColor: '#1890ff' }}
                 >
-                  {currentUser.name.charAt(0)}
+                  {user?.name?.charAt(0) || 'U'}
                 </Avatar>
                 <div style={{ marginLeft: '12px', flex: 1 }}>
                   <div style={{ fontSize: '14px', fontWeight: 500 }}>
-                    {currentUser.name}
+                    {user?.name || '사용자'}
                   </div>
                   <div style={{ fontSize: '12px', color: '#999' }}>
-                    {currentUser.role === 'master' ? '마스터' :
-                     currentUser.role === 'admin' ? '관리자' : '콘텐츠매니저'}
+                    {user?.role === 'master' ? '마스터' :
+                     user?.role === 'admin' ? '관리자' : '콘텐츠매니저'}
                   </div>
                 </div>
               </div>
@@ -241,7 +259,7 @@ export default function Sidebar({ onNavigate, collapsed = false }: SidebarProps)
                 size="default" 
                 style={{ backgroundColor: '#1890ff', marginBottom: '8px' }}
               >
-                {currentUser.name.charAt(0)}
+                {user?.name?.charAt(0) || 'U'}
               </Avatar>
               <Button
                 type="text"

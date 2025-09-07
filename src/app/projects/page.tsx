@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Card, 
@@ -15,7 +15,8 @@ import {
   Select,
   Badge,
   Image,
-  Tooltip
+  Tooltip,
+  message
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -25,7 +26,7 @@ import {
   ProjectOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyProjects } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { Project, ProjectStatus } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -36,12 +37,36 @@ export default function ProjectsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all');
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 프로젝트 목록 가져오기
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/projects');
+      if (response.success) {
+        setProjects(response.data || []);
+      } else {
+        message.error('프로젝트 목록을 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('프로젝트 목록 로딩 오류:', error);
+      message.error('프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 필터링된 프로젝트 목록
-  const filteredProjects = dummyProjects.filter(project => {
+  const filteredProjects = projects.filter(project => {
     const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         project.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (project.location && project.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                         (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -239,6 +264,7 @@ export default function ProjectsPage() {
             columns={columns}
             dataSource={filteredProjects}
             rowKey="id"
+            loading={loading}
             pagination={{
               total: filteredProjects.length,
               pageSize: 10,

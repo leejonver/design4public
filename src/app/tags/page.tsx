@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   Card, 
   Table, 
@@ -24,7 +24,7 @@ import {
   TagOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyTags } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { Tag, TagFormData } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -36,7 +36,30 @@ export default function TagsPage() {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingTag, setEditingTag] = useState<Tag | null>(null);
   const [form] = Form.useForm();
-  const [tags, setTags] = useState(dummyTags);
+  const [tags, setTags] = useState<Tag[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 태그 목록 가져오기
+  useEffect(() => {
+    fetchTags();
+  }, []);
+
+  const fetchTags = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/tags');
+      if (response.success) {
+        setTags(response.data || []);
+      } else {
+        message.error('태그 목록을 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('태그 목록 로딩 오류:', error);
+      message.error('태그 목록을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 필터링된 태그 목록
   const filteredTags = tags.filter(tag => 
@@ -65,36 +88,49 @@ export default function TagsPage() {
   };
 
   // 태그 저장
-  const handleSave = (values: TagFormData) => {
-    if (editingTag) {
-      // 수정
-      setTags(prevTags => 
-        prevTags.map(tag => 
-          tag.id === editingTag.id 
-            ? { ...tag, name: values.name, updatedAt: new Date().toISOString() }
-            : tag
-        )
-      );
-      message.success('태그가 수정되었습니다.');
-    } else {
-      // 새로 추가
-      const newTag: Tag = {
-        id: Date.now().toString(),
-        name: values.name,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      setTags(prevTags => [...prevTags, newTag]);
-      message.success('태그가 추가되었습니다.');
+  const handleSave = async (values: TagFormData) => {
+    try {
+      if (editingTag) {
+        // 수정
+        const response = await api.put(`/tags/${editingTag.id}`, values);
+        if (response.success) {
+          message.success('태그가 수정되었습니다.');
+          fetchTags(); // 목록 새로고침
+        } else {
+          message.error('태그 수정에 실패했습니다.');
+        }
+      } else {
+        // 새로 추가
+        const response = await api.post('/tags', values);
+        if (response.success) {
+          message.success('태그가 추가되었습니다.');
+          fetchTags(); // 목록 새로고침
+        } else {
+          message.error('태그 추가에 실패했습니다.');
+        }
+      }
+      
+      handleCancel();
+    } catch (error) {
+      console.error('태그 저장 오류:', error);
+      message.error('태그 저장 중 오류가 발생했습니다.');
     }
-    
-    handleCancel();
   };
 
   // 태그 삭제
-  const handleDelete = (tagId: string) => {
-    setTags(prevTags => prevTags.filter(tag => tag.id !== tagId));
-    message.success('태그가 삭제되었습니다.');
+  const handleDelete = async (tagId: string) => {
+    try {
+      const response = await api.delete(`/tags/${tagId}`);
+      if (response.success) {
+        message.success('태그가 삭제되었습니다.');
+        fetchTags(); // 목록 새로고침
+      } else {
+        message.error('태그 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('태그 삭제 오류:', error);
+      message.error('태그 삭제 중 오류가 발생했습니다.');
+    }
   };
 
   // 테이블 컬럼 정의
@@ -196,6 +232,7 @@ export default function TagsPage() {
             columns={columns}
             dataSource={filteredTags}
             rowKey="id"
+            loading={loading}
             pagination={{
               total: filteredTags.length,
               pageSize: 20,

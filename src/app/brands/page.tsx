@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Card, 
@@ -16,7 +16,8 @@ import {
   Badge,
   Image,
   Tooltip,
-  Avatar
+  Avatar,
+  message
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -28,7 +29,7 @@ import {
   GlobalOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import { dummyBrands } from '@/data/dummyData';
+import { api } from '@/lib/api';
 import type { Brand, BrandStatus } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
 
@@ -39,11 +40,35 @@ export default function BrandsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<BrandStatus | 'all'>('all');
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 브랜드 목록 가져오기
+  useEffect(() => {
+    fetchBrands();
+  }, []);
+
+  const fetchBrands = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/brands');
+      if (response.success) {
+        setBrands(response.data || []);
+      } else {
+        message.error('브랜드 목록을 불러오는데 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('브랜드 목록 로딩 오류:', error);
+      message.error('브랜드 목록을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // 필터링된 브랜드 목록
-  const filteredBrands = dummyBrands.filter(brand => {
+  const filteredBrands = brands.filter(brand => {
     const matchesSearch = brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         brand.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         (brand.description && brand.description.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesStatus = statusFilter === 'all' || brand.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -215,6 +240,7 @@ export default function BrandsPage() {
             columns={columns}
             dataSource={filteredBrands}
             rowKey="id"
+            loading={loading}
             pagination={{
               total: filteredBrands.length,
               pageSize: 10,
