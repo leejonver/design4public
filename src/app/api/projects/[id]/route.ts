@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = params
 
-    const { data: project, error } = await supabase
+    const { data: project, error } = await supabaseAdmin
       .from('projects')
       .select(`
         *,
@@ -40,7 +40,7 @@ export async function GET(
       name: project.title,
       description: project.description || '',
       location: project.location || '',
-      completionYear: project.completion_year || new Date().getFullYear(),
+      completionYear: project.year || new Date().getFullYear(),
       area: project.area || 0,
       images: project.project_images?.map((img: any, index: number) => ({
         id: img.id,
@@ -83,15 +83,13 @@ export async function PUT(
     const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
 
     // 프로젝트 업데이트
-    const { data: project, error: projectError } = await supabase
+    const { data: project, error: projectError } = await supabaseAdmin
       .from('projects')
       .update({
         title: name,
         description,
-        location,
-        completion_year: completionYear,
+        year: completionYear,
         area,
-        inquiry_url: inquiryUrl,
         status,
         updated_at: new Date().toISOString()
       })
@@ -108,7 +106,7 @@ export async function PUT(
     }
 
     // 기존 이미지 삭제
-    await supabase
+    await supabaseAdmin
       .from('project_images')
       .delete()
       .eq('project_id', id)
@@ -123,13 +121,13 @@ export async function PUT(
         order: index
       }))
 
-      await supabase
+      await supabaseAdmin
         .from('project_images')
         .insert(imageInserts)
     }
 
     // 기존 태그 연결 삭제
-    await supabase
+    await supabaseAdmin
       .from('project_tags')
       .delete()
       .eq('project_id', id)
@@ -141,13 +139,13 @@ export async function PUT(
         tag_id: tagId
       }))
 
-      await supabase
+      await supabaseAdmin
         .from('project_tags')
         .insert(tagInserts)
     }
 
     // 기존 아이템 연결 삭제
-    await supabase
+    await supabaseAdmin
       .from('project_items')
       .delete()
       .eq('project_id', id)
@@ -159,7 +157,7 @@ export async function PUT(
         item_id: itemId
       }))
 
-      await supabase
+      await supabaseAdmin
         .from('project_items')
         .insert(itemInserts)
     }
@@ -187,23 +185,23 @@ export async function DELETE(
     const { id } = params
 
     // 관련 데이터 삭제
-    await supabase
+    await supabaseAdmin
       .from('project_images')
       .delete()
       .eq('project_id', id)
 
-    await supabase
+    await supabaseAdmin
       .from('project_tags')
       .delete()
       .eq('project_id', id)
 
-    await supabase
+    await supabaseAdmin
       .from('project_items')
       .delete()
       .eq('project_id', id)
 
     // 프로젝트 삭제
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('projects')
       .delete()
       .eq('id', id)
