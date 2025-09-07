@@ -4,9 +4,10 @@
 
 'use client';
 
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Layout } from 'antd';
 import Sidebar from './Sidebar';
+import { api } from '@/lib/api';
 
 const { Content } = Layout;
 
@@ -20,6 +21,17 @@ interface MainLayoutProps {
 }
 
 /**
+ * 각 메뉴별 데이터 개수 타입
+ */
+interface MenuCounts {
+  projects: number;
+  items: number;
+  brands: number;
+  tags: number;
+  managers: number;
+}
+
+/**
  * 메인 레이아웃 컴포넌트
  * 
  * 특징:
@@ -27,6 +39,7 @@ interface MainLayoutProps {
  * - 우측 메인 콘텐츠 영역
  * - 반응형 디자인 지원
  * - 일관된 패딩 및 배경색 적용
+ * - 각 메뉴별 실제 데이터 개수 표시
  * 
  * 사용법:
  * ```tsx
@@ -39,10 +52,45 @@ interface MainLayoutProps {
  * @returns {JSX.Element} 메인 레이아웃 JSX
  */
 export default function MainLayout({ children }: MainLayoutProps) {
+  const [counts, setCounts] = useState<MenuCounts>({
+    projects: 0,
+    items: 0,
+    brands: 0,
+    tags: 0,
+    managers: 0,
+  });
+
+  // 각 메뉴별 데이터 개수 가져오기
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const [projectsRes, itemsRes, brandsRes, tagsRes, managersRes] = await Promise.all([
+          api.get('/projects'),
+          api.get('/items'),
+          api.get('/brands'),
+          api.get('/tags'),
+          api.get('/managers'),
+        ]);
+
+        setCounts({
+          projects: projectsRes.data?.length || 0,
+          items: itemsRes.data?.length || 0,
+          brands: brandsRes.data?.length || 0,
+          tags: tagsRes.data?.length || 0,
+          managers: managersRes.data?.length || 0,
+        });
+      } catch (error) {
+        console.error('Failed to fetch counts:', error);
+      }
+    };
+
+    fetchCounts();
+  }, []);
+
   return (
     <Layout style={{ minHeight: '100vh' }}>
       {/* 좌측 고정 사이드바 - 네비게이션 메뉴 포함 */}
-      <Sidebar />
+      <Sidebar counts={counts} />
       
       {/* 우측 메인 콘텐츠 영역 */}
       <Layout style={{ 
