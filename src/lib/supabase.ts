@@ -26,6 +26,8 @@ export interface Database {
           id: string
           title: string
           description: string | null
+          location: string | null
+          inquiry_url: string | null
           cover_image_url: string | null
           year: number | null
           area: number | null
@@ -37,6 +39,8 @@ export interface Database {
           id?: string
           title: string
           description?: string | null
+          location?: string | null
+          inquiry_url?: string | null
           cover_image_url?: string | null
           year?: number | null
           area?: number | null
@@ -48,6 +52,8 @@ export interface Database {
           id?: string
           title?: string
           description?: string | null
+          location?: string | null
+          inquiry_url?: string | null
           cover_image_url?: string | null
           year?: number | null
           area?: number | null
@@ -93,6 +99,7 @@ export interface Database {
           brand_id: string | null
           nara_url: string | null
           image_url: string | null
+          status: 'available' | 'unavailable' | 'discontinued'
           created_at: string
           updated_at: string
         }
@@ -103,6 +110,7 @@ export interface Database {
           brand_id?: string | null
           nara_url?: string | null
           image_url?: string | null
+          status?: 'available' | 'unavailable' | 'discontinued'
           created_at?: string
           updated_at?: string
         }
@@ -113,6 +121,7 @@ export interface Database {
           brand_id?: string | null
           nara_url?: string | null
           image_url?: string | null
+          status?: 'available' | 'unavailable' | 'discontinued'
           created_at?: string
           updated_at?: string
         }

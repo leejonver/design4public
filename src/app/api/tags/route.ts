@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin
       .from('tags')
-      .select('*')
+      .select('*', { count: 'exact' })
       .order('name', { ascending: true })
 
     // 검색 필터
@@ -27,7 +27,11 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Tags fetch error:', error)
       return NextResponse.json(
-        { success: false, error: '태그 목록을 가져오는데 실패했습니다.' },
+        { 
+          success: false, 
+          error: '태그 목록을 가져오는데 실패했습니다.',
+          ...(process.env.NODE_ENV === 'development' && { details: error.message })
+        },
         { status: 500 }
       )
     }
@@ -53,7 +57,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Tags API error:', error)
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: '서버 오류가 발생했습니다.',
+        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
+      },
       { status: 500 }
     )
   }
@@ -71,18 +79,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: tag, error } = await supabase
+    const { data: tag, error } = await supabaseAdmin
       .from('tags')
       .insert({
         name: name.trim()
       })
-      .select()
+      .select('*')
       .single()
 
     if (error) {
       console.error('Tag creation error:', error)
       return NextResponse.json(
-        { success: false, error: '태그 생성에 실패했습니다.' },
+        { 
+          success: false, 
+          error: '태그 생성에 실패했습니다.',
+          ...(process.env.NODE_ENV === 'development' && { details: error.message })
+        },
         { status: 500 }
       )
     }
@@ -96,7 +108,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Tag creation error:', error)
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: '서버 오류가 발생했습니다.',
+        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
+      },
       { status: 500 }
     )
   }

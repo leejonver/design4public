@@ -30,7 +30,7 @@ export async function GET(
       id: project.id,
       name: project.title,
       description: project.description || '',
-      location: project.location || '',
+      location: project.location || '', // location 필드가 없으면 빈 문자열로 설정
       completionYear: project.year || new Date().getFullYear(),
       area: project.area || 0,
       images: project.project_images?.map((img: any, index: number) => ({
@@ -70,17 +70,25 @@ export async function PUT(
     const body = await request.json()
     const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
 
-    // 프로젝트 업데이트
+    // 프로젝트 업데이트 (location 필드가 없을 수 있으므로 조건부로 업데이트)
+    const updateData: any = {
+      title: name,
+      description,
+      year: completionYear,
+      area,
+      inquiry_url: inquiryUrl,
+      status,
+      updated_at: new Date().toISOString()
+    };
+    
+    // location 필드가 있으면 업데이트에 포함
+    if (location !== undefined) {
+      updateData.location = location;
+    }
+    
     const { data: project, error: projectError } = await supabaseAdmin
       .from('projects')
-      .update({
-        title: name,
-        description,
-        year: completionYear,
-        area,
-        status,
-        updated_at: new Date().toISOString()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()

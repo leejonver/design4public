@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         brands(*)
-      `)
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
 
     // 상태 필터
@@ -42,7 +42,11 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Items fetch error:', error)
       return NextResponse.json(
-        { success: false, error: '아이템 목록을 가져오는데 실패했습니다.' },
+        { 
+          success: false, 
+          error: '아이템 목록을 가져오는데 실패했습니다.',
+          ...(process.env.NODE_ENV === 'development' && { details: error.message })
+        },
         { status: 500 }
       )
     }
@@ -79,7 +83,11 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Items API error:', error)
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: '서버 오류가 발생했습니다.',
+        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
+      },
       { status: 500 }
     )
   }
@@ -90,7 +98,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, mallUrl, brandId, status, images } = body
 
-    const { data: item, error } = await supabase
+    const { data: item, error } = await supabaseAdmin
       .from('items')
       .insert({
         name,
@@ -100,13 +108,17 @@ export async function POST(request: NextRequest) {
         image_url: images?.[0]?.url,
         status: status || 'available'
       })
-      .select()
+      .select('*')
       .single()
 
     if (error) {
       console.error('Item creation error:', error)
       return NextResponse.json(
-        { success: false, error: '아이템 생성에 실패했습니다.' },
+        { 
+          success: false, 
+          error: '아이템 생성에 실패했습니다.',
+          ...(process.env.NODE_ENV === 'development' && { details: error.message })
+        },
         { status: 500 }
       )
     }
@@ -120,7 +132,11 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Item creation error:', error)
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: '서버 오류가 발생했습니다.',
+        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
+      },
       { status: 500 }
     )
   }
