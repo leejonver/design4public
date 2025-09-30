@@ -1,0 +1,70 @@
+/**
+ * Sidebar 컴포넌트 테스트
+ * Phase 1: 컴포넌트 단위 테스트
+ */
+
+import React from 'react'
+import { render, screen } from '@testing-library/react'
+import Sidebar from '@/components/Sidebar'
+
+// Next.js 라우터 모킹
+jest.mock('next/navigation', () => ({
+  usePathname: jest.fn(() => '/projects'),
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+  })),
+}))
+
+// Ant Design 아이콘 모킹
+jest.mock('@ant-design/icons', () => ({
+  ProjectOutlined: () => <div data-testid="project-icon">ProjectIcon</div>,
+  AppstoreOutlined: () => <div data-testid="appstore-icon">AppstoreIcon</div>,
+  ShopOutlined: () => <div data-testid="shop-icon">ShopIcon</div>,
+  TagsOutlined: () => <div data-testid="tags-icon">TagsIcon</div>,
+  TeamOutlined: () => <div data-testid="team-icon">TeamIcon</div>,
+  LogoutOutlined: () => <div data-testid="logout-icon">LogoutIcon</div>,
+}))
+
+// AuthContext 모킹
+jest.mock('@/contexts/AuthContext', () => ({
+  useAuth: jest.fn(() => ({
+    user: {
+      email: 'test@test.com',
+      name: 'Test User',
+      role: 'admin',
+    },
+    logout: jest.fn(),
+  })),
+}))
+
+describe('Sidebar Component', () => {
+  it('사이드바가 렌더링되어야 합니다', () => {
+    render(<Sidebar />)
+    
+    expect(screen.getByText('design4public')).toBeInTheDocument()
+    expect(screen.getByText('콘텐츠관리자')).toBeInTheDocument()
+  })
+
+  it('모든 메뉴 항목이 표시되어야 합니다', () => {
+    render(<Sidebar />)
+    
+    expect(screen.getByText('프로젝트')).toBeInTheDocument()
+    expect(screen.getByText('아이템')).toBeInTheDocument()
+    expect(screen.getByText('브랜드')).toBeInTheDocument()
+    expect(screen.getByText('태그')).toBeInTheDocument()
+    expect(screen.getByText('관리자')).toBeInTheDocument()
+  })
+
+  it('사용자 정보가 표시되어야 합니다', () => {
+    render(<Sidebar />)
+    
+    expect(screen.getByText('Test User')).toBeInTheDocument()
+    expect(screen.getByText('test@test.com')).toBeInTheDocument()
+  })
+
+  it('로그아웃 버튼이 표시되어야 합니다', () => {
+    render(<Sidebar />)
+    
+    expect(screen.getByText('로그아웃')).toBeInTheDocument()
+  })
+})
