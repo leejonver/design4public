@@ -68,9 +68,9 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
+    const { name, description, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
 
-    // 프로젝트 업데이트 (location 필드가 없을 수 있으므로 조건부로 업데이트)
+    // 프로젝트 업데이트
     const updateData: any = {
       title: name,
       description,
@@ -80,11 +80,6 @@ export async function PUT(
       status,
       updated_at: new Date().toISOString()
     };
-    
-    // location 필드가 있으면 업데이트에 포함
-    if (location !== undefined) {
-      updateData.location = location;
-    }
     
     const { data: project, error: projectError } = await supabaseAdmin
       .from('projects')
