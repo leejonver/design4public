@@ -63,7 +63,7 @@ export default function NewProjectPage() {
     const fetchData = async () => {
       try {
         const [tagsResponse, itemsResponse] = await Promise.all([
-          api.get('/tags'),
+          api.get('/tags?type=project'), // 프로젝트 태그만 가져오기
           api.get('/items')
         ]);
 

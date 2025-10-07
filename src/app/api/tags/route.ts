@@ -5,6 +5,7 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
+    const type = searchParams.get('type') // 'project' 또는 'item'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
@@ -13,6 +14,11 @@ export async function GET(request: NextRequest) {
       .from('tags')
       .select('*', { count: 'exact' })
       .order('name', { ascending: true })
+
+    // 타입 필터
+    if (type && (type === 'project' || type === 'item')) {
+      query = query.eq('type', type)
+    }
 
     // 검색 필터
     if (search) {
@@ -40,6 +46,7 @@ export async function GET(request: NextRequest) {
     const transformedTags = tags?.map(tag => ({
       id: tag.id,
       name: tag.name,
+      type: tag.type,
       createdAt: tag.created_at,
       updatedAt: tag.created_at // updated_at 컬럼이 없으므로 created_at 사용
     })) || []
@@ -70,7 +77,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name } = body
+    const { name, type } = body
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
@@ -79,10 +86,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!type || (type !== 'project' && type !== 'item')) {
+      return NextResponse.json(
+        { success: false, error: '태그 타입을 올바르게 선택해주세요.' },
+        { status: 400 }
+      )
+    }
+
     const { data: tag, error } = await supabaseAdmin
       .from('tags')
       .insert({
-        name: name.trim()
+        name: name.trim(),
+        type: type
       })
       .select('*')
       .single()

@@ -18,7 +18,8 @@ import {
   message,
   Divider,
   Image,
-  Empty
+  Empty,
+  Spin
 } from 'antd';
 import { 
   ArrowLeftOutlined, 
@@ -26,7 +27,9 @@ import {
   PlusOutlined,
   LinkOutlined,
   AppstoreOutlined,
-  DeleteOutlined
+  DeleteOutlined,
+  ShopOutlined,
+  TagsOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
@@ -47,6 +50,34 @@ export default function EditItemPage() {
   // 아이템 데이터 조회
   const [item, setItem] = useState<any>(null);
   const [dataLoading, setDataLoading] = useState(true);
+  
+  // 브랜드와 태그 데이터
+  const [allBrands, setAllBrands] = useState<any[]>([]);
+  const [allTags, setAllTags] = useState<any[]>([]);
+
+  // 브랜드와 태그 목록 가져오기
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [brandsResponse, tagsResponse] = await Promise.all([
+          api.get('/brands'),
+          api.get('/tags?type=item') // 아이템 태그만 가져오기
+        ]);
+
+        if (brandsResponse.success && brandsResponse.data) {
+          setAllBrands(brandsResponse.data.items || brandsResponse.data || []);
+        }
+
+        if (tagsResponse.success && tagsResponse.data) {
+          setAllTags(tagsResponse.data.items || tagsResponse.data || []);
+        }
+      } catch (error) {
+        console.error('데이터 로드 오류:', error);
+        message.error('브랜드 및 태그 목록을 불러오는 데 실패했습니다.');
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     const fetchItem = async () => {
@@ -91,6 +122,16 @@ export default function EditItemPage() {
     }
   }, [item, form]);
 
+  if (dataLoading) {
+    return (
+      <MainLayout>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" tip="아이템 정보를 불러오는 중..." />
+        </div>
+      </MainLayout>
+    );
+  }
+
   if (!item) {
     return (
       <MainLayout>
@@ -116,10 +157,15 @@ export default function EditItemPage() {
         message.error('이미지는 10MB보다 작아야 합니다!');
         return false;
       }
+      // UploadFile 형식으로 변환하여 fileList에 추가
+      const uploadFile: UploadFile = {
+        uid: file.uid || `${Date.now()}-${Math.random()}`,
+        name: file.name,
+        status: 'done',
+        originFileObj: file,
+      };
+      setFileList(prev => [...prev, uploadFile]);
       return false; // 자동 업로드 방지
-    },
-    onChange: ({ fileList: newFileList }) => {
-      setFileList(newFileList);
     },
     onPreview: (file) => {
       // 미리보기 기능
@@ -127,6 +173,7 @@ export default function EditItemPage() {
     },
     onRemove: (file) => {
       console.log('Remove:', file);
+      setFileList(prev => prev.filter(f => f.uid !== file.uid));
       return true;
     },
   };
@@ -135,18 +182,50 @@ export default function EditItemPage() {
     setLoading(true);
     
     try {
-      // 실제로는 API 호출을 해야 함
-      console.log('아이템 수정 데이터:', values);
-      console.log('업로드된 파일들:', fileList);
-      console.log('기존 아이템 ID:', itemId);
+      // 이미지 업로드 처리
+      let uploadedImages: string[] = [];
       
-      // 성공 메시지
-      message.success('아이템이 성공적으로 수정되었습니다!');
-      
-      // 아이템 상세 페이지로 이동
-      router.push(`/items/${itemId}`);
+      // 새로 추가된 파일만 업로드
+      const newFiles = fileList.filter(file => !file.url);
+      if (newFiles.length > 0) {
+        for (const file of newFiles) {
+          if (file.originFileObj) {
+            const uploadResponse = await api.upload(file.originFileObj, 'items');
+            if (uploadResponse.success && uploadResponse.data?.url) {
+              uploadedImages.push(uploadResponse.data.url);
+            }
+          }
+        }
+      }
+
+      // 기존 이미지 URL
+      const existingImages = fileList
+        .filter(file => file.url)
+        .map(file => file.url as string);
+
+      // 모든 이미지 URL 합치기
+      const allImages = [...existingImages, ...uploadedImages];
+
+      // API 호출
+      const response = await api.put(`/items/${itemId}`, {
+        name: values.name,
+        description: values.description,
+        brandId: values.brandId,
+        tags: values.tags || [],
+        mallUrl: values.mallUrl || null,
+        status: values.status,
+        images: allImages,
+      });
+
+      if (response.success) {
+        message.success('아이템이 성공적으로 수정되었습니다!');
+        router.push(`/items/${itemId}`);
+      } else {
+        throw new Error(response.error || '아이템 수정에 실패했습니다.');
+      }
       
     } catch (error) {
+      console.error('아이템 수정 중 예외 발생:', error);
       message.error('아이템 수정 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
@@ -174,6 +253,27 @@ export default function EditItemPage() {
             </Title>
           </Space>
         </div>
+
+        {item && (
+          <div style={{ marginBottom: '24px' }}>
+            <Space>
+              <Button
+                onClick={() => {
+                  form.setFieldsValue({
+                    name: item.name,
+                    description: item.description,
+                    mallUrl: item.mallUrl,
+                    brandId: item.brand.id,
+                    tags: item.tags?.map((tag: any) => tag.id) || [],
+                    status: item.status,
+                  });
+                }}
+              >
+                초기값으로 리셋
+              </Button>
+            </Space>
+          </div>
+        )}
 
         <Form
           form={form}
@@ -257,13 +357,19 @@ export default function EditItemPage() {
                   ]}
                 >
                   <Select
-                    placeholder="브랜드를 선택하세요"
+                    placeholder={allBrands.length === 0 ? "로딩 중..." : "브랜드를 검색하고 선택하세요"}
                     showSearch
-                    optionFilterProp="children"
+                    optionFilterProp="label"
                     filterOption={(input, option) =>
                       ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={[]}
+                    loading={allBrands.length === 0}
+                    disabled={allBrands.length === 0}
+                    suffixIcon={<ShopOutlined />}
+                    options={allBrands.map(brand => ({
+                      value: brand.id,
+                      label: brand.name
+                    }))}
                   />
                 </Form.Item>
 
@@ -276,13 +382,20 @@ export default function EditItemPage() {
                 >
                   <Select
                     mode="multiple"
-                    placeholder="태그를 선택하세요"
+                    placeholder={allTags.length === 0 ? "로딩 중..." : "태그를 검색하고 선택하세요"}
                     showSearch
-                    optionFilterProp="children"
+                    optionFilterProp="label"
                     filterOption={(input, option) =>
                       ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
                     }
-                    options={[]}
+                    loading={allTags.length === 0}
+                    disabled={allTags.length === 0}
+                    suffixIcon={<TagsOutlined />}
+                    maxTagCount="responsive"
+                    options={allTags.map(tag => ({
+                      value: tag.id,
+                      label: tag.name
+                    }))}
                   />
                 </Form.Item>
 
@@ -297,9 +410,8 @@ export default function EditItemPage() {
                 >
                   <Select
                     options={[
-                      { value: 'available', label: '구입가능' },
+                      { value: 'available', label: '구매가능' },
                       { value: 'discontinued', label: '단종' },
-                      { value: 'hidden', label: '숨김' },
                     ]}
                   />
                 </Form.Item>

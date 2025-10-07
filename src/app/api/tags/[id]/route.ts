@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function PUT(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { name } = body
+    const { name, type } = body
 
     if (!name || name.trim().length === 0) {
       return NextResponse.json(
@@ -17,11 +17,24 @@ export async function PUT(
       )
     }
 
-    const { data: tag, error } = await supabase
+    const updateData: any = {
+      name: name.trim()
+    }
+
+    // type이 제공된 경우 검증 후 업데이트
+    if (type) {
+      if (type !== 'project' && type !== 'item') {
+        return NextResponse.json(
+          { success: false, error: '태그 타입을 올바르게 선택해주세요.' },
+          { status: 400 }
+        )
+      }
+      updateData.type = type
+    }
+
+    const { data: tag, error } = await supabaseAdmin
       .from('tags')
-      .update({
-        name: name.trim()
-      })
+      .update(updateData)
       .eq('id', id)
       .select()
       .single()
@@ -29,21 +42,38 @@ export async function PUT(
     if (error) {
       console.error('Tag update error:', error)
       return NextResponse.json(
-        { success: false, error: '태그 업데이트에 실패했습니다.' },
+        { 
+          success: false, 
+          error: '태그 업데이트에 실패했습니다.',
+          ...(process.env.NODE_ENV === 'development' && { details: error.message })
+        },
         { status: 500 }
       )
     }
 
+    // 데이터 변환 (snake_case -> camelCase)
+    const transformedTag = {
+      id: tag.id,
+      name: tag.name,
+      type: tag.type,
+      createdAt: tag.created_at,
+      updatedAt: tag.created_at // updated_at 컬럼이 없으므로 created_at 사용
+    };
+
     return NextResponse.json({
       success: true,
-      data: tag,
+      data: transformedTag,
       message: '태그가 성공적으로 업데이트되었습니다.'
     })
 
   } catch (error) {
     console.error('Tag update error:', error)
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: '서버 오류가 발생했습니다.',
+        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
+      },
       { status: 500 }
     )
   }
@@ -56,7 +86,7 @@ export async function DELETE(
   try {
     const { id } = params
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('tags')
       .delete()
       .eq('id', id)
@@ -64,7 +94,11 @@ export async function DELETE(
     if (error) {
       console.error('Tag deletion error:', error)
       return NextResponse.json(
-        { success: false, error: '태그 삭제에 실패했습니다.' },
+        { 
+          success: false, 
+          error: '태그 삭제에 실패했습니다.',
+          ...(process.env.NODE_ENV === 'development' && { details: error.message })
+        },
         { status: 500 }
       )
     }
@@ -77,7 +111,11 @@ export async function DELETE(
   } catch (error) {
     console.error('Tag deletion error:', error)
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
+      { 
+        success: false, 
+        error: '서버 오류가 발생했습니다.',
+        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
+      },
       { status: 500 }
     )
   }

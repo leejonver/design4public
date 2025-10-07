@@ -94,21 +94,20 @@ export async function apiDelete<T>(endpoint: string): Promise<ApiResponse<T>> {
 }
 
 // 파일 업로드
-export async function apiUpload(file: File, folder?: string): Promise<ApiResponse<any>> {
-  const formData = new FormData()
-  formData.append('file', file)
+export async function apiUpload(file: File, folder?: string): Promise<ApiResponse<{ url: string }>> {
+  const formData = new FormData();
+  formData.append('file', file);
   if (folder) {
-    formData.append('folder', folder)
+    formData.append('folder', folder);
   }
 
-  const url = '/upload'.startsWith('/api') ? '/upload' : `${API_BASE_URL}/upload`
+  const url = `${API_BASE_URL}/upload`;
   
-  // 토큰이 있으면 Authorization 헤더 추가
-  const headers: Record<string, string> = {}
+  const headers: Record<string, string> = {};
   if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('authToken')
+    const token = localStorage.getItem('authToken');
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`
+      headers['Authorization'] = `Bearer ${token}`;
     }
   }
 
@@ -116,14 +115,14 @@ export async function apiUpload(file: File, folder?: string): Promise<ApiRespons
     method: 'POST',
     headers,
     body: formData,
-  })
+  });
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
   }
 
-  return response.json()
+  return response.json();
 }
 
 // 인증 관련 API

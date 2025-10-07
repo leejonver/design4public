@@ -9,100 +9,90 @@ import {
   Form, 
   Input, 
   Button, 
-  Select, 
   Upload, 
   Space, 
   Typography, 
   Row,
   Col,
-  message,
-  Divider
+  message
 } from 'antd';
 import { 
   ArrowLeftOutlined, 
   SaveOutlined, 
   PlusOutlined,
   ShopOutlined,
-  LinkOutlined,
-  UploadOutlined
+  LinkOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
-import type { BrandFormData, BrandStatus } from '@/types';
-import type { UploadProps } from 'antd';
+import { api } from '@/lib/api';
+import type { BrandFormData } from '@/types';
+import type { UploadFile, UploadProps } from 'antd';
 
-const { Title, Text } = Typography;
+const { Title } = Typography;
 const { TextArea } = Input;
 
 export default function NewBrandPage() {
   const router = useRouter();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const [logoFileList, setLogoFileList] = useState<any[]>([]);
-  const [coverFileList, setCoverFileList] = useState<any[]>([]);
+  const [logoFileList, setLogoFileList] = useState<UploadFile[]>([]);
+  const [coverFileList, setCoverFileList] = useState<UploadFile[]>([]);
 
-  // 로고 이미지 업로드 설정
-  const logoUploadProps: UploadProps = {
-    name: 'logo',
-    listType: 'picture-circle',
-    fileList: logoFileList,
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('이미지 파일만 업로드 가능합니다!');
-        return false;
+  const handleUpload = async (file: UploadFile, type: 'logo' | 'cover'): Promise<string | null> => {
+    if (!file.originFileObj) return null;
+    
+    try {
+      const response = await api.upload(file.originFileObj, 'brands');
+      if (response.success && response.data?.url) {
+        return response.data.url;
+      } else {
+        message.error(`${type === 'logo' ? '로고' : '커버'} 이미지 업로드 실패: ${response.error}`);
+        return null;
       }
-      const isLt5M = file.size / 1024 / 1024 < 5;
-      if (!isLt5M) {
-        message.error('이미지는 5MB보다 작아야 합니다!');
-        return false;
-      }
-      return false; // 자동 업로드 방지
-    },
-    onChange: ({ fileList: newFileList }) => {
-      setLogoFileList(newFileList);
-    },
-    maxCount: 1,
-  };
-
-  // 커버 이미지 업로드 설정
-  const coverUploadProps: UploadProps = {
-    name: 'cover',
-    listType: 'picture-card',
-    fileList: coverFileList,
-    beforeUpload: (file) => {
-      const isImage = file.type.startsWith('image/');
-      if (!isImage) {
-        message.error('이미지 파일만 업로드 가능합니다!');
-        return false;
-      }
-      const isLt10M = file.size / 1024 / 1024 < 10;
-      if (!isLt10M) {
-        message.error('이미지는 10MB보다 작아야 합니다!');
-        return false;
-      }
-      return false; // 자동 업로드 방지
-    },
-    onChange: ({ fileList: newFileList }) => {
-      setCoverFileList(newFileList);
-    },
-    maxCount: 1,
+    } catch (error) {
+      console.error('Upload error:', error);
+      message.error(`${type === 'logo' ? '로고' : '커버'} 이미지 업로드 중 예외 발생`);
+      return null;
+    }
   };
 
   const handleSubmit = async (values: BrandFormData) => {
     setLoading(true);
-    
+
+    let logoImageUrl: string | null = null;
+    if (logoFileList.length > 0 && logoFileList[0].originFileObj) {
+      logoImageUrl = await handleUpload(logoFileList[0], 'logo');
+      if (!logoImageUrl) {
+        setLoading(false);
+        return;
+      }
+    }
+
+    let coverImageUrl: string | null = null;
+    if (coverFileList.length > 0 && coverFileList[0].originFileObj) {
+      coverImageUrl = await handleUpload(coverFileList[0], 'cover');
+      if (!coverImageUrl) {
+        setLoading(false);
+        return;
+      }
+    }
+
     try {
-      // 실제로는 API 호출을 해야 함
-      console.log('새 브랜드 데이터:', values);
-      console.log('로고 파일:', logoFileList);
-      console.log('커버 파일:', coverFileList);
+      const brandData = {
+        ...values,
+        logoImageUrl,
+        coverImageUrl,
+      };
       
-      // 성공 메시지
-      message.success('브랜드가 성공적으로 추가되었습니다!');
+      const response = await api.post('/brands', brandData);
       
-      // 브랜드 리스트로 이동
-      router.push('/brands');
-      
+      if (response.success) {
+        message.success('브랜드가 성공적으로 추가되었습니다!');
+        // router.push('/brands');
+        window.location.href = '/brands';
+      } else {
+        message.error(`브랜드 추가 실패: ${response.error || '알 수 없는 오류'}`);
+      }
     } catch (error) {
       message.error('브랜드 추가 중 오류가 발생했습니다.');
     } finally {
@@ -114,16 +104,42 @@ export default function NewBrandPage() {
     router.back();
   };
 
+  const createUploadProps = (fileList: UploadFile[], setFileList: React.Dispatch<React.SetStateAction<UploadFile[]>>): UploadProps => ({
+    listType: "picture-card",
+    fileList,
+    beforeUpload: (file) => {
+      const isImage = file.type.startsWith('image/');
+      if (!isImage) {
+        message.error('이미지 파일만 업로드 가능합니다!');
+        return false;
+      }
+      const isLt10M = file.size / 1024 / 1024 < 10;
+      if (!isLt10M) {
+        message.error('이미지는 10MB보다 작아야 합니다!');
+        return false;
+      }
+      // UploadFile 형식으로 변환하여 저장
+      const uploadFile: UploadFile = {
+        uid: file.uid || `${Date.now()}`,
+        name: file.name,
+        status: 'done',
+        originFileObj: file,
+      };
+      setFileList([uploadFile]);
+      return false;
+    },
+    onRemove: () => {
+      setFileList([]);
+    },
+    maxCount: 1,
+  });
+
   return (
     <MainLayout>
       <div>
-        {/* 헤더 */}
         <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Space>
-            <Button 
-              icon={<ArrowLeftOutlined />} 
-              onClick={handleCancel}
-            >
+            <Button icon={<ArrowLeftOutlined />} onClick={handleCancel}>
               돌아가기
             </Button>
             <Title level={2} style={{ margin: 0 }}>
@@ -136,52 +152,46 @@ export default function NewBrandPage() {
           form={form}
           layout="vertical"
           onFinish={handleSubmit}
-          initialValues={{
-            status: 'visible'
-          }}
         >
           <Row gutter={[24, 0]}>
-            {/* 기본 정보 */}
             <Col xs={24} lg={14}>
               <Card title="기본 정보" style={{ marginBottom: '24px' }}>
                 <Form.Item
-                  label="브랜드명"
-                  name="name"
-                  rules={[
-                    { required: true, message: '브랜드명을 입력해주세요.' },
-                    { min: 2, max: 50, message: '브랜드명은 2-50자 사이여야 합니다.' }
-                  ]}
+                  label="브랜드명 (한글)"
+                  name="nameKo"
+                  rules={[{ required: true, message: '한글 브랜드명을 입력해주세요.' }]}
                 >
                   <Input 
-                    placeholder="브랜드명을 입력하세요"
+                    placeholder="예: 허먼밀러"
                     prefix={<ShopOutlined />}
-                    showCount
-                    maxLength={50}
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  label="브랜드명 (영문)"
+                  name="nameEn"
+                >
+                  <Input 
+                    placeholder="예: Herman Miller"
+                    prefix={<ShopOutlined />}
                   />
                 </Form.Item>
 
                 <Form.Item
                   label="브랜드 설명"
                   name="description"
-                  rules={[
-                    { required: true, message: '브랜드 설명을 입력해주세요.' },
-                    { min: 10, max: 500, message: '설명은 10-500자 사이여야 합니다.' }
-                  ]}
+                  rules={[{ required: true, message: '브랜드 설명을 입력해주세요.' }]}
                 >
                   <TextArea
                     rows={4}
                     placeholder="브랜드에 대한 자세한 설명을 입력하세요"
-                    showCount
-                    maxLength={500}
                   />
                 </Form.Item>
 
                 <Form.Item
                   label="브랜드 웹사이트 URL"
                   name="websiteUrl"
-                  rules={[
-                    { type: 'url', message: '올바른 URL을 입력해주세요.' }
-                  ]}
+                  rules={[{ type: 'url', message: '올바른 URL을 입력해주세요.' }]}
                 >
                   <Input 
                     placeholder="https://example.com"
@@ -189,57 +199,40 @@ export default function NewBrandPage() {
                   />
                 </Form.Item>
               </Card>
-
-              {/* 커버 이미지 */}
-              <Card title="브랜드 커버 이미지">
-                <Form.Item
-                  label="커버 이미지"
-                  extra="브랜드 페이지에 표시될 커버 이미지를 업로드하세요. (권장 크기: 800x400px)"
-                >
-                  <Upload {...coverUploadProps}>
-                    <div>
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>커버 이미지 업로드</div>
-                    </div>
-                  </Upload>
-                </Form.Item>
-              </Card>
             </Col>
 
-            {/* 로고 및 상태 */}
             <Col xs={24} lg={10}>
-              <Card title="브랜드 로고" style={{ marginBottom: '24px' }}>
+              <Card title="이미지" style={{ marginBottom: '24px' }}>
                 <Form.Item
                   label="로고 이미지"
-                  extra="원형으로 크롭되어 표시됩니다. 정사각형 이미지를 업로드해주세요."
+                  help="1:1 비율의 이미지를 권장합니다."
                 >
-                  <Upload {...logoUploadProps}>
-                    <div>
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>로고 업로드</div>
-                    </div>
+                  <Upload {...createUploadProps(logoFileList, setLogoFileList)}>
+                    {logoFileList.length < 1 && (
+                      <div>
+                        <PlusOutlined />
+                        <div style={{ marginTop: 8 }}>로고 업로드</div>
+                      </div>
+                    )}
+                  </Upload>
+                </Form.Item>
+
+                <Form.Item
+                  label="커버 이미지"
+                  help="2:1 비율의 이미지를 권장합니다."
+                >
+                  <Upload {...createUploadProps(coverFileList, setCoverFileList)}>
+                    {coverFileList.length < 1 && (
+                      <div>
+                        <PlusOutlined />
+                        <div style={{ marginTop: 8 }}>커버 업로드</div>
+                      </div>
+                    )}
                   </Upload>
                 </Form.Item>
               </Card>
 
               <Card>
-                <Form.Item
-                  label="상태"
-                  name="status"
-                  rules={[
-                    { required: true, message: '상태를 선택해주세요.' }
-                  ]}
-                >
-                  <Select
-                    options={[
-                      { value: 'visible', label: '노출' },
-                      { value: 'hidden', label: '숨김' },
-                    ]}
-                  />
-                </Form.Item>
-
-                <Divider />
-
                 <Space direction="vertical" style={{ width: '100%' }}>
                   <Button
                     type="primary"

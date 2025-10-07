@@ -41,6 +41,13 @@ export type ManagerRole = 'master' | 'admin' | 'content_manager';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 /**
+ * 태그 타입 열거형
+ * - project: 프로젝트 태그
+ * - item: 아이템 태그
+ */
+export type TagType = 'project' | 'item';
+
+/**
  * 이미지 데이터 인터페이스
  * 프로젝트, 아이템, 브랜드에서 사용되는 이미지 정보
  */
@@ -58,6 +65,7 @@ export interface ImageData {
 export interface Tag {
   id: string;
   name: string; // 태그명 (1-20자, 한글/영문/숫자)
+  type: TagType; // 태그 타입 (project 또는 item)
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식
 }
@@ -105,12 +113,13 @@ export interface Item {
  */
 export interface Brand {
   id: string;
-  name: string; // 브랜드명 (2-50자)
+  name: string; // 기본 이름으로 nameKo를 사용
+  nameKo: string; // 브랜드명 (한글)
+  nameEn?: string; // 브랜드명 (영문)
   description: string; // 설명 (10-500자)
-  logoImage?: ImageData; // 브랜드 로고 이미지 (옵션)
-  coverImage?: ImageData; // 커버 이미지 (옵션)
+  logoImageUrl?: string; // 브랜드 로고 이미지 URL (옵션)
+  coverImageUrl?: string; // 커버 이미지 URL (옵션)
   websiteUrl?: string; // 브랜드 웹사이트 URL (옵션)
-  status: BrandStatus;
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식
 }
@@ -191,10 +200,12 @@ export interface ItemFormData {
  * 브랜드 생성/수정 폼 데이터
  */
 export interface BrandFormData {
-  name: string; // 2-50자
+  nameKo: string; // 2-50자 (필수)
+  nameEn?: string; // 2-50자 (선택)
   description: string; // 10-500자
   websiteUrl?: string; // 유효한 URL 형식
-  status: BrandStatus;
+  logoImageUrl?: string;
+  coverImageUrl?: string;
 }
 
 /**
@@ -202,6 +213,7 @@ export interface BrandFormData {
  */
 export interface TagFormData {
   name: string; // 1-20자, 한글/영문/숫자만
+  type: TagType; // 태그 타입 (project 또는 item)
 }
 
 /**

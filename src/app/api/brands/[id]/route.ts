@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
 export async function GET(
   request: NextRequest,
@@ -8,7 +8,7 @@ export async function GET(
   try {
     const { id } = params
 
-    const { data: brand, error } = await supabase
+    const { data: brand, error } = await supabaseAdmin
       .from('brands')
       .select('*')
       .eq('id', id)
@@ -25,20 +25,13 @@ export async function GET(
     // 데이터 변환
     const transformedBrand = {
       id: brand.id,
-      name: brand.name,
+      name: brand.name_ko,
+      nameKo: brand.name_ko,
+      nameEn: brand.name_en,
       description: brand.description || '',
-      logoImage: brand.logo_image_url ? {
-        id: `logo_${brand.id}`,
-        url: brand.logo_image_url,
-        alt: `${brand.name} 로고`
-      } : undefined,
-      coverImage: brand.cover_image_url ? {
-        id: `cover_${brand.id}`,
-        url: brand.cover_image_url,
-        alt: `${brand.name} 커버 이미지`
-      } : undefined,
+      logoImageUrl: brand.logo_image_url,
+      coverImageUrl: brand.cover_image_url,
       websiteUrl: brand.website_url,
-      status: brand.status || 'visible',
       createdAt: brand.created_at,
       updatedAt: brand.updated_at
     }
@@ -64,17 +57,26 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { name, description, websiteUrl, status, logoImage, coverImage } = body
+    const { nameKo, nameEn, description, websiteUrl, logoImageUrl, coverImageUrl } = body
 
-    const { data: brand, error } = await supabase
+    console.log('Received brand update data:', body); // 데이터 로깅
+
+    if (!nameKo) {
+      return NextResponse.json(
+        { success: false, error: '브랜드 한글 이름은 필수입니다.' },
+        { status: 400 }
+      )
+    }
+
+    const { data: brand, error } = await supabaseAdmin
       .from('brands')
       .update({
-        name,
+        name_ko: nameKo,
+        name_en: nameEn,
         description,
         website_url: websiteUrl,
-        status,
-        logo_image_url: logoImage?.url,
-        cover_image_url: coverImage?.url,
+        logo_image_url: logoImageUrl,
+        cover_image_url: coverImageUrl,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)
@@ -111,7 +113,7 @@ export async function DELETE(
   try {
     const { id } = params
 
-    const { error } = await supabase
+    const { error } = await supabaseAdmin
       .from('brands')
       .delete()
       .eq('id', id)

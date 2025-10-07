@@ -96,7 +96,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description, mallUrl, brandId, status, images } = body
+    const { name, description, mallUrl, brandId, images, tags, status } = body
 
     const { data: item, error } = await supabaseAdmin
       .from('items')
@@ -121,6 +121,23 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 }
       )
+    }
+
+    // 태그 추가
+    if (tags && Array.isArray(tags) && tags.length > 0) {
+      const itemTags = tags.map(tagId => ({
+        item_id: item.id,
+        tag_id: tagId
+      }))
+
+      const { error: tagError } = await supabaseAdmin
+        .from('item_tags')
+        .insert(itemTags)
+
+      if (tagError) {
+        console.warn('Failed to insert item_tags:', tagError)
+        // 에러가 있어도 계속 진행
+      }
     }
 
     return NextResponse.json({

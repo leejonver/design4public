@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
 
     // 검색 필터
     if (search) {
-      query = query.or(`name.ilike.%${search}%,description.ilike.%${search}%`)
+      query = query.or(`name_ko.ilike.%${search}%,name_en.ilike.%${search}%,description.ilike.%${search}%`)
     }
 
     // 페이지네이션
@@ -45,18 +45,12 @@ export async function GET(request: NextRequest) {
     // 데이터 변환
     const transformedBrands = brands?.map(brand => ({
       id: brand.id,
-      name: brand.name,
+      name: brand.name_ko, // 기본 이름을 name_ko로 설정
+      nameKo: brand.name_ko,
+      nameEn: brand.name_en,
       description: brand.description || '',
-      logoImage: brand.logo_image_url ? {
-        id: `logo_${brand.id}`,
-        url: brand.logo_image_url,
-        alt: `${brand.name} 로고`
-      } : undefined,
-      coverImage: brand.cover_image_url ? {
-        id: `cover_${brand.id}`,
-        url: brand.cover_image_url,
-        alt: `${brand.name} 커버 이미지`
-      } : undefined,
+      logoImageUrl: brand.logo_image_url,
+      coverImageUrl: brand.cover_image_url,
       websiteUrl: brand.website_url,
       status: brand.status || 'visible',
       createdAt: brand.created_at,
@@ -89,17 +83,24 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description, websiteUrl, status, logoImage, coverImage } = body
+    const { nameKo, nameEn, description, websiteUrl, logoImageUrl, coverImageUrl } = body
+
+    if (!nameKo) {
+      return NextResponse.json(
+        { success: false, error: '브랜드 한글 이름은 필수입니다.' },
+        { status: 400 }
+      )
+    }
 
     const { data: brand, error } = await supabaseAdmin
       .from('brands')
       .insert({
-        name,
+        name_ko: nameKo,
+        name_en: nameEn,
         description,
         website_url: websiteUrl,
-        status: status || 'visible',
-        logo_image_url: logoImage?.url,
-        cover_image_url: coverImage?.url
+        logo_image_url: logoImageUrl,
+        cover_image_url: coverImageUrl
       })
       .select('*')
       .single()

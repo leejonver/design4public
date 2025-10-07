@@ -105,29 +105,36 @@ export default function ItemsPage() {
       title: '이미지',
       dataIndex: 'images',
       key: 'image',
-      width: 80,
+      width: 100,
       render: (images: Item['images']) => {
-        const mainImage = images.find(img => img.isMain) || images[0];
+        const mainImage = Array.isArray(images) && images.length > 0 
+          ? (images.find(img => img.isMain) || images[0]) 
+          : null;
+        
         return mainImage ? (
           <Image
-            width={50}
-            height={50}
+            width={60}
+            height={60}
             src={mainImage.url}
-            alt={mainImage.alt}
-            style={{ objectFit: 'cover', borderRadius: '4px' }}
+            alt={mainImage.alt || '아이템 이미지'}
+            style={{ objectFit: 'cover', borderRadius: '8px' }}
+            preview={{
+              mask: <div style={{ fontSize: '12px' }}>미리보기</div>
+            }}
             fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN..."
           />
         ) : (
           <div style={{ 
-            width: 50, 
-            height: 50, 
+            width: 60, 
+            height: 60, 
             backgroundColor: '#f5f5f5', 
             display: 'flex', 
             alignItems: 'center', 
             justifyContent: 'center',
-            borderRadius: '4px'
+            borderRadius: '8px',
+            border: '1px dashed #d9d9d9'
           }}>
-            <ShopOutlined style={{ color: '#bfbfbf' }} />
+            <ShopOutlined style={{ fontSize: '20px', color: '#bfbfbf' }} />
           </div>
         );
       },

@@ -11,7 +11,6 @@ import {
   Space, 
   Typography, 
   Image,
-  Badge,
   Row,
   Col,
   Empty,
@@ -27,7 +26,6 @@ import {
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
-import type { BrandStatus } from '@/types';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -76,30 +74,6 @@ export default function BrandDetailPage() {
     );
   }
 
-  // 상태별 색상 매핑
-  const getStatusColor = (status: BrandStatus) => {
-    switch (status) {
-      case 'visible':
-        return 'success';
-      case 'hidden':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
-
-  // 상태별 텍스트 매핑
-  const getStatusText = (status: BrandStatus) => {
-    switch (status) {
-      case 'visible':
-        return '노출';
-      case 'hidden':
-        return '숨김';
-      default:
-        return status;
-    }
-  };
-
   return (
     <MainLayout>
       <div>
@@ -126,13 +100,13 @@ export default function BrandDetailPage() {
         </div>
 
         {/* 브랜드 커버 이미지 */}
-        {brand.coverImage && (
+        {brand.coverImageUrl && (
           <Card style={{ marginBottom: '24px' }}>
             <Image
               width="100%"
               height={300}
-              src={brand.coverImage.url}
-              alt={brand.coverImage.alt}
+              src={brand.coverImageUrl}
+              alt={`${brand.nameKo} 커버 이미지`}
               style={{ objectFit: 'cover', borderRadius: '8px' }}
             />
           </Card>
@@ -143,11 +117,11 @@ export default function BrandDetailPage() {
           <Col xs={24} lg={8}>
             <Card title="브랜드 로고">
               <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                {brand.logoImage ? (
+                {brand.logoImageUrl ? (
                   <Avatar
                     size={120}
-                    src={brand.logoImage.url}
-                    alt={brand.logoImage.alt}
+                    src={brand.logoImageUrl}
+                    alt={`${brand.nameKo} 로고`}
                   />
                 ) : (
                   <Avatar 
@@ -158,12 +132,9 @@ export default function BrandDetailPage() {
                   </Avatar>
                 )}
                 <Title level={3} style={{ marginTop: '16px', marginBottom: '8px' }}>
-                  {brand.name}
+                  {brand.nameKo}
+                  {brand.nameEn && <div style={{ fontSize: '14px', fontWeight: 'normal', color: '#8c8c8c' }}>{brand.nameEn}</div>}
                 </Title>
-                <Badge
-                  status={getStatusColor(brand.status) as any}
-                  text={getStatusText(brand.status)}
-                />
               </div>
             </Card>
           </Col>
@@ -173,18 +144,12 @@ export default function BrandDetailPage() {
             <Card title="브랜드 정보">
               <Descriptions column={1} bordered>
                 <Descriptions.Item label="브랜드명">
-                  <Text strong>{brand.name}</Text>
+                  <Text strong>{brand.nameKo}</Text>
+                  {brand.nameEn && <div style={{ color: '#8c8c8c', marginTop: '4px' }}>{brand.nameEn}</div>}
                 </Descriptions.Item>
                 
                 <Descriptions.Item label="브랜드 설명">
                   <Paragraph>{brand.description}</Paragraph>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="상태">
-                  <Badge
-                    status={getStatusColor(brand.status) as any}
-                    text={getStatusText(brand.status)}
-                  />
                 </Descriptions.Item>
                 
                 <Descriptions.Item label="웹사이트">

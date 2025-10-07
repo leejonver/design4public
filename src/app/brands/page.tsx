@@ -51,6 +51,7 @@ export default function BrandsPage() {
   const fetchBrands = async () => {
     try {
       setLoading(true);
+      // API 응답 타입에 맞게 수정
       const response = await api.get<{items: Brand[]}>('/brands');
       if (response.success) {
         setBrands(response.data?.items || []);
@@ -67,49 +68,27 @@ export default function BrandsPage() {
 
   // 필터링된 브랜드 목록
   const filteredBrands = brands.filter(brand => {
-    const matchesSearch = brand.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (brand.description && brand.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || brand.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const searchTermLower = searchTerm.toLowerCase();
+    const matchesSearch = 
+      brand.nameKo.toLowerCase().includes(searchTermLower) ||
+      (brand.nameEn && brand.nameEn.toLowerCase().includes(searchTermLower)) ||
+      (brand.description && brand.description.toLowerCase().includes(searchTermLower));
+    return matchesSearch;
   });
-
-  // 상태별 색상 매핑
-  const getStatusColor = (status: BrandStatus) => {
-    switch (status) {
-      case 'visible':
-        return 'success';
-      case 'hidden':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
-
-  // 상태별 텍스트 매핑
-  const getStatusText = (status: BrandStatus) => {
-    switch (status) {
-      case 'visible':
-        return '노출';
-      case 'hidden':
-        return '숨김';
-      default:
-        return status;
-    }
-  };
 
   // 테이블 컬럼 정의
   const columns: ColumnsType<Brand> = [
     {
       title: '로고',
-      dataIndex: 'logoImage',
+      dataIndex: 'logoImageUrl',
       key: 'logo',
       width: 80,
-      render: (logoImage: Brand['logoImage'], record: Brand) => (
-        logoImage ? (
+      render: (logoUrl: string, record: Brand) => (
+        logoUrl ? (
           <Avatar
             size={50}
-            src={logoImage.url}
-            alt={logoImage.alt}
+            src={logoUrl}
+            alt={`${record.nameKo} 로고`}
           />
         ) : (
           <Avatar 
@@ -123,16 +102,25 @@ export default function BrandsPage() {
     },
     {
       title: '브랜드명',
-      dataIndex: 'name',
+      dataIndex: 'nameKo',
       key: 'name',
       render: (text: string, record: Brand) => (
         <div>
-          <div style={{ fontWeight: 500, marginBottom: '4px' }}>{text}</div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.description.substring(0, 60)}...
-          </div>
+          <div style={{ fontWeight: 500 }}>{record.nameKo}</div>
+          {record.nameEn && <div style={{ fontSize: '12px', color: '#888' }}>{record.nameEn}</div>}
         </div>
       ),
+    },
+    {
+      title: '설명',
+      dataIndex: 'description',
+      key: 'description',
+      ellipsis: true,
+      render: (text: string) => (
+        <Tooltip title={text}>
+          {text}
+        </Tooltip>
+      )
     },
     {
       title: '웹사이트',
@@ -151,17 +139,6 @@ export default function BrandsPage() {
         ) : (
           <span style={{ color: '#bfbfbf' }}>-</span>
         )
-      ),
-    },
-    {
-      title: '상태',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: BrandStatus) => (
-        <Badge
-          status={getStatusColor(status) as any}
-          text={getStatusText(status)}
-        />
       ),
     },
     {
@@ -217,21 +194,11 @@ export default function BrandsPage() {
           {/* 검색 및 필터 */}
           <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
             <Search
-              placeholder="브랜드명 또는 설명 검색"
+              placeholder="한글/영문 브랜드명 검색"
               allowClear
               style={{ width: 300 }}
               onChange={(e) => setSearchTerm(e.target.value)}
               prefix={<SearchOutlined />}
-            />
-            <Select
-              style={{ width: 150 }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { label: '모든 상태', value: 'all' },
-                { label: '노출', value: 'visible' },
-                { label: '숨김', value: 'hidden' },
-              ]}
             />
           </div>
 
