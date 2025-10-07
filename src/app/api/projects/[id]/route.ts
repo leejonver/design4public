@@ -77,7 +77,6 @@ export async function PUT(
       location,
       year: completionYear,
       area,
-      inquiry_url: inquiryUrl,
       status,
       updated_at: new Date().toISOString()
     };
