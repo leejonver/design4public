@@ -68,12 +68,13 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { name, description, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
+    const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
 
     // 프로젝트 업데이트
     const updateData: any = {
       title: name,
       description,
+      location,
       year: completionYear,
       area,
       inquiry_url: inquiryUrl,
