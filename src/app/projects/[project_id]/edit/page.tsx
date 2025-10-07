@@ -95,11 +95,13 @@ export default function EditProjectPage() {
         ]);
 
         if (tagsResponse.success && tagsResponse.data) {
-          setAllTags(tagsResponse.data.items || tagsResponse.data || []);
+          const tagsData = tagsResponse.data as any;
+          setAllTags(tagsData.items || tagsData || []);
         }
 
         if (itemsResponse.success && itemsResponse.data) {
-          setAllItems(itemsResponse.data.items || itemsResponse.data || []);
+          const itemsData = itemsResponse.data as any;
+          setAllItems(itemsData.items || itemsData || []);
         }
       } catch (error) {
         console.error('데이터 로드 오류:', error);
