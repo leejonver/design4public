@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   Card, 
@@ -50,6 +50,50 @@ export default function NewProjectPage() {
   const [fileList, setFileList] = useState<any[]>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  
+  // 태그와 아이템 데이터
+  const [allTags, setAllTags] = useState<any[]>([]);
+  const [allItems, setAllItems] = useState<any[]>([]);
+  const [tagSearchText, setTagSearchText] = useState('');
+  const [itemSearchText, setItemSearchText] = useState('');
+  const [dataLoading, setDataLoading] = useState(true);
+
+  // 태그와 아이템 목록 가져오기
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [tagsResponse, itemsResponse] = await Promise.all([
+          api.get('/tags'),
+          api.get('/items')
+        ]);
+
+        if (tagsResponse.success && tagsResponse.data) {
+          setAllTags(tagsResponse.data.items || tagsResponse.data || []);
+        }
+
+        if (itemsResponse.success && itemsResponse.data) {
+          setAllItems(itemsResponse.data.items || itemsResponse.data || []);
+        }
+      } catch (error) {
+        console.error('데이터 로드 오류:', error);
+        message.error('태그 및 아이템 목록을 불러오는 데 실패했습니다.');
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // 필터링된 태그와 아이템
+  const filteredTags = allTags.filter(tag =>
+    tag.name.toLowerCase().includes(tagSearchText.toLowerCase())
+  );
+
+  const filteredItems = allItems.filter(item =>
+    item.name.toLowerCase().includes(itemSearchText.toLowerCase()) ||
+    item.brand?.name.toLowerCase().includes(itemSearchText.toLowerCase())
+  );
 
   // 이미지 업로드 설정
   const uploadProps = {
@@ -311,19 +355,37 @@ export default function NewProjectPage() {
                 <div style={{ marginBottom: '16px' }}>
                   <Text type="secondary">프로젝트와 관련된 태그를 선택하세요</Text>
                 </div>
-                <div>
-                  {[].map((tag: any) => (
-                    <CheckableTag
-                      key={tag.id}
-                      checked={selectedTags.includes(tag.id)}
-                      onChange={(checked) => handleTagChange(tag.id, checked)}
-                      style={{ marginBottom: '8px' }}
-                    >
-                      <TagsOutlined /> {tag.name}
-                    </CheckableTag>
-                  ))}
+                
+                <Input
+                  placeholder="태그 검색..."
+                  prefix={<TagsOutlined />}
+                  value={tagSearchText}
+                  onChange={(e) => setTagSearchText(e.target.value)}
+                  style={{ marginBottom: '16px' }}
+                  allowClear
+                />
+                
+                <div style={{ maxHeight: '200px', overflow: 'auto', marginBottom: '16px' }}>
+                  <Space size={[0, 8]} wrap>
+                    {filteredTags.length > 0 ? (
+                      filteredTags.map((tag: any) => (
+                        <CheckableTag
+                          key={tag.id}
+                          checked={selectedTags.includes(tag.id)}
+                          onChange={(checked) => handleTagChange(tag.id, checked)}
+                        >
+                          {tag.name}
+                        </CheckableTag>
+                      ))
+                    ) : (
+                      <Text type="secondary">
+                        {dataLoading ? '로딩 중...' : '태그가 없습니다'}
+                      </Text>
+                    )}
+                  </Space>
                 </div>
-                <div style={{ marginTop: '16px', fontSize: '12px', color: '#666' }}>
+                
+                <div style={{ fontSize: '12px', color: '#666' }}>
                   선택된 태그: {selectedTags.length}개
                 </div>
               </Card>
@@ -333,31 +395,50 @@ export default function NewProjectPage() {
                   <Text type="secondary">프로젝트에서 사용된 아이템을 선택하세요</Text>
                 </div>
                 
-                <List
-                  size="small"
-                  dataSource={[]}
-                  renderItem={(item: any) => (
-                    <List.Item>
-                      <Checkbox
-                        checked={selectedItems.includes(item.id)}
-                        onChange={(e) => handleItemChange(item.id, e.target.checked)}
-                      >
-                        <List.Item.Meta
-                          avatar={
-                            <Avatar 
-                              size={32}
-                              src={item.images[0]?.url}
-                              icon={<AppstoreOutlined />}
-                            />
-                          }
-                          title={<span style={{ fontSize: '14px' }}>{item.name}</span>}
-                          description={<Text type="secondary" style={{ fontSize: '12px' }}>{item.brand.name}</Text>}
-                        />
-                      </Checkbox>
-                    </List.Item>
-                  )}
-                  style={{ maxHeight: '300px', overflow: 'auto' }}
+                <Input
+                  placeholder="아이템 또는 브랜드 검색..."
+                  prefix={<AppstoreOutlined />}
+                  value={itemSearchText}
+                  onChange={(e) => setItemSearchText(e.target.value)}
+                  style={{ marginBottom: '16px' }}
+                  allowClear
                 />
+                
+                {filteredItems.length > 0 ? (
+                  <List
+                    size="small"
+                    dataSource={filteredItems}
+                    renderItem={(item: any) => (
+                      <List.Item style={{ padding: '8px 0' }}>
+                        <Checkbox
+                          checked={selectedItems.includes(item.id)}
+                          onChange={(e) => handleItemChange(item.id, e.target.checked)}
+                        >
+                          <List.Item.Meta
+                            avatar={
+                              <Avatar 
+                                size={32}
+                                src={item.images?.[0]?.url}
+                                icon={<AppstoreOutlined />}
+                                shape="square"
+                              />
+                            }
+                            title={<span style={{ fontSize: '14px' }}>{item.name}</span>}
+                            description={<Text type="secondary" style={{ fontSize: '12px' }}>{item.brand?.name || '브랜드 없음'}</Text>}
+                          />
+                        </Checkbox>
+                      </List.Item>
+                    )}
+                    style={{ maxHeight: '300px', overflow: 'auto' }}
+                  />
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '20px' }}>
+                    <Text type="secondary">
+                      {dataLoading ? '로딩 중...' : '아이템이 없습니다'}
+                    </Text>
+                  </div>
+                )}
+                
                 <div style={{ marginTop: '16px', fontSize: '12px', color: '#666' }}>
                   선택된 아이템: {selectedItems.length}개
                 </div>
