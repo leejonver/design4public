@@ -20,6 +20,7 @@ import {
   Divider,
   Spin
 } from 'antd';
+import type { UploadProps, UploadFile } from 'antd';
 import { 
   ArrowLeftOutlined, 
   SaveOutlined, 
@@ -33,7 +34,6 @@ import {
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
 import type { ItemFormData, ItemStatus } from '@/types';
-import type { UploadProps } from 'antd';
 
 const { Title } = Typography;
 const { TextArea } = Input;
@@ -54,8 +54,8 @@ export default function NewItemPage() {
     const fetchData = async () => {
       try {
         const [brandsResponse, tagsResponse] = await Promise.all([
-          api.get('/brands'),
-          api.get('/tags?type=item') // 아이템 태그만 가져오기
+          api.get<{items: any[]}>('/brands'),
+          api.get<{items: any[]}>('/tags?type=item') // 아이템 태그만 가져오기
         ]);
 
         if (brandsResponse.success && brandsResponse.data) {

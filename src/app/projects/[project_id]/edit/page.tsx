@@ -90,8 +90,8 @@ export default function EditProjectPage() {
     const fetchData = async () => {
       try {
         const [tagsResponse, itemsResponse] = await Promise.all([
-          api.get('/tags?type=project'), // 프로젝트 태그만 가져오기
-          api.get('/items')
+          api.get<{items: any[]}>('/tags?type=project'), // 프로젝트 태그만 가져오기
+          api.get<{items: any[]}>('/items')
         ]);
 
         if (tagsResponse.success && tagsResponse.data) {

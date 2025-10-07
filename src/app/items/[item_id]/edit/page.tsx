@@ -60,8 +60,8 @@ export default function EditItemPage() {
     const fetchData = async () => {
       try {
         const [brandsResponse, tagsResponse] = await Promise.all([
-          api.get('/brands'),
-          api.get('/tags?type=item') // 아이템 태그만 가져오기
+          api.get<{items: any[]}>('/brands'),
+          api.get<{items: any[]}>('/tags?type=item') // 아이템 태그만 가져오기
         ]);
 
         if (brandsResponse.success && brandsResponse.data) {
