@@ -395,6 +395,31 @@ export default function NewProjectPage() {
                   <Text type="secondary">프로젝트에서 사용된 아이템을 선택하세요</Text>
                 </div>
                 
+                {/* 선택된 아이템 표시 */}
+                {selectedItems.length > 0 && (
+                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f5f5f5', borderRadius: '6px' }}>
+                    <div style={{ marginBottom: '8px', fontWeight: 500 }}>
+                      선택된 아이템 ({selectedItems.length}개)
+                    </div>
+                    <Space size={[8, 8]} wrap>
+                      {selectedItems.map((itemId) => {
+                        const item = allItems.find(i => i.id === itemId);
+                        if (!item) return null;
+                        return (
+                          <Tag
+                            key={item.id}
+                            closable
+                            onClose={() => handleItemChange(item.id, false)}
+                            style={{ margin: 0 }}
+                          >
+                            {item.name}
+                          </Tag>
+                        );
+                      })}
+                    </Space>
+                  </div>
+                )}
+                
                 <Input
                   placeholder="아이템 또는 브랜드 검색..."
                   prefix={<AppstoreOutlined />}
@@ -409,24 +434,41 @@ export default function NewProjectPage() {
                     size="small"
                     dataSource={filteredItems}
                     renderItem={(item: any) => (
-                      <List.Item style={{ padding: '8px 0' }}>
-                        <Checkbox
-                          checked={selectedItems.includes(item.id)}
-                          onChange={(e) => handleItemChange(item.id, e.target.checked)}
-                        >
-                          <List.Item.Meta
-                            avatar={
-                              <Avatar 
-                                size={32}
-                                src={item.images?.[0]?.url}
-                                icon={<AppstoreOutlined />}
-                                shape="square"
-                              />
-                            }
-                            title={<span style={{ fontSize: '14px' }}>{item.name}</span>}
-                            description={<Text type="secondary" style={{ fontSize: '12px' }}>{item.brand?.name || '브랜드 없음'}</Text>}
+                      <List.Item style={{ padding: '8px 0', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', width: '100%', minWidth: 0 }}>
+                          <Checkbox
+                            checked={selectedItems.includes(item.id)}
+                            onChange={(e) => handleItemChange(item.id, e.target.checked)}
+                            style={{ marginRight: '12px', flexShrink: 0 }}
                           />
-                        </Checkbox>
+                          <Avatar 
+                            size={40}
+                            src={item.images?.[0]?.url}
+                            icon={<AppstoreOutlined />}
+                            shape="square"
+                            style={{ marginRight: '12px', flexShrink: 0 }}
+                          />
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div style={{ 
+                              fontSize: '14px', 
+                              fontWeight: 500,
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {item.name}
+                            </div>
+                            <div style={{ 
+                              fontSize: '12px', 
+                              color: '#999',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap'
+                            }}>
+                              {item.brand?.name || '브랜드 없음'}
+                            </div>
+                          </div>
+                        </div>
                       </List.Item>
                     )}
                     style={{ maxHeight: '300px', overflow: 'auto' }}
@@ -438,10 +480,6 @@ export default function NewProjectPage() {
                     </Text>
                   </div>
                 )}
-                
-                <div style={{ marginTop: '16px', fontSize: '12px', color: '#666' }}>
-                  선택된 아이템: {selectedItems.length}개
-                </div>
               </Card>
 
               {/* 상태 및 저장 */}
