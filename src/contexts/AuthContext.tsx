@@ -34,9 +34,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.success) {
         setUser(response.data.user)
         
-        // 토큰 저장
+        // 토큰 및 사용자 정보 저장
         if (typeof window !== 'undefined') {
           localStorage.setItem('authToken', response.data.session.access_token)
+          localStorage.setItem('user', JSON.stringify(response.data.user))
         }
       } else {
         throw new Error(response.error || '로그인에 실패했습니다.')
@@ -70,25 +71,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null)
       
-      // 토큰 제거
+      // 토큰 및 사용자 정보 제거
       if (typeof window !== 'undefined') {
         localStorage.removeItem('authToken')
+        localStorage.removeItem('user')
       }
     }
   }
 
-  // 초기 로딩 시 토큰 확인
+  // 초기 로딩 시 토큰 및 사용자 정보 확인
   useEffect(() => {
     const checkAuth = async () => {
       try {
         const token = localStorage.getItem('authToken')
-        if (token) {
-          // 토큰이 있으면 사용자 정보를 가져오는 로직을 여기에 추가할 수 있습니다
-          // 현재는 단순히 토큰만 확인
+        const userStr = localStorage.getItem('user')
+        
+        if (token && userStr) {
+          // localStorage에서 사용자 정보 복원
+          const storedUser = JSON.parse(userStr)
+          setUser(storedUser)
+        } else {
+          // 토큰이나 사용자 정보가 없으면 초기화
+          localStorage.removeItem('authToken')
+          localStorage.removeItem('user')
         }
       } catch (error) {
         console.error('Auth check error:', error)
         localStorage.removeItem('authToken')
+        localStorage.removeItem('user')
+        setUser(null)
       } finally {
         setLoading(false)
       }

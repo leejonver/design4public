@@ -16,6 +16,7 @@ import {
   Badge,
   Image,
   Tooltip,
+  Modal,
   message
 } from 'antd';
 import { 
@@ -23,7 +24,8 @@ import {
   EditOutlined, 
   EyeOutlined, 
   SearchOutlined,
-  ProjectOutlined
+  ProjectOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
@@ -60,6 +62,31 @@ export default function ProjectsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 프로젝트 삭제
+  const handleDelete = (project: Project) => {
+    Modal.confirm({
+      title: '프로젝트 삭제',
+      content: `"${project.name}" 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
+      okText: '삭제',
+      okType: 'danger',
+      cancelText: '취소',
+      onOk: async () => {
+        try {
+          const response = await api.delete(`/projects/${project.id}`);
+          if (response.success) {
+            message.success('프로젝트가 삭제되었습니다.');
+            fetchProjects(); // 목록 새로고침
+          } else {
+            message.error(response.error || '프로젝트 삭제에 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('프로젝트 삭제 오류:', error);
+          message.error('프로젝트 삭제 중 오류가 발생했습니다.');
+        }
+      },
+    });
   };
 
   // 필터링된 프로젝트 목록
@@ -196,7 +223,7 @@ export default function ProjectsPage() {
     {
       title: '작업',
       key: 'actions',
-      width: 120,
+      width: 150,
       render: (_, record: Project) => (
         <Space>
           <Tooltip title="상세보기">
@@ -213,6 +240,15 @@ export default function ProjectsPage() {
               icon={<EditOutlined />} 
               size="small"
               onClick={() => router.push(`/projects/${record.id}/edit`)}
+            />
+          </Tooltip>
+          <Tooltip title="삭제">
+            <Button 
+              type="text" 
+              icon={<DeleteOutlined />} 
+              size="small"
+              danger
+              onClick={() => handleDelete(record)}
             />
           </Tooltip>
         </Space>

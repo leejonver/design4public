@@ -16,6 +16,7 @@ import {
   Badge,
   Image,
   Tooltip,
+  Modal,
   message
 } from 'antd';
 import { 
@@ -24,7 +25,8 @@ import {
   EyeOutlined, 
   SearchOutlined,
   ShopOutlined,
-  LinkOutlined
+  LinkOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
@@ -61,6 +63,31 @@ export default function ItemsPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  // 아이템 삭제
+  const handleDelete = (item: Item) => {
+    Modal.confirm({
+      title: '아이템 삭제',
+      content: `"${item.name}" 아이템을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
+      okText: '삭제',
+      okType: 'danger',
+      cancelText: '취소',
+      onOk: async () => {
+        try {
+          const response = await api.delete(`/items/${item.id}`);
+          if (response.success) {
+            message.success('아이템이 삭제되었습니다.');
+            fetchItems(); // 목록 새로고침
+          } else {
+            message.error(response.error || '아이템 삭제에 실패했습니다.');
+          }
+        } catch (error) {
+          console.error('아이템 삭제 오류:', error);
+          message.error('아이템 삭제 중 오류가 발생했습니다.');
+        }
+      },
+    });
   };
 
   // 필터링된 아이템 목록
@@ -208,7 +235,7 @@ export default function ItemsPage() {
     {
       title: '작업',
       key: 'actions',
-      width: 120,
+      width: 150,
       render: (_, record: Item) => (
         <Space>
           <Tooltip title="상세보기">
@@ -225,6 +252,15 @@ export default function ItemsPage() {
               icon={<EditOutlined />} 
               size="small"
               onClick={() => router.push(`/items/${record.id}/edit`)}
+            />
+          </Tooltip>
+          <Tooltip title="삭제">
+            <Button 
+              type="text" 
+              icon={<DeleteOutlined />} 
+              size="small"
+              danger
+              onClick={() => handleDelete(record)}
             />
           </Tooltip>
         </Space>

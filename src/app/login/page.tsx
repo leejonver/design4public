@@ -135,7 +135,7 @@ export default function LoginPage() {
         <Divider plain>또는</Divider>
 
         {/* 회원가입 링크 */}
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <div style={{ textAlign: 'center' }}>
           <Text type="secondary">
             계정이 없으신가요?{' '}
           </Text>
@@ -143,27 +143,6 @@ export default function LoginPage() {
             회원가입
           </Link>
         </div>
-
-        {/* 테스트 계정 정보 */}
-        <Card 
-          size="small" 
-          style={{
-            backgroundColor: '#f9f9f9',
-            border: '1px solid #e8e8e8'
-          }}
-        >
-          <Text strong style={{ fontSize: '14px', display: 'block', marginBottom: '8px' }}>
-            테스트 계정
-          </Text>
-          <Space direction="vertical" size={0} style={{ width: '100%' }}>
-            <Text type="secondary" style={{ fontSize: '12px' }}>
-              <strong>관리자:</strong> admin@design4public.com / password
-            </Text>
-            <Text type="secondary" style={{ fontSize: '12px' }}>
-              <strong>마스터:</strong> master@design4public.com / master123
-            </Text>
-          </Space>
-        </Card>
       </Card>
     </div>
   );

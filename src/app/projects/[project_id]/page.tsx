@@ -109,9 +109,19 @@ export default function ProjectDetailPage() {
     }
   };
 
-  const handleDelete = () => {
-    message.success('프로젝트가 삭제되었습니다.');
-    router.push('/projects');
+  const handleDelete = async () => {
+    try {
+      const response = await api.delete(`/projects/${projectId}`);
+      if (response.success) {
+        message.success('프로젝트가 삭제되었습니다.');
+        router.push('/projects');
+      } else {
+        message.error(response.error || '프로젝트 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('프로젝트 삭제 오류:', error);
+      message.error('프로젝트 삭제 중 오류가 발생했습니다.');
+    }
   };
 
   const mainImage = project.images?.find((img: any) => img.isMain) || project.images?.[0];
