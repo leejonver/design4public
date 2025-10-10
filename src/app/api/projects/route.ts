@@ -65,8 +65,8 @@ export async function GET(request: NextRequest) {
       images: project.project_images?.map((img: any, index: number) => ({
         id: img.id,
         url: img.image_url,
-        alt: img.alt_text || project.title,
-        isMain: img.is_main || index === 0
+        alt: project.title,
+        isMain: index === 0
       })) || [],
       tags: project.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
       connectedItems: project.project_items?.map((pi: any) => ({
@@ -110,8 +110,6 @@ export async function POST(request: NextRequest) {
     // RPC 호출을 위한 이미지 데이터 포맷팅
     const formattedImages = images?.map((img: any, index: number) => ({
       image_url: img.url,
-      alt_text: img.alt,
-      is_main: img.isMain || index === 0,
       order: index
     })) || []
 
@@ -198,8 +196,6 @@ export async function POST(request: NextRequest) {
         const imagesRows = formattedImages.map((img: any) => ({
           project_id: projectId,
           image_url: img.image_url,
-          alt_text: img.alt_text,
-          is_main: img.is_main,
           order: img.order,
         }))
         const { error: imagesErr } = await supabaseAdmin.from('project_images').insert(imagesRows)
@@ -254,8 +250,8 @@ export async function POST(request: NextRequest) {
         images: fullProject.project_images?.map((img: any, index: number) => ({
           id: img.id,
           url: img.image_url,
-          alt: img.alt_text || fullProject.title,
-          isMain: img.is_main || index === 0
+          alt: fullProject.title,
+          isMain: index === 0
         })) || [],
         tags: fullProject.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
         connectedItems: fullProject.project_items?.map((pi: any) => ({

@@ -133,10 +133,10 @@ export default function EditProjectPage() {
       const existingFiles: UploadFile[] = project.images?.map((image: any, index: number) => ({
         uid: image.id,
         name: `image-${index + 1}.jpg`,
-        status: 'done',
+        status: 'done' as const,
         url: image.url,
         thumbUrl: image.url,
-      }));
+      })) || [];
       setFileList(existingFiles);
     }
   }, [project, form]);
@@ -202,25 +202,24 @@ export default function EditProjectPage() {
     
     try {
       // 1. 새로 업로드된 이미지들을 Supabase Storage에 업로드
-      const uploadedImages = [];
-      const existingImages = [];
+      const allImages = [];
       
       for (const file of fileList) {
         if (file.status === 'done' && file.url) {
           // 기존 이미지 (이미 업로드된 것)
-          existingImages.push({
+          allImages.push({
             url: file.url,
             alt: values.name,
-            isMain: false
+            isMain: allImages.length === 0 // 첫 번째 이미지를 대표 이미지로
           });
         } else if (file.originFileObj) {
           // 새로 업로드된 이미지
           const uploadResponse = await api.upload(file.originFileObj, 'projects');
           if (uploadResponse.success && uploadResponse.data?.url) {
-            uploadedImages.push({
+            allImages.push({
               url: uploadResponse.data.url,
               alt: values.name,
-              isMain: false
+              isMain: allImages.length === 0 // 첫 번째 이미지를 대표 이미지로
             });
           } else {
             message.error(`이미지 업로드 실패: ${uploadResponse.error || '알 수 없는 오류'}`);
@@ -230,8 +229,7 @@ export default function EditProjectPage() {
         }
       }
       
-      // 2. 모든 이미지를 합쳐서 프로젝트 데이터 구성
-      const allImages = [...existingImages, ...uploadedImages];
+      // 2. 프로젝트 데이터 구성
       
       const projectData = {
         name: values.name,
@@ -246,19 +244,25 @@ export default function EditProjectPage() {
         connectedItems: selectedItems
       };
       
+      console.log('전송할 프로젝트 데이터:', projectData);
+      
       // 3. 프로젝트 업데이트 API 호출
       const response = await api.put(`/projects/${projectId}`, projectData);
+      
+      console.log('API 응답:', response);
       
       if (response.success) {
         message.success('프로젝트가 성공적으로 수정되었습니다!');
         router.push(`/projects/${projectId}`);
       } else {
+        console.error('API 오류:', response.error);
         message.error(`프로젝트 수정 중 오류가 발생했습니다: ${response.error || '알 수 없는 오류'}`);
       }
       
     } catch (error) {
       console.error('프로젝트 수정 중 예외 발생:', error);
-      message.error('프로젝트 수정 중 오류가 발생했습니다.');
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      message.error(`프로젝트 수정 중 오류가 발생했습니다: ${errorMessage}`);
     } finally {
       setLoading(false);
     }

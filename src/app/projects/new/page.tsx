@@ -129,25 +129,17 @@ export default function NewProjectPage() {
       const uploadedImages = [];
       for (const file of fileList) {
         if (file.originFileObj) {
-          // 파일 타입을 명시적으로 설정
-          const fileObj = file.originFileObj;
-          if (file.name.toLowerCase().endsWith('.png')) {
-            Object.defineProperty(fileObj, 'type', { value: 'image/png' });
-          } else if (file.name.toLowerCase().endsWith('.jpg') || file.name.toLowerCase().endsWith('.jpeg')) {
-            Object.defineProperty(fileObj, 'type', { value: 'image/jpeg' });
-          } else if (file.name.toLowerCase().endsWith('.webp')) {
-            Object.defineProperty(fileObj, 'type', { value: 'image/webp' });
-          } else if (file.name.toLowerCase().endsWith('.gif')) {
-            Object.defineProperty(fileObj, 'type', { value: 'image/gif' });
-          }
-          
-          const uploadResponse = await api.upload(fileObj, 'projects');
+          const uploadResponse = await api.upload(file.originFileObj, 'projects');
           if (uploadResponse.success && uploadResponse.data) {
             uploadedImages.push({
               url: uploadResponse.data.url,
-              alt: file.name,
+              alt: values.name,
               isMain: uploadedImages.length === 0 // 첫 번째 이미지를 대표 이미지로 설정
             });
+          } else {
+            message.error(`이미지 업로드 실패: ${uploadResponse.error || '알 수 없는 오류'}`);
+            setLoading(false);
+            return;
           }
         }
       }

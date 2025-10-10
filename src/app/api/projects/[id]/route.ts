@@ -12,7 +12,16 @@ export async function GET(
       .from('projects')
       .select(`
         *,
-        project_images(*)
+        project_images(*),
+        project_tags(
+          tags(*)
+        ),
+        project_items(
+          items(
+            *,
+            brands(*)
+          )
+        )
       `)
       .eq('id', id)
       .single()
@@ -30,17 +39,26 @@ export async function GET(
       id: project.id,
       name: project.title,
       description: project.description || '',
-      location: project.location || '', // location 필드가 없으면 빈 문자열로 설정
+      location: project.location || '',
       completionYear: project.year || new Date().getFullYear(),
-      area: project.area, // 면적은 선택사항이므로 null/undefined 허용
+      area: project.area,
       images: project.project_images?.map((img: any, index: number) => ({
         id: img.id,
         url: img.image_url,
         alt: project.title,
         isMain: index === 0
       })) || [],
-      tags: [], // 일단 빈 배열로 설정
-      connectedItems: [], // 일단 빈 배열로 설정
+      tags: project.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
+      connectedItems: project.project_items?.map((pi: any) => ({
+        ...pi.items,
+        brand: pi.items?.brands,
+        images: pi.items?.image_url ? [{
+          id: pi.items.id,
+          url: pi.items.image_url,
+          alt: pi.items.name,
+          isMain: true
+        }] : []
+      })).filter(Boolean) || [],
       inquiryUrl: project.inquiry_url || '',
       status: project.status,
       createdAt: project.created_at,
@@ -77,6 +95,7 @@ export async function PUT(
       location,
       year: completionYear,
       area,
+      inquiry_url: inquiryUrl,
       status,
       updated_at: new Date().toISOString()
     };
@@ -136,9 +155,17 @@ export async function PUT(
         tag_id: tagId
       }))
 
-      await supabaseAdmin
+      const { error: tagsError } = await supabaseAdmin
         .from('project_tags')
         .insert(tagInserts)
+      
+      if (tagsError) {
+        console.error('Tags insert error:', tagsError)
+        return NextResponse.json(
+          { success: false, error: `태그 저장에 실패했습니다: ${tagsError.message}` },
+          { status: 500 }
+        )
+      }
     }
 
     // 기존 아이템 연결 삭제
@@ -154,9 +181,17 @@ export async function PUT(
         item_id: itemId
       }))
 
-      await supabaseAdmin
+      const { error: itemsError } = await supabaseAdmin
         .from('project_items')
         .insert(itemInserts)
+      
+      if (itemsError) {
+        console.error('Items insert error:', itemsError)
+        return NextResponse.json(
+          { success: false, error: `아이템 연결에 실패했습니다: ${itemsError.message}` },
+          { status: 500 }
+        )
+      }
     }
 
     return NextResponse.json({
