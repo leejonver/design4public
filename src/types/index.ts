@@ -73,7 +73,7 @@ export interface Project {
   description: string; // 설명 (10-1000자)
   location: string; // 지역 (예: "서울시 강남구")
   completionYear: number; // 완공연도 (1900-현재+10년)
-  area: number; // 면적 (m², 1 이상)
+  area?: number; // 면적 (m², 1 이상, 선택사항)
   images: ImageData[]; // 프로젝트 이미지 배열
   tags: Tag[]; // 연결된 태그 배열
   connectedItems: Item[]; // 연결된 아이템 배열
@@ -172,7 +172,7 @@ export interface ProjectFormData {
   description: string; // 10-1000자
   location: string; // 지역 정보
   completionYear: number; // 1900-현재+10년
-  area: number; // 1 이상
+  area?: number; // 1 이상 (선택사항)
   tags: string[]; // 태그 ID 배열
   connectedItems: string[]; // 아이템 ID 배열
   inquiryUrl?: string; // 유효한 URL 형식

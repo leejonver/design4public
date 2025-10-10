@@ -32,7 +32,7 @@ export async function GET(
       description: project.description || '',
       location: project.location || '', // location 필드가 없으면 빈 문자열로 설정
       completionYear: project.year || new Date().getFullYear(),
-      area: project.area || 0,
+      area: project.area, // 면적은 선택사항이므로 null/undefined 허용
       images: project.project_images?.map((img: any, index: number) => ({
         id: img.id,
         url: img.image_url,

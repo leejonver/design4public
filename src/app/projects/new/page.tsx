@@ -306,13 +306,11 @@ export default function NewProjectPage() {
                     <Form.Item
                       label="면적 (m²)"
                       name="area"
-                      rules={[
-                        { required: true, message: '면적을 입력해주세요.' }
-                      ]}
                     >
                       <InputNumber
                         style={{ width: '100%' }}
                         min={1}
+                        placeholder="면적을 입력하세요 (선택사항)"
                         prefix={<ExpandAltOutlined />}
                         formatter={value => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
                       />

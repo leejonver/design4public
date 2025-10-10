@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       description: project.description || '',
       location: project.location || '',
       completionYear: project.year, // 기본값을 null 또는 undefined로 유지
-      area: project.area || 0,
+      area: project.area, // 면적은 선택사항이므로 null/undefined 허용
       images: project.project_images?.map((img: any, index: number) => ({
         id: img.id,
         url: img.image_url,

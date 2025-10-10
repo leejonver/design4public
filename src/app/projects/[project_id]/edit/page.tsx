@@ -385,12 +385,11 @@ export default function EditProjectPage() {
                   label="프로젝트 면적 (m²)"
                   name="area"
                   rules={[
-                    { required: true, message: '프로젝트 면적을 입력해주세요.' },
                     { type: 'number', min: 1, message: '면적은 1m² 이상이어야 합니다.' }
                   ]}
                 >
                   <InputNumber 
-                    placeholder="1000"
+                    placeholder="면적을 입력하세요 (선택사항)"
                     prefix={<ExpandAltOutlined />}
                     style={{ width: '100%' }}
                     min={1}
