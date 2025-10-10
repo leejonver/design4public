@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+// Route Segment Config - Vercel 제한 완화
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60; // 최대 60초
+
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()

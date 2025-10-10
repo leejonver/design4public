@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
+import imageCompression from 'browser-image-compression';
 import { 
   Card, 
   Form, 
@@ -201,8 +202,15 @@ export default function EditProjectPage() {
     setLoading(true);
     
     try {
-      // 1. 새로 업로드된 이미지들을 Supabase Storage에 업로드
+      // 1. 이미지 처리: 기존 이미지 유지 + 새 이미지 압축 및 업로드
       const allImages = [];
+      const newFilesCount = fileList.filter(f => f.originFileObj).length;
+      let uploadedCount = 0;
+      let hideLoading: any = null;
+      
+      if (newFilesCount > 0) {
+        hideLoading = message.loading(`이미지 업로드 중... (0/${newFilesCount})`, 0);
+      }
       
       for (const file of fileList) {
         if (file.status === 'done' && file.url) {
@@ -213,21 +221,50 @@ export default function EditProjectPage() {
             isMain: allImages.length === 0 // 첫 번째 이미지를 대표 이미지로
           });
         } else if (file.originFileObj) {
-          // 새로 업로드된 이미지
-          const uploadResponse = await api.upload(file.originFileObj, 'projects');
-          if (uploadResponse.success && uploadResponse.data?.url) {
-            allImages.push({
-              url: uploadResponse.data.url,
-              alt: values.name,
-              isMain: allImages.length === 0 // 첫 번째 이미지를 대표 이미지로
-            });
-          } else {
-            message.error(`이미지 업로드 실패: ${uploadResponse.error || '알 수 없는 오류'}`);
+          try {
+            // 이미지 압축
+            const options = {
+              maxSizeMB: 2, // 최대 2MB
+              maxWidthOrHeight: 1920, // 최대 해상도
+              useWebWorker: true,
+            };
+            
+            const compressedFile = await imageCompression(file.originFileObj, options);
+            console.log(`이미지 압축: ${(file.originFileObj.size / 1024 / 1024).toFixed(2)}MB → ${(compressedFile.size / 1024 / 1024).toFixed(2)}MB`);
+            
+            // 업로드 진행률 업데이트
+            uploadedCount++;
+            if (hideLoading) {
+              hideLoading();
+              hideLoading = message.loading(`이미지 업로드 중... (${uploadedCount}/${newFilesCount})`, 0);
+            }
+            
+            // Supabase Storage에 직접 업로드
+            const uploadResponse = await api.upload(compressedFile, 'projects');
+            
+            if (uploadResponse.success && uploadResponse.data?.url) {
+              allImages.push({
+                url: uploadResponse.data.url,
+                alt: values.name,
+                isMain: allImages.length === 0 // 첫 번째 이미지를 대표 이미지로
+              });
+            } else {
+              if (hideLoading) hideLoading();
+              message.error(`이미지 업로드 실패: ${uploadResponse.error || '알 수 없는 오류'}`);
+              setLoading(false);
+              return;
+            }
+          } catch (error) {
+            if (hideLoading) hideLoading();
+            console.error('이미지 처리 오류:', error);
+            message.error(`이미지 처리 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
             setLoading(false);
             return;
           }
         }
       }
+      
+      if (hideLoading) hideLoading();
       
       // 2. 프로젝트 데이터 구성
       

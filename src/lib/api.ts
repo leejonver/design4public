@@ -93,36 +93,55 @@ export async function apiDelete<T>(endpoint: string): Promise<ApiResponse<T>> {
   })
 }
 
-// 파일 업로드
+// 파일 업로드 - Supabase Storage에 직접 업로드 (Vercel 제한 우회)
 export async function apiUpload(file: File, folder?: string): Promise<ApiResponse<{ url: string }>> {
-  const formData = new FormData();
-  formData.append('file', file);
-  if (folder) {
-    formData.append('folder', folder);
-  }
-
-  const url = `${API_BASE_URL}/upload`;
-  
-  const headers: Record<string, string> = {};
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+  try {
+    // 동적 import로 supabase 클라이언트 가져오기
+    const { supabase } = await import('@/lib/supabase');
+    
+    const folderPath = folder || 'uploads';
+    
+    // 고유한 파일명 생성
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const fileExt = file.name.split('.').pop()?.toLowerCase();
+    const fileName = `${timestamp}_${randomString}.${fileExt}`;
+    const filePath = `${folderPath}/${fileName}`;
+    
+    // Supabase Storage에 직접 업로드
+    const { data, error } = await supabase.storage
+      .from('images')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+    
+    if (error) {
+      console.error('Supabase upload error:', error);
+      return {
+        success: false,
+        error: `파일 업로드에 실패했습니다: ${error.message}`
+      };
     }
+    
+    // 공개 URL 가져오기
+    const { data: urlData } = supabase.storage
+      .from('images')
+      .getPublicUrl(data.path);
+    
+    return {
+      success: true,
+      data: {
+        url: urlData.publicUrl
+      }
+    };
+  } catch (error) {
+    console.error('Upload error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : '파일 업로드 중 오류가 발생했습니다.'
+    };
   }
-
-  const response = await fetch(url, {
-    method: 'POST',
-    headers,
-    body: formData,
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
-  }
-
-  return response.json();
 }
 
 // 인증 관련 API
