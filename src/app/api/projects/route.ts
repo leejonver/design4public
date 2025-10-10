@@ -118,12 +118,12 @@ export async function POST(request: NextRequest) {
     const { data: project, error: rpcError } = await supabaseAdmin
       .rpc('create_project_with_relations', {
         p_title: name,
-        p_description: description,
-        p_location: location,
-        p_year: completionYear,
-        p_area: area ?? null, // undefined를 null로 변환
+        p_description: description ?? null,
+        p_location: location ?? null,
+        p_year: completionYear ?? null,
+        p_area: area ?? null,
         p_status: status || 'draft',
-        p_inquiry_url: inquiryUrl,
+        p_inquiry_url: inquiryUrl ?? null,
         p_images: formattedImages,
         p_tag_ids: tags || [],
         p_item_ids: connectedItems || []
