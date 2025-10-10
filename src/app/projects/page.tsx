@@ -179,7 +179,8 @@ export default function ProjectsPage() {
         <div>
           <div>{record.location}</div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.completionYear}년 · {record.area.toLocaleString()}m²
+            {record.completionYear}년
+            {record.area && ` · ${record.area.toLocaleString()}m²`}
           </div>
         </div>
       ),

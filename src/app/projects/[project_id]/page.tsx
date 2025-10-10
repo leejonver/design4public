@@ -210,7 +210,7 @@ export default function ProjectDetailPage() {
                 </Descriptions.Item>
                 
                 <Descriptions.Item label="면적">
-                  {project.area.toLocaleString()}m²
+                  {project.area ? `${project.area.toLocaleString()}m²` : '-'}
                 </Descriptions.Item>
                 
                 <Descriptions.Item label="상태">
