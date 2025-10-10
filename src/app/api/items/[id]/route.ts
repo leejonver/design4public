@@ -40,6 +40,7 @@ export async function GET(
       mallUrl: item.nara_url,
       brand: item.brands,
       tags: item.tags || [],
+      slug: item.slug,
       status: item.status || 'available',
       createdAt: item.created_at,
       updatedAt: item.updated_at
@@ -70,11 +71,53 @@ export async function PUT(
 
     console.log('Update item request:', { id, name, description, mallUrl, brandId, images, tags, status })
 
+    // 기존 아이템 정보 가져오기 (slug 비교를 위해)
+    const { data: existingItem } = await supabaseAdmin
+      .from('items')
+      .select('slug, name')
+      .eq('id', id)
+      .single()
+
+    // slug 생성 함수
+    const generateSlug = (name: string): string => {
+      return name
+        .toLowerCase()
+        .replace(/[^a-z0-9가-힣]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 50)
+    }
+
+    // slug 업데이트 로직: 이름이 변경된 경우에만 slug 재생성
+    let slug = existingItem?.slug
+    const nameChanged = name !== existingItem?.name
+    
+    if (nameChanged && name) {
+      const baseSlug = generateSlug(name)
+      slug = baseSlug
+      
+      // slug 중복 확인 (자기 자신 제외)
+      let counter = 1
+      while (true) {
+        const { data: existing } = await supabaseAdmin
+          .from('items')
+          .select('id')
+          .eq('slug', slug)
+          .neq('id', id)
+          .single()
+        
+        if (!existing) break
+        slug = `${baseSlug}-${counter}`
+        counter++
+      }
+    }
+
     // 아이템 기본 정보 업데이트
     const updateData: any = {
       name,
       description,
       brand_id: brandId,
+      slug,
       status: status,
       updated_at: new Date().toISOString()
     }

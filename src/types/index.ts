@@ -95,6 +95,7 @@ export interface Item {
   mallUrl?: string; // 나라장터 URL (옵션)
   brand: Brand; // 소속 브랜드
   tags: Tag[]; // 연결된 태그 배열
+  slug: string; // URL 친화적인 식별자
   status: ItemStatus;
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식

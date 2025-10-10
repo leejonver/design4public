@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
       mallUrl: item.nara_url,
       brand: item.brands,
       tags: [], // 태그는 별도 테이블에서 가져와야 함
+      slug: item.slug,
       status: item.status || 'available',
       createdAt: item.created_at,
       updatedAt: item.updated_at
@@ -98,6 +99,45 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { name, description, mallUrl, brandId, images, tags, status } = body
 
+    if (!name) {
+      return NextResponse.json(
+        { success: false, error: '아이템 이름은 필수입니다.' },
+        { status: 400 }
+      )
+    }
+
+    // slug 생성 함수
+    const generateSlug = (name: string): string => {
+      return name
+        .toLowerCase()
+        .replace(/[^a-z0-9가-힣]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 50) // 최대 길이 제한
+    }
+
+    const baseSlug = generateSlug(name)
+    
+    // slug 중복 확인
+    let slug = baseSlug
+    let counter = 1
+    while (true) {
+      const { data: existing } = await supabaseAdmin
+        .from('items')
+        .select('id')
+        .eq('slug', slug)
+        .single()
+      
+      if (!existing) break
+      slug = `${baseSlug}-${counter}`
+      counter++
+    }
+
+    // images가 문자열 배열인 경우 처리
+    const imageUrl = Array.isArray(images) && images.length > 0 
+      ? (typeof images[0] === 'string' ? images[0] : images[0]?.url) 
+      : null
+
     const { data: item, error } = await supabaseAdmin
       .from('items')
       .insert({
@@ -105,7 +145,8 @@ export async function POST(request: NextRequest) {
         description,
         brand_id: brandId,
         nara_url: mallUrl,
-        image_url: images?.[0]?.url,
+        image_url: imageUrl,
+        slug,
         status: status || 'available'
       })
       .select('*')
