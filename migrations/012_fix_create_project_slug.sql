@@ -1,6 +1,10 @@
 -- 프로젝트 생성 RPC 함수에 slug 처리 추가
 
-CREATE OR REPLACE FUNCTION public.create_project_with_relations(
+-- 기존 함수 삭제 (반환 타입이 변경되므로)
+DROP FUNCTION IF EXISTS public.create_project_with_relations(text,text,text,integer,numeric,project_status,text,project_image_type[],uuid[],uuid[]);
+
+-- 새로운 함수 생성
+CREATE FUNCTION public.create_project_with_relations(
   p_title TEXT,
   p_description TEXT,
   p_location TEXT,
