@@ -121,12 +121,12 @@ export async function POST(request: NextRequest) {
         p_description: description,
         p_location: location,
         p_year: completionYear,
-        p_area: area,
+        p_area: area ?? null, // undefined를 null로 변환
         p_status: status || 'draft',
         p_inquiry_url: inquiryUrl,
         p_images: formattedImages,
-        p_tag_ids: tags,
-        p_item_ids: connectedItems
+        p_tag_ids: tags || [],
+        p_item_ids: connectedItems || []
       })
       .single()
 
