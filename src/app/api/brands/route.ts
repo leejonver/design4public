@@ -52,7 +52,7 @@ export async function GET(request: NextRequest) {
       logoImageUrl: brand.logo_image_url,
       coverImageUrl: brand.cover_image_url,
       websiteUrl: brand.website_url,
-      status: brand.status || 'visible',
+      slug: brand.slug,
       createdAt: brand.created_at,
       updatedAt: brand.updated_at
     })) || []
@@ -92,6 +92,33 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // slug 생성: 영문명이 있으면 사용, 없으면 한글명 기반으로 생성
+    const generateSlug = (name: string): string => {
+      return name
+        .toLowerCase()
+        .replace(/[^a-z0-9가-힣]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 50) // 최대 길이 제한
+    }
+
+    const baseSlug = nameEn ? generateSlug(nameEn) : generateSlug(nameKo)
+    
+    // slug 중복 확인
+    let slug = baseSlug
+    let counter = 1
+    while (true) {
+      const { data: existing } = await supabaseAdmin
+        .from('brands')
+        .select('id')
+        .eq('slug', slug)
+        .single()
+      
+      if (!existing) break
+      slug = `${baseSlug}-${counter}`
+      counter++
+    }
+
     const { data: brand, error } = await supabaseAdmin
       .from('brands')
       .insert({
@@ -100,7 +127,8 @@ export async function POST(request: NextRequest) {
         description,
         website_url: websiteUrl,
         logo_image_url: logoImageUrl,
-        cover_image_url: coverImageUrl
+        cover_image_url: coverImageUrl,
+        slug
       })
       .select('*')
       .single()

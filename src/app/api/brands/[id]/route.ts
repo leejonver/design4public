@@ -32,6 +32,7 @@ export async function GET(
       logoImageUrl: brand.logo_image_url,
       coverImageUrl: brand.cover_image_url,
       websiteUrl: brand.website_url,
+      slug: brand.slug,
       createdAt: brand.created_at,
       updatedAt: brand.updated_at
     }
@@ -68,6 +69,47 @@ export async function PUT(
       )
     }
 
+    // 기존 브랜드 정보 가져오기 (slug 비교를 위해)
+    const { data: existingBrand } = await supabaseAdmin
+      .from('brands')
+      .select('slug, name_en')
+      .eq('id', id)
+      .single()
+
+    // slug 생성 함수
+    const generateSlug = (name: string): string => {
+      return name
+        .toLowerCase()
+        .replace(/[^a-z0-9가-힣]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .substring(0, 50)
+    }
+
+    // slug 업데이트 로직: 이름이 변경된 경우에만 slug 재생성
+    let slug = existingBrand?.slug
+    const nameChanged = nameEn !== existingBrand?.name_en
+    
+    if (nameChanged) {
+      const baseSlug = nameEn ? generateSlug(nameEn) : generateSlug(nameKo)
+      slug = baseSlug
+      
+      // slug 중복 확인 (자기 자신 제외)
+      let counter = 1
+      while (true) {
+        const { data: existing } = await supabaseAdmin
+          .from('brands')
+          .select('id')
+          .eq('slug', slug)
+          .neq('id', id)
+          .single()
+        
+        if (!existing) break
+        slug = `${baseSlug}-${counter}`
+        counter++
+      }
+    }
+
     const { data: brand, error } = await supabaseAdmin
       .from('brands')
       .update({
@@ -77,6 +119,7 @@ export async function PUT(
         website_url: websiteUrl,
         logo_image_url: logoImageUrl,
         cover_image_url: coverImageUrl,
+        slug,
         updated_at: new Date().toISOString()
       })
       .eq('id', id)

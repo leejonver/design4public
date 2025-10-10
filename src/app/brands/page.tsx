@@ -32,7 +32,7 @@ import {
 } from '@ant-design/icons';
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
-import type { Brand, BrandStatus } from '@/types';
+import type { Brand } from '@/types';
 import type { ColumnsType } from 'antd/es/table';
 
 const { Title } = Typography;
@@ -41,7 +41,6 @@ const { Search } = Input;
 export default function BrandsPage() {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<BrandStatus | 'all'>('all');
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
 

@@ -18,13 +18,6 @@ export type ProjectStatus = 'draft' | 'published' | 'hidden';
 export type ItemStatus = 'available' | 'discontinued' | 'hidden';
 
 /**
- * 브랜드 상태 열거형
- * - visible: 노출
- * - hidden: 숨김
- */
-export type BrandStatus = 'visible' | 'hidden';
-
-/**
  * 관리자 권한 열거형
  * - master: 마스터 (모든 권한)
  * - admin: 관리자 (대부분의 권한)
@@ -120,6 +113,7 @@ export interface Brand {
   logoImageUrl?: string; // 브랜드 로고 이미지 URL (옵션)
   coverImageUrl?: string; // 커버 이미지 URL (옵션)
   websiteUrl?: string; // 브랜드 웹사이트 URL (옵션)
+  slug: string; // URL 친화적인 식별자
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식
 }
