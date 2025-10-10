@@ -38,7 +38,19 @@ export async function GET(
         isMain: true
       }] : [],
       mallUrl: item.nara_url,
-      brand: item.brands,
+      brand: item.brands ? {
+        id: item.brands.id,
+        name: item.brands.name_ko, // name_ko를 name으로 매핑
+        nameKo: item.brands.name_ko,
+        nameEn: item.brands.name_en,
+        description: item.brands.description || '',
+        logoImageUrl: item.brands.logo_image_url,
+        coverImageUrl: item.brands.cover_image_url,
+        websiteUrl: item.brands.website_url,
+        slug: item.brands.slug,
+        createdAt: item.brands.created_at,
+        updatedAt: item.brands.updated_at
+      } : null,
       tags: item.tags || [],
       slug: item.slug,
       status: item.status || 'available',

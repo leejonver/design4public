@@ -193,13 +193,17 @@ export default function ItemDetailPage() {
                 </Descriptions.Item>
                 
                 <Descriptions.Item label="브랜드">
-                  <Tag 
-                    color="blue" 
-                    style={{ cursor: 'pointer' }}
-                    onClick={() => router.push(`/brands/${item.brand.id}`)}
-                  >
-                    {item.brand.name}
-                  </Tag>
+                  {item.brand ? (
+                    <Tag 
+                      color="blue" 
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => router.push(`/brands/${item.brand.id}`)}
+                    >
+                      {item.brand.name}
+                    </Tag>
+                  ) : (
+                    <Text type="secondary">등록되지 않음</Text>
+                  )}
                 </Descriptions.Item>
                 
                 <Descriptions.Item label="상태">
@@ -245,52 +249,54 @@ export default function ItemDetailPage() {
         </Row>
 
         {/* 브랜드 정보 */}
-        <Card 
-          title="브랜드 정보" 
-          style={{ marginTop: '24px' }}
-          extra={
-            <Button 
-              type="link" 
-              onClick={() => router.push(`/brands/${item.brand.id}`)}
-            >
-              브랜드 상세보기
-            </Button>
-          }
-        >
-          <Row gutter={[16, 16]} align="middle">
-            <Col>
-              {item.brand.logoImage ? (
-                <Image
-                  width={60}
-                  height={60}
-                  src={item.brand.logoImage.url}
-                  alt={item.brand.logoImage.alt}
-                  style={{ objectFit: 'cover', borderRadius: '50%' }}
-                />
-              ) : (
-                <div style={{
-                  width: 60,
-                  height: 60,
-                  backgroundColor: '#f5f5f5',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <ShopOutlined style={{ color: '#bfbfbf' }} />
+        {item.brand && (
+          <Card 
+            title="브랜드 정보" 
+            style={{ marginTop: '24px' }}
+            extra={
+              <Button 
+                type="link" 
+                onClick={() => router.push(`/brands/${item.brand.id}`)}
+              >
+                브랜드 상세보기
+              </Button>
+            }
+          >
+            <Row gutter={[16, 16]} align="middle">
+              <Col>
+                {item.brand.logoImageUrl ? (
+                  <Image
+                    width={60}
+                    height={60}
+                    src={item.brand.logoImageUrl}
+                    alt={`${item.brand.name} 로고`}
+                    style={{ objectFit: 'cover', borderRadius: '50%' }}
+                  />
+                ) : (
+                  <div style={{
+                    width: 60,
+                    height: 60,
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <ShopOutlined style={{ color: '#bfbfbf' }} />
+                  </div>
+                )}
+              </Col>
+              <Col flex="1">
+                <div>
+                  <Text strong style={{ fontSize: '16px' }}>{item.brand.name}</Text>
+                  <Paragraph type="secondary" style={{ margin: '4px 0 0 0' }}>
+                    {item.brand.description}
+                  </Paragraph>
                 </div>
-              )}
-            </Col>
-            <Col flex="1">
-              <div>
-                <Text strong style={{ fontSize: '16px' }}>{item.brand.name}</Text>
-                <Paragraph type="secondary" style={{ margin: '4px 0 0 0' }}>
-                  {item.brand.description}
-                </Paragraph>
-              </div>
-            </Col>
-          </Row>
-        </Card>
+              </Col>
+            </Row>
+          </Card>
+        )}
       </div>
     </MainLayout>
   );

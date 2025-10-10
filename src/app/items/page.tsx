@@ -184,7 +184,7 @@ export default function ItemsPage() {
       dataIndex: 'brand',
       key: 'brand',
       render: (brand: Item['brand']) => (
-        <Tag color="blue">{brand.name}</Tag>
+        brand ? <Tag color="blue">{brand.name}</Tag> : <span style={{ color: '#bfbfbf' }}>-</span>
       ),
     },
     {
