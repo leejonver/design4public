@@ -139,151 +139,136 @@ export async function POST(request: NextRequest) {
 
     if (rpcError) {
       console.error('Project creation RPC error:', rpcError)
-      // PGRST202 (function not found/signature mismatch) 또는 스키마 캐시 문제 시 폴백
-      const errCode = (rpcError as any)?.code
-      const errMessage = (rpcError as any)?.message || ''
-      const shouldFallback = errCode === 'PGRST202' || /no matches were found in the schema cache/i.test(errMessage)
+      // 어떤 RPC 에러든 폴백 수행
+      // 1) slug 생성 (서버에서 동일 로직으로 최대한 일치)
+      const baseSlug = (name || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9가-힣\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
+        .slice(0, 50)
 
-      if (shouldFallback) {
-        // 1) slug 생성 (서버에서 동일 로직으로 최대한 일치)
-        const baseSlug = (name || '')
-          .toLowerCase()
-          .replace(/[^a-z0-9가-힣\s-]/g, '')
-          .replace(/\s+/g, '-')
-          .replace(/-+/g, '-')
-          .replace(/^-|-$/g, '')
-          .slice(0, 50)
-
-        let newSlug = baseSlug
-        let counter = 0
-        // 슬러그 중복 체크
-        while (true) {
-          const { data: slugExists, error: slugErr } = await supabaseAdmin
-            .from('projects')
-            .select('id')
-            .eq('slug', newSlug)
-            .limit(1)
-          if (slugErr) break
-          if (!slugExists || slugExists.length === 0) break
-          counter += 1
-          newSlug = `${baseSlug}-${counter}`
-        }
-
-        // 2) projects 삽입
-        const { data: insertedProject, error: insertErr } = await supabaseAdmin
+      let newSlug = baseSlug
+      let counter = 0
+      // 슬러그 중복 체크
+      while (true) {
+        const { data: slugExists, error: slugErr } = await supabaseAdmin
           .from('projects')
-          .insert({
-            title: name,
-            description: description ?? null,
-            location: location ?? null,
-            year: completionYear ?? null,
-            area: area ?? null,
-            status: status || 'draft',
-            inquiry_url: inquiryUrl ?? null,
-            slug: newSlug,
-          })
-          .select('*')
-          .single()
-
-        if (insertErr || !insertedProject) {
-          return NextResponse.json(
-            { 
-              success: false, 
-              error: '프로젝트 생성에 실패했습니다.',
-              ...(process.env.NODE_ENV === 'development' && { details: (insertErr || {}).message })
-            },
-            { status: 500 }
-          )
-        }
-
-        const projectId = insertedProject.id
-
-        // 3) 이미지 삽입
-        if (formattedImages.length > 0) {
-          const imagesRows = formattedImages.map((img: any) => ({
-            project_id: projectId,
-            image_url: img.image_url,
-            alt_text: img.alt_text,
-            is_main: img.is_main,
-            order: img.order,
-          }))
-          const { error: imagesErr } = await supabaseAdmin.from('project_images').insert(imagesRows)
-          if (imagesErr) {
-            console.error('project_images insert error:', imagesErr)
-          }
-        }
-
-        // 4) 태그 연결
-        if (tags && tags.length > 0) {
-          const tagRows = tags.map((tagId: string) => ({ project_id: projectId, tag_id: tagId }))
-          const { error: tagsErr } = await supabaseAdmin.from('project_tags').insert(tagRows)
-          if (tagsErr) {
-            console.error('project_tags insert error:', tagsErr)
-          }
-        }
-
-        // 5) 아이템 연결
-        if (connectedItems && connectedItems.length > 0) {
-          const itemRows = connectedItems.map((itemId: string) => ({ project_id: projectId, item_id: itemId }))
-          const { error: itemsErr } = await supabaseAdmin.from('project_items').insert(itemRows)
-          if (itemsErr) {
-            console.error('project_items insert error:', itemsErr)
-          }
-        }
-
-        // 6) 삽입된 프로젝트를 조회하여 기존 응답 형태로 반환
-        const { data: fullProject, error: fetchErr } = await supabaseAdmin
-          .from('projects')
-          .select(`
-            *,
-            project_images(*),
-            project_tags(tags(*)),
-            project_items(items(*, brands(*)))
-          `)
-          .eq('id', projectId)
-          .single()
-
-        if (fetchErr || !fullProject) {
-          return NextResponse.json(
-            { success: true, data: insertedProject, message: '프로젝트가 생성되었습니다. (부분 데이터)' }
-          )
-        }
-
-        const transformed = {
-          id: fullProject.id,
-          name: fullProject.title,
-          description: fullProject.description || '',
-          location: fullProject.location || '',
-          completionYear: fullProject.year,
-          area: fullProject.area,
-          images: fullProject.project_images?.map((img: any, index: number) => ({
-            id: img.id,
-            url: img.image_url,
-            alt: img.alt_text || fullProject.title,
-            isMain: img.is_main || index === 0
-          })) || [],
-          tags: fullProject.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
-          connectedItems: fullProject.project_items?.map((pi: any) => ({
-            ...pi.items,
-            brand: pi.items?.brands
-          })) || [],
-          inquiryUrl: fullProject.inquiry_url || '',
-          status: fullProject.status,
-          createdAt: fullProject.created_at,
-          updatedAt: fullProject.updated_at
-        }
-
-        return NextResponse.json({ success: true, data: transformed, message: '프로젝트가 성공적으로 생성되었습니다.' })
+          .select('id')
+          .eq('slug', newSlug)
+          .limit(1)
+        if (slugErr) break
+        if (!slugExists || slugExists.length === 0) break
+        counter += 1
+        newSlug = `${baseSlug}-${counter}`
       }
 
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: '프로젝트 생성에 실패했습니다.',
-          ...(process.env.NODE_ENV === 'development' && { details: rpcError.message })
-        },
-        { status: 500 }
-      )
+      // 2) projects 삽입
+      const { data: insertedProject, error: insertErr } = await supabaseAdmin
+        .from('projects')
+        .insert({
+          title: name,
+          description: description ?? null,
+          location: location ?? null,
+          year: completionYear ?? null,
+          area: area ?? null,
+          status: status || 'draft',
+          inquiry_url: inquiryUrl ?? null,
+          slug: newSlug,
+        })
+        .select('*')
+        .single()
+
+      if (insertErr || !insertedProject) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: '프로젝트 생성에 실패했습니다.',
+            ...(process.env.NODE_ENV === 'development' && { details: (insertErr || {}).message })
+          },
+          { status: 500 }
+        )
+      }
+
+      const projectId = insertedProject.id
+
+      // 3) 이미지 삽입
+      if (formattedImages.length > 0) {
+        const imagesRows = formattedImages.map((img: any) => ({
+          project_id: projectId,
+          image_url: img.image_url,
+          alt_text: img.alt_text,
+          is_main: img.is_main,
+          order: img.order,
+        }))
+        const { error: imagesErr } = await supabaseAdmin.from('project_images').insert(imagesRows)
+        if (imagesErr) {
+          console.error('project_images insert error:', imagesErr)
+        }
+      }
+
+      // 4) 태그 연결
+      if (tags && tags.length > 0) {
+        const tagRows = tags.map((tagId: string) => ({ project_id: projectId, tag_id: tagId }))
+        const { error: tagsErr } = await supabaseAdmin.from('project_tags').insert(tagRows)
+        if (tagsErr) {
+          console.error('project_tags insert error:', tagsErr)
+        }
+      }
+
+      // 5) 아이템 연결
+      if (connectedItems && connectedItems.length > 0) {
+        const itemRows = connectedItems.map((itemId: string) => ({ project_id: projectId, item_id: itemId }))
+        const { error: itemsErr } = await supabaseAdmin.from('project_items').insert(itemRows)
+        if (itemsErr) {
+          console.error('project_items insert error:', itemsErr)
+        }
+      }
+
+      // 6) 삽입된 프로젝트를 조회하여 기존 응답 형태로 반환
+      const { data: fullProject, error: fetchErr } = await supabaseAdmin
+        .from('projects')
+        .select(`
+          *,
+          project_images(*),
+          project_tags(tags(*)),
+          project_items(items(*, brands(*)))
+        `)
+        .eq('id', projectId)
+        .single()
+
+      if (fetchErr || !fullProject) {
+        return NextResponse.json(
+          { success: true, data: insertedProject, message: '프로젝트가 생성되었습니다. (부분 데이터)' }
+        )
+      }
+
+      const transformed = {
+        id: fullProject.id,
+        name: fullProject.title,
+        description: fullProject.description || '',
+        location: fullProject.location || '',
+        completionYear: fullProject.year,
+        area: fullProject.area,
+        images: fullProject.project_images?.map((img: any, index: number) => ({
+          id: img.id,
+          url: img.image_url,
+          alt: img.alt_text || fullProject.title,
+          isMain: img.is_main || index === 0
+        })) || [],
+        tags: fullProject.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
+        connectedItems: fullProject.project_items?.map((pi: any) => ({
+          ...pi.items,
+          brand: pi.items?.brands
+        })) || [],
+        inquiryUrl: fullProject.inquiry_url || '',
+        status: fullProject.status,
+        createdAt: fullProject.created_at,
+        updatedAt: fullProject.updated_at
+      }
+
+      return NextResponse.json({ success: true, data: transformed, message: '프로젝트가 성공적으로 생성되었습니다.' })
     }
     
     return NextResponse.json({
