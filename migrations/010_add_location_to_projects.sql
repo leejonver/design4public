@@ -6,3 +6,5 @@ ADD COLUMN location TEXT;
 
 
 
+
+

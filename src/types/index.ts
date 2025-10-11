@@ -150,6 +150,15 @@ export interface ApiResponse<T> {
   error?: string; // 에러 메시지
 }
 
+export interface UploadResponse {
+  url: string;
+  path?: string;
+  fileName?: string;
+  originalName?: string;
+  size?: number;
+  type?: string;
+}
+
 /**
  * 리스트 API 응답 인터페이스
  * 페이지네이션 정보 포함

@@ -1,5 +1,7 @@
 // API 호출을 위한 유틸리티 함수들
 
+import type { UploadResponse } from '@/types'
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 
 // API 응답 타입 정의
@@ -94,47 +96,40 @@ export async function apiDelete<T>(endpoint: string): Promise<ApiResponse<T>> {
 }
 
 // 파일 업로드 - Supabase Storage에 직접 업로드 (Vercel 제한 우회)
-export async function apiUpload(file: File, folder?: string): Promise<ApiResponse<{ url: string }>> {
+export async function apiUpload(file: File, folder?: string): Promise<ApiResponse<UploadResponse>> {
   try {
-    // 동적 import로 supabase 클라이언트 가져오기
-    const { supabase } = await import('@/lib/supabase');
-    
-    const folderPath = folder || 'uploads';
-    
-    // 고유한 파일명 생성
-    const timestamp = Date.now();
-    const randomString = Math.random().toString(36).substring(2, 15);
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    const fileName = `${timestamp}_${randomString}.${fileExt}`;
-    const filePath = `${folderPath}/${fileName}`;
-    
-    // Supabase Storage에 직접 업로드
-    const { data, error } = await supabase.storage
-      .from('images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
-    
-    if (error) {
-      console.error('Supabase upload error:', error);
+    const url = `${API_BASE_URL}/upload`;
+    const formData = new FormData();
+    formData.append('file', file);
+    if (folder) {
+      formData.append('folder', folder);
+    }
+
+    const headers: Record<string, string> = {};
+
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('authToken');
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+    }
+
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      headers,
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
       return {
         success: false,
-        error: `파일 업로드에 실패했습니다: ${error.message}`
+        error: errorData.error || `파일 업로드에 실패했습니다: HTTP ${response.status}`,
       };
     }
-    
-    // 공개 URL 가져오기
-    const { data: urlData } = supabase.storage
-      .from('images')
-      .getPublicUrl(data.path);
-    
-    return {
-      success: true,
-      data: {
-        url: urlData.publicUrl
-      }
-    };
+
+    const result = await response.json();
+    return result;
   } catch (error) {
     console.error('Upload error:', error);
     return {

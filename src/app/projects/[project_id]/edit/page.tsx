@@ -239,7 +239,7 @@ export default function EditProjectPage() {
               hideLoading = message.loading(`이미지 업로드 중... (${uploadedCount}/${newFilesCount})`, 0);
             }
             
-            // Supabase Storage에 직접 업로드
+            // 프로젝트 업로드 API 호출 (RLS 우회)
             const uploadResponse = await api.upload(compressedFile, 'projects');
             
             if (uploadResponse.success && uploadResponse.data?.url) {

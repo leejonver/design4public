@@ -3,40 +3,55 @@
  * Phase 1: API Routes 단위 테스트
  */
 
-import { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { POST as loginPost } from '@/app/api/auth/login/route'
 import { POST as signupPost } from '@/app/api/auth/signup/route'
 
 // Supabase 모킹
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    auth: {
-      signInWithPassword: jest.fn(),
-      signUp: jest.fn(),
-    },
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          single: jest.fn(),
-        })),
-      })),
-      insert: jest.fn(),
-    })),
-  },
-}))
+jest.mock('@/lib/supabase', () => {
+  const authMock = {
+    signInWithPassword: jest.fn(),
+    signUp: jest.fn(),
+  }
+
+  const fromMock = jest.fn()
+
+  const supabase = {
+    auth: authMock,
+    from: fromMock,
+  }
+
+  const supabaseAdmin = {
+    from: jest.fn(),
+    rpc: jest.fn(),
+  }
+
+  return { supabase, supabaseAdmin }
+})
 
 describe('Auth API Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.spyOn(NextResponse, 'json').mockImplementation((body: any, init?: ResponseInit) => {
+      return new Response(JSON.stringify(body), {
+        status: init?.status ?? 200,
+        headers: { 'Content-Type': 'application/json', ...(init?.headers as HeadersInit | undefined) },
+      }) as any
+    })
   })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  const createRequest = (url: string, body?: Record<string, unknown>) => ({
+    url,
+    json: async () => body ?? {},
+  }) as any
 
   describe('POST /api/auth/login', () => {
     it('이메일과 비밀번호가 없으면 400 에러를 반환해야 합니다', async () => {
-      const url = new URL('http://localhost:3000/api/auth/login')
-      const request = new NextRequest(url, {
-        method: 'POST',
-        body: JSON.stringify({}),
-      })
+      const request = createRequest('http://localhost:3000/api/auth/login', {})
 
       const response = await loginPost(request)
       const data = await response.json()
@@ -47,15 +62,14 @@ describe('Auth API Routes', () => {
     })
 
     it('개발 환경에서 마스터 계정 로그인이 가능해야 합니다', async () => {
-      process.env.NODE_ENV = 'development'
+      const originalEnv = process.env
+      Object.defineProperty(process, 'env', {
+        value: { ...process.env, NODE_ENV: 'development' },
+      })
 
-      const url = new URL('http://localhost:3000/api/auth/login')
-      const request = new NextRequest(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          email: 'design4public@gmail.com',
-          password: 'dfourp7!@#',
-        }),
+      const request = createRequest('http://localhost:3000/api/auth/login', {
+        email: 'design4public@gmail.com',
+        password: 'dfourp7!@#',
       })
 
       const response = await loginPost(request)
@@ -65,6 +79,10 @@ describe('Auth API Routes', () => {
       expect(data.success).toBe(true)
       expect(data.data.user.role).toBe('master')
       expect(data.data.session.access_token).toBeDefined()
+
+      Object.defineProperty(process, 'env', {
+        value: originalEnv,
+      })
     })
 
     it('잘못된 자격 증명으로 로그인 시 401 에러를 반환해야 합니다', async () => {
@@ -74,13 +92,9 @@ describe('Auth API Routes', () => {
         error: { message: 'Invalid login credentials' },
       })
 
-      const url = new URL('http://localhost:3000/api/auth/login')
-      const request = new NextRequest(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          email: 'test@test.com',
-          password: 'wrongpassword',
-        }),
+      const request = createRequest('http://localhost:3000/api/auth/login', {
+        email: 'test@test.com',
+        password: 'wrongpassword',
       })
 
       const response = await loginPost(request)
@@ -93,11 +107,7 @@ describe('Auth API Routes', () => {
 
   describe('POST /api/auth/signup', () => {
     it('이메일과 비밀번호가 없으면 400 에러를 반환해야 합니다', async () => {
-      const url = new URL('http://localhost:3000/api/auth/signup')
-      const request = new NextRequest(url, {
-        method: 'POST',
-        body: JSON.stringify({}),
-      })
+      const request = createRequest('http://localhost:3000/api/auth/signup', {})
 
       const response = await signupPost(request)
       const data = await response.json()
@@ -126,14 +136,10 @@ describe('Auth API Routes', () => {
         }),
       })
 
-      const url = new URL('http://localhost:3000/api/auth/signup')
-      const request = new NextRequest(url, {
-        method: 'POST',
-        body: JSON.stringify({
-          name: 'Test User',
-          email: 'newuser@test.com',
-          password: 'password123',
-        }),
+      const request = createRequest('http://localhost:3000/api/auth/signup', {
+        name: 'Test User',
+        email: 'newuser@test.com',
+        password: 'password123',
       })
 
       const response = await signupPost(request)

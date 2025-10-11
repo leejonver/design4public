@@ -4,6 +4,7 @@
  */
 
 import React from 'react'
+import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
 import Sidebar from '@/components/Sidebar'
 
@@ -16,14 +17,17 @@ jest.mock('next/navigation', () => ({
 }))
 
 // Ant Design 아이콘 모킹
-jest.mock('@ant-design/icons', () => ({
-  ProjectOutlined: () => <div data-testid="project-icon">ProjectIcon</div>,
-  AppstoreOutlined: () => <div data-testid="appstore-icon">AppstoreIcon</div>,
-  ShopOutlined: () => <div data-testid="shop-icon">ShopIcon</div>,
-  TagsOutlined: () => <div data-testid="tags-icon">TagsIcon</div>,
-  TeamOutlined: () => <div data-testid="team-icon">TeamIcon</div>,
-  LogoutOutlined: () => <div data-testid="logout-icon">LogoutIcon</div>,
-}))
+jest.mock('@ant-design/icons', () => {
+  const React = require('react')
+  return {
+    ProjectOutlined: (props: any) => React.createElement('div', { 'data-testid': 'project-icon', ...props }, 'ProjectIcon'),
+    AppstoreOutlined: (props: any) => React.createElement('div', { 'data-testid': 'appstore-icon', ...props }, 'AppstoreIcon'),
+    ShopOutlined: (props: any) => React.createElement('div', { 'data-testid': 'shop-icon', ...props }, 'ShopIcon'),
+    TagsOutlined: (props: any) => React.createElement('div', { 'data-testid': 'tags-icon', ...props }, 'TagsIcon'),
+    UserOutlined: (props: any) => React.createElement('div', { 'data-testid': 'user-icon', ...props }, 'UserIcon'),
+    LogoutOutlined: (props: any) => React.createElement('div', { 'data-testid': 'logout-icon', ...props }, 'LogoutIcon'),
+  }
+})
 
 // AuthContext 모킹
 jest.mock('@/contexts/AuthContext', () => ({
@@ -40,8 +44,8 @@ jest.mock('@/contexts/AuthContext', () => ({
 describe('Sidebar Component', () => {
   it('사이드바가 렌더링되어야 합니다', () => {
     render(<Sidebar />)
-    
-    expect(screen.getByText('design4public')).toBeInTheDocument()
+
+    expect(screen.getByText(/design4public/i)).toBeInTheDocument()
     expect(screen.getByText('콘텐츠관리자')).toBeInTheDocument()
   })
 
@@ -52,14 +56,14 @@ describe('Sidebar Component', () => {
     expect(screen.getByText('아이템')).toBeInTheDocument()
     expect(screen.getByText('브랜드')).toBeInTheDocument()
     expect(screen.getByText('태그')).toBeInTheDocument()
-    expect(screen.getByText('관리자')).toBeInTheDocument()
+    expect(screen.getAllByText('관리자').length).toBeGreaterThan(0)
   })
 
   it('사용자 정보가 표시되어야 합니다', () => {
     render(<Sidebar />)
     
     expect(screen.getByText('Test User')).toBeInTheDocument()
-    expect(screen.getByText('test@test.com')).toBeInTheDocument()
+    expect(screen.queryByText('test@test.com')).not.toBeInTheDocument()
   })
 
   it('로그아웃 버튼이 표시되어야 합니다', () => {

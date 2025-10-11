@@ -65,7 +65,7 @@ export default function LoginPage() {
       >
         {/* 로고 및 타이틀 */}
         <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <Title level={2} style={{ color: '#1890ff', marginBottom: '8px' }}>
+          <Title level={2} style={{ color: '#1890ff', marginBottom: '8px' }} aria-label="Design4Public">
             Design4Public
           </Title>
           <Text type="secondary" style={{ fontSize: '16px' }}>

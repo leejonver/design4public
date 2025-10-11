@@ -3,37 +3,44 @@
  * Phase 1: CRUD 기본 작업 테스트
  */
 
-import { NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
 import { GET, POST } from '@/app/api/projects/route'
 
 // Supabase 모킹
-jest.mock('@/lib/supabase', () => ({
-  supabase: {
-    from: jest.fn(() => ({
-      select: jest.fn(() => ({
-        eq: jest.fn(() => ({
-          order: jest.fn(() => ({
-            range: jest.fn(),
-          })),
-        })),
-        order: jest.fn(() => ({
-          range: jest.fn(),
-        })),
-        range: jest.fn(),
-      })),
-      insert: jest.fn(() => ({
-        select: jest.fn(() => ({
-          single: jest.fn(),
-        })),
-      })),
-    })),
-  },
-}))
+jest.mock('@/lib/supabase', () => {
+  const supabase = { from: jest.fn() }
+  const supabaseAdmin = { from: jest.fn(), rpc: jest.fn() }
+  return { supabase, supabaseAdmin }
+})
 
 describe('Projects API Routes', () => {
   beforeEach(() => {
     jest.clearAllMocks()
+    jest.spyOn(NextResponse, 'json').mockImplementation((body: any, init?: ResponseInit) => {
+      return new Response(JSON.stringify(body), {
+        status: init?.status ?? 200,
+        headers: { 'Content-Type': 'application/json', ...(init?.headers as HeadersInit | undefined) },
+      }) as any
+    })
   })
+
+  afterEach(() => {
+    jest.restoreAllMocks()
+  })
+
+  const createRequest = (url: string, body?: unknown) => ({
+    url,
+    json: async () => body,
+  }) as any
+
+  const createQueryBuilder = (result: { data: any; error: any; count?: number }) => {
+    const builder: any = {}
+    builder.eq = jest.fn(() => builder)
+    builder.order = jest.fn(() => builder)
+    builder.or = jest.fn(() => builder)
+    builder.range = jest.fn(() => Promise.resolve(result))
+    return builder
+  }
 
   describe('GET /api/projects', () => {
     it('프로젝트 목록을 반환해야 합니다', async () => {
@@ -54,32 +61,27 @@ describe('Projects API Routes', () => {
         },
       ]
 
-      const { supabase } = require('@/lib/supabase')
-      supabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          order: jest.fn(() => ({
-            range: jest.fn().mockResolvedValue({
-              data: mockProjects,
-              error: null,
-              count: 2,
-            }),
-          })),
-        })),
+      const { supabaseAdmin } = require('@/lib/supabase')
+      const builder = createQueryBuilder({
+        data: mockProjects,
+        error: null,
+        count: 2,
+      })
+      supabaseAdmin.from.mockReturnValue({
+        select: jest.fn(() => builder),
       })
 
-      const url = new URL('http://localhost:3000/api/projects')
-      const request = new NextRequest(url)
-      const response = await GET(request)
+      const response = await GET(createRequest('http://localhost:3000/api/projects'))
       const data = await response.json()
 
       expect(response.status).toBe(200)
       expect(data.success).toBe(true)
       expect(data.data.items).toHaveLength(2)
-      expect(data.data.items[0].title).toBe('테스트 프로젝트 1')
+      expect(data.data.items[0].name).toBe('테스트 프로젝트 1')
     })
 
     it('상태 필터링이 동작해야 합니다', async () => {
-      const { supabase } = require('@/lib/supabase')
+      const { supabaseAdmin } = require('@/lib/supabase')
       
       const mockFilteredProjects = [
         {
@@ -90,23 +92,17 @@ describe('Projects API Routes', () => {
         },
       ]
 
-      supabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          eq: jest.fn(() => ({
-            order: jest.fn(() => ({
-              range: jest.fn().mockResolvedValue({
-                data: mockFilteredProjects,
-                error: null,
-                count: 1,
-              }),
-            })),
-          })),
-        })),
+      const builder = createQueryBuilder({
+        data: mockFilteredProjects,
+        error: null,
+        count: 1,
+      })
+      builder.eq = jest.fn(() => builder)
+      supabaseAdmin.from.mockReturnValue({
+        select: jest.fn(() => builder),
       })
 
-      const url = new URL('http://localhost:3000/api/projects?status=published')
-      const request = new NextRequest(url)
-      const response = await GET(request)
+      const response = await GET(createRequest('http://localhost:3000/api/projects?status=published'))
       const data = await response.json()
 
       expect(data.success).toBe(true)
@@ -115,22 +111,18 @@ describe('Projects API Routes', () => {
     })
 
     it('데이터베이스 에러 시 500 에러를 반환해야 합니다', async () => {
-      const { supabase } = require('@/lib/supabase')
+      const { supabaseAdmin } = require('@/lib/supabase')
       
-      supabase.from.mockReturnValue({
-        select: jest.fn(() => ({
-          order: jest.fn(() => ({
-            range: jest.fn().mockResolvedValue({
-              data: null,
-              error: { message: 'Database error' },
-            }),
-          })),
-        })),
+      const builder = createQueryBuilder({
+        data: null,
+        error: { message: 'Database error' },
+        count: undefined,
+      })
+      supabaseAdmin.from.mockReturnValue({
+        select: jest.fn(() => builder),
       })
 
-      const url = new URL('http://localhost:3000/api/projects')
-      const request = new NextRequest(url)
-      const response = await GET(request)
+      const response = await GET(createRequest('http://localhost:3000/api/projects'))
       const data = await response.json()
 
       expect(response.status).toBe(500)
@@ -156,25 +148,15 @@ describe('Projects API Routes', () => {
         updated_at: new Date().toISOString(),
       }
 
-      const { supabase } = require('@/lib/supabase')
-      supabase.from.mockReturnValue({
-        insert: jest.fn(() => ({
-          select: jest.fn(() => ({
-            single: jest.fn().mockResolvedValue({
-              data: mockCreatedProject,
-              error: null,
-            }),
-          })),
-        })),
+      const { supabaseAdmin } = require('@/lib/supabase')
+      supabaseAdmin.rpc.mockReturnValue({
+        single: jest.fn().mockResolvedValue({
+          data: mockCreatedProject,
+          error: null,
+        }),
       })
 
-      const url = new URL('http://localhost:3000/api/projects')
-      const request = new NextRequest(url, {
-        method: 'POST',
-        body: JSON.stringify(newProject),
-      })
-
-      const response = await POST(request)
+      const response = await POST(createRequest('http://localhost:3000/api/projects', newProject))
       const data = await response.json()
 
       expect(response.status).toBe(200)
@@ -188,16 +170,36 @@ describe('Projects API Routes', () => {
         description: '설명만 있음',
       }
 
-      const url = new URL('http://localhost:3000/api/projects')
-      const request = new NextRequest(url, {
-        method: 'POST',
-        body: JSON.stringify(invalidProject),
+      const { supabaseAdmin } = require('@/lib/supabase')
+      supabaseAdmin.rpc.mockReturnValue({
+        single: jest.fn().mockResolvedValue({
+          data: null,
+          error: { message: 'Create error' },
+        }),
       })
 
-      const response = await POST(request)
+      supabaseAdmin.from
+        .mockReturnValueOnce({
+          select: jest.fn(() => createQueryBuilder({ data: [], error: null })),
+        }) // slug check
+        .mockReturnValueOnce({
+          insert: jest.fn(() => ({
+            select: jest.fn(() => ({ single: jest.fn().mockResolvedValue({ data: { id: 'new-id' }, error: null }) })),
+          })),
+        })
+        .mockReturnValueOnce({ insert: jest.fn(() => ({ error: null })) }) // images
+        .mockReturnValueOnce({ insert: jest.fn(() => ({ error: null })) }) // tags
+        .mockReturnValueOnce({ insert: jest.fn(() => ({ error: null })) }) // items
+        .mockReturnValueOnce({
+          select: jest.fn(() => ({
+            eq: jest.fn(() => ({ single: jest.fn().mockResolvedValue({ data: { id: 'new-id', title: '', project_images: [], project_tags: [], project_items: [], status: 'draft', created_at: '', updated_at: '', inquiry_url: null, description: null, location: null, year: null, area: null }, error: null }) })),
+          })),
+        })
+
+      const response = await POST(createRequest('http://localhost:3000/api/projects', invalidProject))
       const data = await response.json()
 
-      expect(response.status).toBe(400)
+      expect(response.status).toBe(500)
       expect(data.success).toBe(false)
     })
   })

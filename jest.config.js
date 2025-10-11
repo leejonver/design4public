@@ -9,6 +9,7 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
   testEnvironment: 'jest-environment-jsdom',
+  testPathIgnorePatterns: ['<rootDir>/__tests__/e2e/'],
   moduleNameMapper: {
     // 경로 별칭 처리
     '^@/(.*)$': '<rootDir>/src/$1',
