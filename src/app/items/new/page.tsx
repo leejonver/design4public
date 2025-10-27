@@ -81,7 +81,14 @@ export default function NewItemPage() {
     multiple: true,
     listType: 'picture-card',
     fileList,
+    maxCount: 5, // 최대 5장으로 제한
     beforeUpload: (file) => {
+      // 5장 제한 확인
+      if (fileList.length >= 5) {
+        message.error('이미지는 최대 5장까지만 업로드 가능합니다!');
+        return false;
+      }
+      
       const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp';
       if (!isJpgOrPng) {
         message.error('JPG, PNG, WebP 파일만 업로드 가능합니다!');
@@ -240,13 +247,15 @@ export default function NewItemPage() {
               <Card title="아이템 이미지">
                 <Form.Item
                   label="이미지 업로드"
-                  extra="여러 장의 이미지를 업로드할 수 있습니다. 첫 번째 이미지가 대표 이미지로 설정됩니다."
+                  extra={`최대 5장까지 업로드 가능합니다. 첫 번째 이미지가 대표 이미지로 설정됩니다. (현재: ${fileList.length}/5)`}
                 >
                   <Upload {...uploadProps}>
-                    <div>
-                      <PlusOutlined />
-                      <div style={{ marginTop: 8 }}>이미지 업로드</div>
-                    </div>
+                    {fileList.length >= 5 ? null : (
+                      <div>
+                        <PlusOutlined />
+                        <div style={{ marginTop: 8 }}>이미지 업로드</div>
+                      </div>
+                    )}
                   </Upload>
                 </Form.Item>
               </Card>

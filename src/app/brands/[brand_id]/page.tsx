@@ -36,6 +36,14 @@ export default function BrandDetailPage() {
   const [brand, setBrand] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
+  // 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
+  const addCacheBuster = (url: string | null | undefined, updatedAt?: string): string | undefined => {
+    if (!url) return undefined;
+    const timestamp = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${timestamp}`;
+  };
+
   // 브랜드 데이터 조회
   useEffect(() => {
     const fetchBrand = async () => {
@@ -105,7 +113,7 @@ export default function BrandDetailPage() {
             <Image
               width="100%"
               height={300}
-              src={brand.coverImageUrl}
+              src={addCacheBuster(brand.coverImageUrl, brand.updatedAt)}
               alt={`${brand.nameKo} 커버 이미지`}
               style={{ objectFit: 'cover', borderRadius: '8px' }}
             />
@@ -120,7 +128,7 @@ export default function BrandDetailPage() {
                 {brand.logoImageUrl ? (
                   <Avatar
                     size={120}
-                    src={brand.logoImageUrl}
+                    src={addCacheBuster(brand.logoImageUrl, brand.updatedAt)}
                     alt={`${brand.nameKo} 로고`}
                   />
                 ) : (

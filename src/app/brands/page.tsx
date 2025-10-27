@@ -102,6 +102,14 @@ export default function BrandsPage() {
     return matchesSearch;
   });
 
+  // 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
+  const addCacheBuster = (url: string | null | undefined, updatedAt?: string): string | undefined => {
+    if (!url) return undefined;
+    const timestamp = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${timestamp}`;
+  };
+
   // 테이블 컬럼 정의
   const columns: ColumnsType<Brand> = [
     {
@@ -113,7 +121,7 @@ export default function BrandsPage() {
         logoUrl ? (
           <Avatar
             size={50}
-            src={logoUrl}
+            src={addCacheBuster(logoUrl, record.updatedAt)}
             alt={`${record.nameKo} 로고`}
           />
         ) : (

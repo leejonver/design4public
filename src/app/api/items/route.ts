@@ -51,17 +51,42 @@ export async function GET(request: NextRequest) {
       )
     }
 
+    // 모든 아이템의 이미지 정보 가져오기
+    const itemIds = items?.map(item => item.id) || []
+    let itemImagesMap: Record<string, any[]> = {}
+    
+    if (itemIds.length > 0) {
+      const { data: allImages } = await supabaseAdmin
+        .from('item_images')
+        .select('*')
+        .in('item_id', itemIds)
+        .order('order', { ascending: true })
+      
+      // item_id별로 이미지 그룹화
+      allImages?.forEach(img => {
+        if (!itemImagesMap[img.item_id]) {
+          itemImagesMap[img.item_id] = []
+        }
+        itemImagesMap[img.item_id].push({
+          id: img.id,
+          url: img.image_url,
+          alt: img.alt_text || '',
+          isMain: img.is_main || false
+        })
+      })
+    }
+
     // 데이터 변환
     const transformedItems = items?.map(item => ({
       id: item.id,
       name: item.name,
       description: item.description || '',
-      images: item.image_url ? [{
+      images: itemImagesMap[item.id] || (item.image_url ? [{
         id: `item_${item.id}`,
         url: item.image_url,
         alt: item.name,
         isMain: true
-      }] : [],
+      }] : []),
       mallUrl: item.nara_url,
       brand: item.brands ? {
         id: item.brands.id,
@@ -145,7 +170,7 @@ export async function POST(request: NextRequest) {
       counter++
     }
 
-    // images가 문자열 배열인 경우 처리
+    // images가 문자열 배열인 경우 처리 (하위 호환성을 위해 첫 번째 이미지를 image_url에도 저장)
     const imageUrl = Array.isArray(images) && images.length > 0 
       ? (typeof images[0] === 'string' ? images[0] : images[0]?.url) 
       : null
@@ -174,6 +199,26 @@ export async function POST(request: NextRequest) {
         },
         { status: 500 }
       )
+    }
+
+    // 이미지 추가 (item_images 테이블)
+    if (images && Array.isArray(images) && images.length > 0) {
+      const itemImages = images.map((img, index) => ({
+        item_id: item.id,
+        image_url: typeof img === 'string' ? img : img.url,
+        alt_text: name, // 아이템명을 alt_text로 사용
+        is_main: index === 0, // 첫 번째 이미지를 메인으로 설정
+        order: index + 1
+      }))
+
+      const { error: imageError } = await supabaseAdmin
+        .from('item_images')
+        .insert(itemImages)
+
+      if (imageError) {
+        console.warn('Failed to insert item_images:', imageError)
+        // 에러가 있어도 계속 진행
+      }
     }
 
     // 태그 추가

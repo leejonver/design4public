@@ -26,17 +26,29 @@ export async function GET(
       )
     }
 
+    // 이미지 정보 가져오기
+    const { data: itemImages } = await supabase
+      .from('item_images')
+      .select('*')
+      .eq('item_id', id)
+      .order('order', { ascending: true })
+
     // 데이터 변환
     const transformedItem = {
       id: item.id,
       name: item.name,
       description: item.description || '',
-      images: item.image_url ? [{
+      images: itemImages && itemImages.length > 0 ? itemImages.map(img => ({
+        id: img.id,
+        url: img.image_url,
+        alt: img.alt_text || item.name,
+        isMain: img.is_main || false
+      })) : (item.image_url ? [{
         id: `item_${item.id}`,
         url: item.image_url,
         alt: item.name,
         isMain: true
-      }] : [],
+      }] : []),
       mallUrl: item.nara_url,
       brand: item.brands ? {
         id: item.brands.id,
@@ -139,7 +151,7 @@ export async function PUT(
       updateData.nara_url = mallUrl
     }
     if (images && images.length > 0 && images[0]) {
-      updateData.image_url = images[0]
+      updateData.image_url = typeof images[0] === 'string' ? images[0] : images[0]
     }
     
     console.log('Update data:', updateData)
@@ -157,6 +169,38 @@ export async function PUT(
         { success: false, error: '아이템 업데이트에 실패했습니다.' },
         { status: 500 }
       )
+    }
+
+    // 이미지 업데이트
+    if (images && Array.isArray(images)) {
+      // 기존 이미지 삭제
+      const { error: deleteImageError } = await supabaseAdmin
+        .from('item_images')
+        .delete()
+        .eq('item_id', id)
+
+      if (deleteImageError) {
+        console.warn('Failed to delete existing item_images:', deleteImageError)
+      }
+
+      // 새 이미지 추가
+      if (images.length > 0) {
+        const itemImages = images.map((img, index) => ({
+          item_id: id,
+          image_url: typeof img === 'string' ? img : img,
+          alt_text: name,
+          is_main: index === 0,
+          order: index + 1
+        }))
+
+        const { error: insertImageError } = await supabaseAdmin
+          .from('item_images')
+          .insert(itemImages)
+
+        if (insertImageError) {
+          console.warn('Failed to insert item_images:', insertImageError)
+        }
+      }
     }
 
     // 태그 업데이트

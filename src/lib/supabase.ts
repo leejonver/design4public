@@ -99,6 +99,7 @@ export interface Database {
           brand_id: string | null
           nara_url: string | null
           image_url: string | null
+          slug: string
           status: 'available' | 'unavailable' | 'discontinued'
           created_at: string
           updated_at: string
@@ -110,6 +111,7 @@ export interface Database {
           brand_id?: string | null
           nara_url?: string | null
           image_url?: string | null
+          slug?: string
           status?: 'available' | 'unavailable' | 'discontinued'
           created_at?: string
           updated_at?: string
@@ -121,7 +123,40 @@ export interface Database {
           brand_id?: string | null
           nara_url?: string | null
           image_url?: string | null
+          slug?: string
           status?: 'available' | 'unavailable' | 'discontinued'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      item_images: {
+        Row: {
+          id: string
+          item_id: string
+          image_url: string
+          alt_text: string | null
+          is_main: boolean
+          order: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          item_id: string
+          image_url: string
+          alt_text?: string | null
+          is_main?: boolean
+          order?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          item_id?: string
+          image_url?: string
+          alt_text?: string | null
+          is_main?: boolean
+          order?: number
           created_at?: string
           updated_at?: string
         }

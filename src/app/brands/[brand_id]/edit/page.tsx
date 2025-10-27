@@ -62,6 +62,14 @@ export default function EditBrandPage() {
     fetchBrand();
   }, [brandId]);
 
+  // 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
+  const addCacheBuster = (url: string | null | undefined, updatedAt?: string): string | undefined => {
+    if (!url) return undefined;
+    const timestamp = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${timestamp}`;
+  };
+
   useEffect(() => {
     if (brand) {
       form.setFieldsValue({
@@ -71,16 +79,35 @@ export default function EditBrandPage() {
         websiteUrl: brand.websiteUrl,
       });
       if (brand.logoImageUrl) {
-        setLogoFileList([{ uid: '-1', name: 'logo.png', status: 'done', url: brand.logoImageUrl }]);
+        setLogoFileList([{ 
+          uid: '-1', 
+          name: 'logo.png', 
+          status: 'done', 
+          url: addCacheBuster(brand.logoImageUrl, brand.updatedAt),
+          thumbUrl: addCacheBuster(brand.logoImageUrl, brand.updatedAt)
+        }]);
       }
       if (brand.coverImageUrl) {
-        setCoverFileList([{ uid: '-1', name: 'cover.png', status: 'done', url: brand.coverImageUrl }]);
+        setCoverFileList([{ 
+          uid: '-1', 
+          name: 'cover.png', 
+          status: 'done', 
+          url: addCacheBuster(brand.coverImageUrl, brand.updatedAt),
+          thumbUrl: addCacheBuster(brand.coverImageUrl, brand.updatedAt)
+        }]);
       }
     }
   }, [brand, form]);
 
   const handleUpload = async (file: UploadFile, type: 'logo' | 'cover'): Promise<string | null> => {
-    if (!file.originFileObj) return file.url || null; // 기존 이미지 URL 반환
+    if (!file.originFileObj) {
+      // 기존 이미지 URL에서 캐시 버스터 제거 후 반환
+      const url = file.url || null;
+      if (url && url.includes('?v=')) {
+        return url.split('?v=')[0];
+      }
+      return url;
+    }
     try {
       const response = await api.upload(file.originFileObj, 'brands');
       if (response.success && response.data?.url) {
@@ -140,7 +167,11 @@ export default function EditBrandPage() {
       
       if (response.success) {
         message.success('브랜드가 성공적으로 수정되었습니다!');
-        window.location.href = '/brands';
+        // 브랜드 목록으로 리다이렉트 (완전 새로고침을 위해 window.location 사용)
+        // 이렇게 하면 이미지 캐시가 무효화되어 새 이미지가 표시됩니다
+        setTimeout(() => {
+          window.location.href = '/brands';
+        }, 500);
       } else {
         message.error(`브랜드 수정 실패: ${response.error || '알 수 없는 오류'}`);
       }
