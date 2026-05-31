@@ -1,9 +1,15 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { ItemsFilter } from "./items-filter";
 import { ItemsList } from "./items-list";
 import { ItemsSkeleton } from "./items-skeleton";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Items" };
+export const metadata: Metadata = createPageMetadata({
+  title: "Items",
+  description: "공공조달 가구 제품 카탈로그를 브랜드, 태그, 키워드로 탐색하고 프로젝트 적용 사례까지 함께 확인해 보세요.",
+  path: "/items",
+});
 
 export default function ItemsListPage() {
   return (

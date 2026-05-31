@@ -1,18 +1,56 @@
 import Link from "next/link";
+import Image from "next/image";
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchBrandBySlug } from "@/lib/api";
 import { addCacheBuster } from "@/lib/utils";
+import { JsonLd } from "@/components/json-ld";
+import {
+  absoluteUrl,
+  breadcrumbSchema,
+  compactText,
+  createPageMetadata,
+  jsonLdGraph,
+  stripCacheBuster,
+  truncateDescription,
+} from "@/lib/seo";
 
 export const revalidate = 0; // 항상 최신 데이터 가져오기
 
 type Props = { params: Promise<{ slug: string }> };
+type RelatedProject = {
+  id: string;
+  slug: string;
+  cover_image_url: string | null;
+  title: string;
+  year: number | null;
+};
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
+  const brand = await fetchBrandBySlug(decodedSlug);
+  if (!brand) return {};
+  const title = brand.name_en ? `${brand.name_ko} (${brand.name_en})` : brand.name_ko;
+  const description = truncateDescription(
+    compactText(brand.description, `${brand.name_ko} 브랜드의 공공조달 가구 제품과 프로젝트 사례입니다.`)
+  );
+
+  return createPageMetadata({
+    title,
+    description,
+    path: `/brands/${decodedSlug}`,
+    images: [brand.cover_image_url, brand.logo_image_url],
+  });
+}
 
 export default async function BrandDetailPage({ params }: Props) {
   const { slug } = await params;
-  const brand = await fetchBrandBySlug(decodeURIComponent(slug));
+  const decodedSlug = decodeURIComponent(slug);
+  const brand = await fetchBrandBySlug(decodedSlug);
   if (!brand) return notFound();
 
-  const projects = brand.projects
+  const projects: RelatedProject[] = brand.projects
     .map((item: { project_id: string; projects: any | null }) => {
       if (!item.projects) return null;
       // cover_image_url이 없으면 project_images의 첫 번째 이미지 사용
@@ -28,27 +66,60 @@ export default async function BrandDetailPage({ params }: Props) {
             : item.projects.id,
       };
     })
-    .filter((project: { id: string; slug: string; cover_image_url: string | null; title: string; year: number | null } | null): project is { id: string; slug: string; cover_image_url: string | null; title: string; year: number | null } => Boolean(project));
+    .filter((project: RelatedProject | null): project is RelatedProject => Boolean(project));
+  const brandTitle = brand.name_en ? `${brand.name_ko} (${brand.name_en})` : brand.name_ko;
+  const description = truncateDescription(
+    compactText(brand.description, `${brand.name_ko} 브랜드의 공공조달 가구 제품과 프로젝트 사례입니다.`)
+  );
 
   return (
     <article className="-mx-4 -mt-6 sm:-mx-6">
+      <JsonLd
+        data={jsonLdGraph([
+          breadcrumbSchema([
+            { name: "Brands", path: "/brands" },
+            { name: brand.name_ko, path: `/brands/${decodedSlug}` },
+          ]),
+          {
+            "@type": "Brand",
+            "@id": `${absoluteUrl(`/brands/${decodedSlug}`)}#brand`,
+            url: absoluteUrl(`/brands/${decodedSlug}`),
+            name: brand.name_ko,
+            alternateName: brand.name_en ?? undefined,
+            description,
+            logo: stripCacheBuster(brand.logo_image_url),
+            image: stripCacheBuster(brand.cover_image_url),
+            sameAs: brand.website_url ? [brand.website_url] : undefined,
+            subjectOf: projects.map((project: RelatedProject) => ({
+              "@type": "CreativeWork",
+              name: project.title,
+              url: absoluteUrl(`/projects/${project.slug}`),
+            })),
+          },
+        ])}
+      />
       {/* Cover Image Section */}
       <div className="relative">
-        <div className="h-64 w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 sm:h-80">
-          <img
+        <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 sm:h-80">
+          <Image
             src={addCacheBuster(brand.cover_image_url)}
-            alt={brand.name_ko ?? brand.name_en ?? "브랜드"}
-            className="h-full w-full object-cover"
+            alt={brandTitle}
+            fill
+            priority
+            className="object-cover"
+            sizes="100vw"
           />
         </div>
         
         {/* Profile Image */}
         <div className="absolute -bottom-16 left-4 sm:left-8">
-          <div className="h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
-            <img
+          <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
+            <Image
               src={addCacheBuster(brand.logo_image_url ?? brand.cover_image_url)}
-              alt={brand.name_ko ?? brand.name_en ?? "브랜드"}
-              className="h-full w-full object-contain p-2"
+              alt={`${brandTitle} 로고`}
+              fill
+              className="object-contain p-2"
+              sizes="128px"
             />
           </div>
         </div>
@@ -98,11 +169,13 @@ export default async function BrandDetailPage({ params }: Props) {
                   href={`/items/${item.slug}`}
                   className="group overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md"
                 >
-                  <div className="aspect-square w-full overflow-hidden bg-gray-50">
-                    <img
+                  <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
+                    <Image
                       src={addCacheBuster(item.image_url)}
                       alt={item.name}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   </div>
                   <div className="p-4">
@@ -124,17 +197,19 @@ export default async function BrandDetailPage({ params }: Props) {
           <h2 className="mb-4 text-xl font-semibold">관련 프로젝트</h2>
           {projects.length ? (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {projects.map((project: { id: string; slug: string; cover_image_url: string | null; title: string; year: number | null }) => (
+              {projects.map((project: RelatedProject) => (
                 <Link
                   key={project.id}
                   href={`/projects/${project.slug}`}
                   className="group overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md"
                 >
-                  <div className="aspect-video w-full overflow-hidden bg-gray-50">
-                    <img
+                  <div className="relative aspect-video w-full overflow-hidden bg-gray-50">
+                    <Image
                       src={addCacheBuster(project.cover_image_url)}
                       alt={project.title}
-                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, 50vw"
                     />
                   </div>
                   <div className="p-4">
@@ -158,4 +233,3 @@ export default async function BrandDetailPage({ params }: Props) {
     </article>
   );
 }
-

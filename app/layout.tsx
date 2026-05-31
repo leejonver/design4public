@@ -2,22 +2,40 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { JsonLd } from "@/components/json-ld";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_URL,
+  jsonLdGraph,
+  organizationSchema,
+  websiteSchema,
+} from "@/lib/seo";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
+  applicationName: SITE_NAME,
   title: {
-    default: "design4public | Projects",
-    template: "%s | design4public",
+    default: "design4public | 공공조달 가구 납품사례",
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    "한국 공공조달 가구 납품사례를 탐색하는 콘텐츠 사이트. 프로젝트, 아이템, 브랜드별로 필터링하고 살펴보세요.",
+  description: SITE_DESCRIPTION,
+  alternates: {
+    canonical: "/projects",
+  },
   openGraph: {
-    title: "design4public",
-    description:
-      "한국 공공조달 가구 납품사례를 탐색하는 콘텐츠 사이트.",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
     type: "website",
-    url: "https://design4public.com",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    locale: "ko_KR",
   },
-  twitter: { card: "summary_large_image" },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -40,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         />
       </head>
       <body className="min-h-screen bg-background font-sans">
+        <JsonLd data={jsonLdGraph([organizationSchema(), websiteSchema()])} />
         <SiteHeader />
         <main className="mx-auto w-full max-w-[1920px] px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8 lg:py-12">{children}</main>
         <SiteFooter />

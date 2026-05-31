@@ -1,9 +1,15 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { ProjectsFilter } from "./projects-filter";
 import { ProjectsGrid } from "./projects-grid";
 import { ProjectsSkeleton } from "./projects-skeleton";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Projects" };
+export const metadata: Metadata = createPageMetadata({
+  title: "Projects",
+  description: "공공기관과 교육·업무 공간에 납품된 공공조달 가구 프로젝트 사례를 연도, 태그, 키워드로 탐색해 보세요.",
+  path: "/projects",
+});
 
 export default function ProjectsListPage() {
   return (

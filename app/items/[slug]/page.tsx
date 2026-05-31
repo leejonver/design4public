@@ -1,11 +1,23 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Metadata } from "next";
 import { fetchItemBySlug, fetchItemPhotos } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { JsonLd } from "@/components/json-ld";
 import { addCacheBuster } from "@/lib/utils";
 import { ExternalLink, Mail } from "lucide-react";
+import {
+  SITE_URL,
+  absoluteUrl,
+  breadcrumbSchema,
+  compactText,
+  createPageMetadata,
+  jsonLdGraph,
+  stripCacheBuster,
+  truncateDescription,
+} from "@/lib/seo";
 
 export const revalidate = 0; // 항상 최신 데이터 가져오기
 
@@ -15,21 +27,32 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const item = await fetchItemBySlug(decodeURIComponent(slug));
   if (!item) return {};
-  return {
+  const decodedSlug = decodeURIComponent(slug);
+  const description = truncateDescription(
+    compactText(item.description, `${item.name} 공공조달 가구 제품 정보와 적용 프로젝트 사례입니다.`)
+  );
+  const metadata = createPageMetadata({
     title: item.name,
-    description: item.description ?? undefined,
-    openGraph: {
-      title: item.name,
-      description: item.description ?? undefined,
-      images: item.image_url ? [item.image_url] : undefined,
-    },
-  };
+    description,
+    path: `/items/${decodedSlug}`,
+    images: [item.image_url],
+  });
+
+  if (item.status === "hidden") {
+    metadata.robots = {
+      index: false,
+      follow: false,
+    };
+  }
+
+  return metadata;
 }
 
 export default async function ItemDetailPage({ params }: Props) {
   const { slug } = await params;
   const item = await fetchItemBySlug(decodeURIComponent(slug));
   if (!item) return notFound();
+  const decodedSlug = decodeURIComponent(slug);
 
   // Fetch photos that contain this item
   type ItemPhoto = {
@@ -67,18 +90,60 @@ export default async function ItemDetailPage({ params }: Props) {
       tag.tags?.type === "item" ? tag.tags?.name : undefined
     )
     .filter((name: string | undefined): name is string => Boolean(name));
+  const description = truncateDescription(
+    compactText(item.description, `${item.name} 공공조달 가구 제품 정보와 적용 프로젝트 사례입니다.`)
+  );
 
   return (
     <article className="space-y-10">
+      <JsonLd
+        data={jsonLdGraph([
+          breadcrumbSchema([
+            { name: "Items", path: "/items" },
+            { name: item.name, path: `/items/${decodedSlug}` },
+          ]),
+          {
+            "@type": "Product",
+            "@id": `${absoluteUrl(`/items/${decodedSlug}`)}#product`,
+            url: absoluteUrl(`/items/${decodedSlug}`),
+            name: item.name,
+            description,
+            image: stripCacheBuster(item.image_url),
+            brand: item.brands
+              ? {
+                  "@type": "Brand",
+                  name: item.brands.name_ko,
+                  alternateName: item.brands.name_en ?? undefined,
+                  url: absoluteUrl(`/brands/${item.brands.slug}`),
+                }
+              : undefined,
+            category: "공공조달 가구",
+            keywords: tags,
+            offers: item.nara_url
+              ? {
+                  "@type": "Offer",
+                  url: item.nara_url,
+                  availability: "https://schema.org/InStock",
+                  seller: {
+                    "@id": `${SITE_URL}/#organization`,
+                  },
+                }
+              : undefined,
+          },
+        ])}
+      />
       {/* 카탈로그 레이아웃 - 이미지 + 정보 */}
       <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
         {/* 좌측: 제품 이미지 */}
         <div className="lg:w-1/2 space-y-4">
-          <div className="aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-            <img
+          <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
+            <Image
               src={addCacheBuster(item.image_url)}
               alt={item.name}
-              className="w-full h-full object-contain"
+              fill
+              priority
+              className="object-contain"
+              sizes="(max-width: 1024px) 100vw, 50vw"
             />
           </div>
 
@@ -172,10 +237,12 @@ export default async function ItemDetailPage({ params }: Props) {
                 href={`/projects/${photo.project.slug}`}
                 className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100"
               >
-                <img
+                <Image
                   src={addCacheBuster(photo.image_url)}
                   alt={photo.alt_text || photo.project.title}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  fill
+                  className="object-cover transition-transform duration-300 group-hover:scale-105"
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="absolute bottom-0 left-0 right-0 p-3">
@@ -203,10 +270,12 @@ export default async function ItemDetailPage({ params }: Props) {
               >
                 <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-gray-100">
                   {project.cover_image_url && (
-                    <img
+                    <Image
                       src={addCacheBuster(project.cover_image_url)}
                       alt={project.title}
-                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      fill
+                      className="object-cover transition-transform duration-300 group-hover:scale-105"
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     />
                   )}
                 </div>

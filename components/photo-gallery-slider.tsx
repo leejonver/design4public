@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { addCacheBuster } from "@/lib/utils";
 import type { Tables } from "@/lib/database.types";
@@ -94,10 +95,13 @@ export function PhotoGallerySlider({ photos, projectTitle, projectSlug }: Props)
                         onTouchMove={onTouchMove}
                         onTouchEnd={onTouchEnd}
                     >
-                        <img
+                        <Image
                             src={addCacheBuster(currentPhoto?.image_url)}
                             alt={currentPhoto?.alt_text || projectTitle}
-                            className="w-full h-full object-cover transition-opacity duration-300"
+                            fill
+                            priority={currentIndex === 0}
+                            className="object-cover transition-opacity duration-300"
+                            sizes="(max-width: 1024px) 100vw, calc(100vw - 18rem)"
                         />
 
                         {/* Navigation Arrows */}
@@ -147,11 +151,13 @@ export function PhotoGallerySlider({ photos, projectTitle, projectSlug }: Props)
                                         >
                                             <div className="flex flex-col items-center p-2 rounded hover:bg-white transition-colors">
                                                 {item.image_url && (
-                                                    <div className="w-full aspect-square overflow-hidden rounded bg-white mb-2">
-                                                        <img
+                                                    <div className="relative w-full aspect-square overflow-hidden rounded bg-white mb-2">
+                                                        <Image
                                                             src={addCacheBuster(item.image_url)}
                                                             alt={item.name}
-                                                            className="w-full h-full object-contain group-hover:scale-105 transition-transform"
+                                                            fill
+                                                            className="object-contain group-hover:scale-105 transition-transform"
+                                                            sizes="128px"
                                                         />
                                                     </div>
                                                 )}
@@ -190,16 +196,18 @@ export function PhotoGallerySlider({ photos, projectTitle, projectSlug }: Props)
                         <button
                             key={photo.id}
                             onClick={() => goToIndex(index)}
-                            className={`shrink-0 w-16 h-10 rounded overflow-hidden border-2 transition-all ${index === currentIndex
+                            className={`relative shrink-0 w-16 h-10 rounded overflow-hidden border-2 transition-all ${index === currentIndex
                                 ? "border-sage-600 opacity-100"
                                 : "border-transparent opacity-60 hover:opacity-100"
                                 }`}
                             aria-label={`이미지 ${index + 1}로 이동`}
                         >
-                            <img
+                            <Image
                                 src={addCacheBuster(photo.image_url)}
                                 alt={`썸네일 ${index + 1}`}
-                                className="w-full h-full object-cover"
+                                fill
+                                className="object-cover"
+                                sizes="64px"
                             />
                         </button>
                     ))}

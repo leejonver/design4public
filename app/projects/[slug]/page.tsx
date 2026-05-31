@@ -4,6 +4,19 @@ import { fetchProjectBySlug, fetchProjectPhotosWithItems } from "@/lib/api";
 import { Badge } from "@/components/ui/badge";
 import { InquiryDialog } from "@/components/inquiry-dialog";
 import { PhotoGallerySlider } from "@/components/photo-gallery-slider";
+import { JsonLd } from "@/components/json-ld";
+import {
+  SITE_URL,
+  absoluteUrl,
+  breadcrumbSchema,
+  compactText,
+  createPageMetadata,
+  getSeoImages,
+  jsonLdGraph,
+  truncateDescription,
+} from "@/lib/seo";
+
+type GalleryPhoto = Awaited<ReturnType<typeof fetchProjectPhotosWithItems>>[number];
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -11,18 +24,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const project = await fetchProjectBySlug(decodeURIComponent(slug));
   if (!project) return {};
-  const images = project.project_images
-    .map((image: { image_url: string | null }) => image.image_url)
-    .filter((url: string | null): url is string => Boolean(url));
-  return {
+  const decodedSlug = decodeURIComponent(slug);
+  const description = truncateDescription(
+    compactText(
+      project.description,
+      `${project.title} 공공조달 가구 납품 프로젝트 사례입니다.`
+    )
+  );
+  return createPageMetadata({
     title: project.title,
-    description: project.description ?? undefined,
-    openGraph: {
-      title: project.title,
-      description: project.description ?? undefined,
-      images,
-    },
-  };
+    description,
+    path: `/projects/${decodedSlug}`,
+    images: [
+      project.cover_image_url,
+      ...project.project_images.map((image: { image_url: string | null }) => image.image_url),
+    ],
+    type: "article",
+  });
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
@@ -42,7 +60,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
   // Fallback to project_images if no photos from new table
   const hasPhotosWithItems = photosWithItems.length > 0;
-  const fallbackImages = project.project_images.map((img: { id: string; image_url: string; order?: number }, index: number) => ({
+  const fallbackImages: GalleryPhoto[] = project.project_images.map((img: { id: string; image_url: string; order?: number }, index: number) => ({
     id: img.id,
     image_url: img.image_url,
     alt_text: project.title,
@@ -51,10 +69,50 @@ export default async function ProjectDetailPage({ params }: Props) {
     items: [],
   }));
 
-  const galleryPhotos = hasPhotosWithItems ? photosWithItems : fallbackImages;
+  const galleryPhotos: GalleryPhoto[] = hasPhotosWithItems ? photosWithItems : fallbackImages;
+  const description = truncateDescription(
+    compactText(
+      project.description,
+      `${project.title} 공공조달 가구 납품 프로젝트 사례입니다.`
+    )
+  );
+  const imageUrls = getSeoImages(galleryPhotos.map((photo: GalleryPhoto) => photo.image_url)).map(
+    (image) => image.url
+  );
 
   return (
     <article className="space-y-6">
+      <JsonLd
+        data={jsonLdGraph([
+          breadcrumbSchema([
+            { name: "Projects", path: "/projects" },
+            { name: project.title, path: `/projects/${decodedSlug}` },
+          ]),
+          {
+            "@type": "CreativeWork",
+            "@id": `${absoluteUrl(`/projects/${decodedSlug}`)}#project`,
+            url: absoluteUrl(`/projects/${decodedSlug}`),
+            name: project.title,
+            headline: project.title,
+            description,
+            image: imageUrls,
+            datePublished: project.created_at,
+            dateModified: project.updated_at,
+            inLanguage: "ko-KR",
+            temporalCoverage: project.year ? String(project.year) : undefined,
+            contentLocation: project.location
+              ? {
+                  "@type": "Place",
+                  name: project.location,
+                }
+              : undefined,
+            keywords: tags,
+            publisher: {
+              "@id": `${SITE_URL}/#organization`,
+            },
+          },
+        ])}
+      />
       {/* 프로젝트 타이틀 - 상단 */}
       <header>
         <h1 className="text-2xl font-semibold">{project.title}</h1>

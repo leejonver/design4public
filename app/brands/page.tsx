@@ -1,9 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
+import type { Metadata } from "next";
 import { fetchBrands, fetchProjects } from "@/lib/api";
 import { addCacheBuster } from "@/lib/utils";
+import { createPageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Brands" };
+export const metadata: Metadata = createPageMetadata({
+  title: "Brands",
+  description: "공공조달 가구 브랜드별 제품과 납품 프로젝트 사례를 한곳에서 살펴보세요.",
+  path: "/brands",
+});
 export const revalidate = 0;
 
 export default async function BrandsPage() {
