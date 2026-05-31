@@ -1,11 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
 
+const TAG_TYPES = ['project', 'item', 'photo', 'brand'] as const
+
+function isTagType(type: string | null | undefined) {
+  return TAG_TYPES.includes(type as typeof TAG_TYPES[number])
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
-    const type = searchParams.get('type') // 'project' 또는 'item'
+    const type = searchParams.get('type')
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
@@ -16,7 +22,7 @@ export async function GET(request: NextRequest) {
       .order('name', { ascending: true })
 
     // 타입 필터
-    if (type && (type === 'project' || type === 'item')) {
+    if (isTagType(type)) {
       query = query.eq('type', type)
     }
 
@@ -86,7 +92,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    if (!type || (type !== 'project' && type !== 'item')) {
+    if (!isTagType(type)) {
       return NextResponse.json(
         { success: false, error: '태그 타입을 올바르게 선택해주세요.' },
         { status: 400 }

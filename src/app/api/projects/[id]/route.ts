@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
+import { buildProjectPhotoRows, projectSelect, transformProject } from '../project-response'
 
 export async function GET(
   request: NextRequest,
@@ -10,19 +11,7 @@ export async function GET(
 
     const { data: project, error } = await supabaseAdmin
       .from('projects')
-      .select(`
-        *,
-        project_images(*),
-        project_tags(
-          tags(*)
-        ),
-        project_items(
-          items(
-            *,
-            brands(*)
-          )
-        )
-      `)
+      .select(projectSelect)
       .eq('id', id)
       .single()
 
@@ -34,40 +23,9 @@ export async function GET(
       )
     }
 
-    // 데이터 변환
-    const transformedProject = {
-      id: project.id,
-      name: project.title,
-      description: project.description || '',
-      location: project.location || '',
-      completionYear: project.year || new Date().getFullYear(),
-      area: project.area,
-      images: project.project_images?.map((img: any, index: number) => ({
-        id: img.id,
-        url: img.image_url,
-        alt: project.title,
-        isMain: index === 0
-      })) || [],
-      tags: project.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
-      connectedItems: project.project_items?.map((pi: any) => ({
-        ...pi.items,
-        brand: pi.items?.brands,
-        images: pi.items?.image_url ? [{
-          id: pi.items.id,
-          url: pi.items.image_url,
-          alt: pi.items.name,
-          isMain: true
-        }] : []
-      })).filter(Boolean) || [],
-      inquiryUrl: project.inquiry_url || '',
-      status: project.status,
-      createdAt: project.created_at,
-      updatedAt: project.updated_at
-    }
-
     return NextResponse.json({
       success: true,
-      data: transformedProject
+      data: transformProject(project)
     })
 
   } catch (error) {
@@ -86,7 +44,7 @@ export async function PUT(
   try {
     const { id } = params
     const body = await request.json()
-    const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
+    const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images, photos } = body
 
     // 프로젝트 업데이트
     const updateData: any = {
@@ -115,30 +73,55 @@ export async function PUT(
       )
     }
 
-    // 기존 이미지 삭제
-    await supabaseAdmin
-      .from('project_images')
-      .delete()
-      .eq('project_id', id)
-
-    // 새 이미지 저장
-    if (images && images.length > 0) {
-      const imageInserts = images.map((img: any, index: number) => ({
-        project_id: id,
-        image_url: img.url,
-        order: index
-      }))
-
-      const { error: imageError } = await supabaseAdmin
+    if (images !== undefined) {
+      await supabaseAdmin
         .from('project_images')
-        .insert(imageInserts)
-      
-      if (imageError) {
-        console.error('Image insert error:', imageError)
-        return NextResponse.json(
-          { success: false, error: `이미지 저장에 실패했습니다: ${imageError.message}` },
-          { status: 500 }
-        )
+        .delete()
+        .eq('project_id', id)
+
+      if (images.length > 0) {
+        const imageInserts = images.map((img: any, index: number) => ({
+          project_id: id,
+          image_url: img.url,
+          alt_text: img.alt ?? null,
+          is_main: img.isMain ?? index === 0,
+          order: index
+        }))
+
+        const { error: imageError } = await supabaseAdmin
+          .from('project_images')
+          .insert(imageInserts)
+
+        if (imageError) {
+          console.error('Image insert error:', imageError)
+          return NextResponse.json(
+            { success: false, error: `이미지 저장에 실패했습니다: ${imageError.message}` },
+            { status: 500 }
+          )
+        }
+      }
+    }
+
+    if (photos !== undefined) {
+      await supabaseAdmin
+        .from('project_photos')
+        .delete()
+        .eq('project_id', id)
+
+      if (photos.length > 0) {
+        const photoInserts = buildProjectPhotoRows(id, photos)
+
+        const { error: photosError } = await supabaseAdmin
+          .from('project_photos')
+          .insert(photoInserts)
+
+        if (photosError) {
+          console.error('Photos insert error:', photosError)
+          return NextResponse.json(
+            { success: false, error: `사진 연결에 실패했습니다: ${photosError.message}` },
+            { status: 500 }
+          )
+        }
       }
     }
 
@@ -168,35 +151,50 @@ export async function PUT(
       }
     }
 
-    // 기존 아이템 연결 삭제
-    await supabaseAdmin
-      .from('project_items')
-      .delete()
-      .eq('project_id', id)
-
-    // 새 아이템 연결
-    if (connectedItems && connectedItems.length > 0) {
-      const itemInserts = connectedItems.map((itemId: string) => ({
-        project_id: id,
-        item_id: itemId
-      }))
-
-      const { error: itemsError } = await supabaseAdmin
+    if (connectedItems !== undefined) {
+      await supabaseAdmin
         .from('project_items')
-        .insert(itemInserts)
-      
-      if (itemsError) {
-        console.error('Items insert error:', itemsError)
-        return NextResponse.json(
-          { success: false, error: `아이템 연결에 실패했습니다: ${itemsError.message}` },
-          { status: 500 }
-        )
+        .delete()
+        .eq('project_id', id)
+
+      if (connectedItems.length > 0) {
+        const itemInserts = connectedItems.map((itemId: string) => ({
+          project_id: id,
+          item_id: itemId
+        }))
+
+        const { error: itemsError } = await supabaseAdmin
+          .from('project_items')
+          .insert(itemInserts)
+
+        if (itemsError) {
+          console.error('Items insert error:', itemsError)
+          return NextResponse.json(
+            { success: false, error: `아이템 연결에 실패했습니다: ${itemsError.message}` },
+            { status: 500 }
+          )
+        }
       }
+    }
+
+    const { data: fullProject, error: fetchError } = await supabaseAdmin
+      .from('projects')
+      .select(projectSelect)
+      .eq('id', id)
+      .single()
+
+    if (fetchError || !fullProject) {
+      console.error('Updated project fetch error:', fetchError)
+      return NextResponse.json({
+        success: true,
+        data: project,
+        message: '프로젝트가 성공적으로 업데이트되었습니다.'
+      })
     }
 
     return NextResponse.json({
       success: true,
-      data: project,
+      data: transformProject(fullProject),
       message: '프로젝트가 성공적으로 업데이트되었습니다.'
     })
 
@@ -229,6 +227,11 @@ export async function DELETE(
 
     await supabaseAdmin
       .from('project_items')
+      .delete()
+      .eq('project_id', id)
+
+    await supabaseAdmin
+      .from('project_photos')
       .delete()
       .eq('project_id', id)
 

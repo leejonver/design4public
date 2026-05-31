@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 
+const TAG_TYPES = ['project', 'item', 'photo', 'brand'] as const
+
+function isTagType(type: string | null | undefined) {
+  return TAG_TYPES.includes(type as typeof TAG_TYPES[number])
+}
+
 export async function PUT(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -23,7 +29,7 @@ export async function PUT(
 
     // type이 제공된 경우 검증 후 업데이트
     if (type) {
-      if (type !== 'project' && type !== 'item') {
+      if (!isTagType(type)) {
         return NextResponse.json(
           { success: false, error: '태그 타입을 올바르게 선택해주세요.' },
           { status: 400 }

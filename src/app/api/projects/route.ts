@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase, supabaseAdmin } from '@/lib/supabase'
+import { buildProjectPhotoRows, projectSelect, transformProject } from './project-response'
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,19 +13,7 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin
       .from('projects')
-      .select(`
-        *,
-        project_images(*),
-        project_tags(
-          tags(*)
-        ),
-        project_items(
-          items(
-            *,
-            brands(*)
-          )
-        )
-      `, { count: 'exact' })
+      .select(projectSelect, { count: 'exact' })
       .order('created_at', { ascending: false })
 
     // 상태 필터
@@ -45,8 +34,8 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('Projects fetch error:', error)
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: '프로젝트 목록을 가져오는데 실패했습니다.',
           ...(process.env.NODE_ENV === 'development' && { details: error.message })
         },
@@ -54,30 +43,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    // 데이터 변환 (프론트엔드 타입에 맞게)
-    const transformedProjects = projects?.map(project => ({
-      id: project.id,
-      name: project.title,
-      description: project.description || '',
-      location: project.location || '',
-      completionYear: project.year, // 기본값을 null 또는 undefined로 유지
-      area: project.area, // 면적은 선택사항이므로 null/undefined 허용
-      images: project.project_images?.map((img: any, index: number) => ({
-        id: img.id,
-        url: img.image_url,
-        alt: project.title,
-        isMain: index === 0
-      })) || [],
-      tags: project.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
-      connectedItems: project.project_items?.map((pi: any) => ({
-        ...pi.items,
-        brand: pi.items?.brands
-      })) || [],
-      inquiryUrl: project.inquiry_url || '',
-      status: project.status,
-      createdAt: project.created_at,
-      updatedAt: project.updated_at
-    })) || []
+    const transformedProjects = projects?.map(transformProject) || []
 
     return NextResponse.json({
       success: true,
@@ -92,8 +58,8 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Projects API error:', error)
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: '서버 오류가 발생했습니다.',
         ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
       },
@@ -105,7 +71,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images } = body
+    const { name, description, location, completionYear, area, tags, connectedItems, inquiryUrl, status, images, photos } = body
 
     // RPC 호출을 위한 이미지 데이터 포맷팅
     const formattedImages = images?.map((img: any, index: number) => ({
@@ -134,6 +100,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     const { data: project, error: rpcError } = rpcRes
+    const createdProject = project as { id?: string } | null
 
     if (rpcError) {
       console.error('Project creation RPC error:', rpcError)
@@ -180,8 +147,8 @@ export async function POST(request: NextRequest) {
 
       if (insertErr || !insertedProject) {
         return NextResponse.json(
-          { 
-            success: false, 
+          {
+            success: false,
             error: '프로젝트 생성에 실패했습니다.',
             ...(process.env.NODE_ENV === 'development' && { details: (insertErr || {}).message })
           },
@@ -213,7 +180,20 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 5) 아이템 연결
+      // 5) 사진 연결 (photos 배열이 있는 경우 - 새로운 방식)
+      if (photos && photos.length > 0) {
+        const photoRows = buildProjectPhotoRows(projectId, photos)
+        const { error: photosErr } = await supabaseAdmin.from('project_photos').insert(photoRows)
+        if (photosErr) {
+          console.error('project_photos insert error:', photosErr)
+          return NextResponse.json(
+            { success: false, error: `사진 연결에 실패했습니다: ${photosErr.message}` },
+            { status: 500 }
+          )
+        }
+      }
+
+      // 6) 아이템 연결 (legacy 방식 - connectedItems가 있는 경우)
       if (connectedItems && connectedItems.length > 0) {
         const itemRows = connectedItems.map((itemId: string) => ({ project_id: projectId, item_id: itemId }))
         const { error: itemsErr } = await supabaseAdmin.from('project_items').insert(itemRows)
@@ -222,15 +202,10 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      // 6) 삽입된 프로젝트를 조회하여 기존 응답 형태로 반환
+      // 7) 삽입된 프로젝트를 조회하여 기존 응답 형태로 반환
       const { data: fullProject, error: fetchErr } = await supabaseAdmin
         .from('projects')
-        .select(`
-          *,
-          project_images(*),
-          project_tags(tags(*)),
-          project_items(items(*, brands(*)))
-        `)
+        .select(projectSelect)
         .eq('id', projectId)
         .single()
 
@@ -240,33 +215,37 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const transformed = {
-        id: fullProject.id,
-        name: fullProject.title,
-        description: fullProject.description || '',
-        location: fullProject.location || '',
-        completionYear: fullProject.year,
-        area: fullProject.area,
-        images: fullProject.project_images?.map((img: any, index: number) => ({
-          id: img.id,
-          url: img.image_url,
-          alt: fullProject.title,
-          isMain: index === 0
-        })) || [],
-        tags: fullProject.project_tags?.map((pt: any) => pt.tags).filter(Boolean) || [],
-        connectedItems: fullProject.project_items?.map((pi: any) => ({
-          ...pi.items,
-          brand: pi.items?.brands
-        })) || [],
-        inquiryUrl: fullProject.inquiry_url || '',
-        status: fullProject.status,
-        createdAt: fullProject.created_at,
-        updatedAt: fullProject.updated_at
-      }
-
-      return NextResponse.json({ success: true, data: transformed, message: '프로젝트가 성공적으로 생성되었습니다.' })
+      return NextResponse.json({ success: true, data: transformProject(fullProject), message: '프로젝트가 성공적으로 생성되었습니다.' })
     }
-    
+
+    if (createdProject?.id && photos && photos.length > 0) {
+      const photoRows = buildProjectPhotoRows(createdProject.id, photos)
+      const { error: photosErr } = await supabaseAdmin.from('project_photos').insert(photoRows)
+      if (photosErr) {
+        console.error('project_photos insert error:', photosErr)
+        return NextResponse.json(
+          { success: false, error: `사진 연결에 실패했습니다: ${photosErr.message}` },
+          { status: 500 }
+        )
+      }
+    }
+
+    if (createdProject?.id) {
+      const { data: fullProject, error: fetchErr } = await supabaseAdmin
+        .from('projects')
+        .select(projectSelect)
+        .eq('id', createdProject.id)
+        .single()
+
+      if (!fetchErr && fullProject) {
+        return NextResponse.json({
+          success: true,
+          data: transformProject(fullProject),
+          message: '프로젝트가 성공적으로 생성되었습니다.'
+        })
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: project,
@@ -276,8 +255,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Project creation error:', error)
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: '서버 오류가 발생했습니다.',
         ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
       },
