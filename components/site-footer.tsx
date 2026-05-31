@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Mail } from "lucide-react";
+import { Mail, Phone } from "lucide-react";
 import { ContactFormModal } from "./contact-form-modal";
 
 const footerLinks = {
@@ -39,13 +39,20 @@ export function SiteFooter() {
               </p>
 
               {/* Contact Info */}
-              <div className="mt-6 space-y-3">
+              <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
                 <a
                   href="mailto:d4p@design4public.com"
                   className="flex items-center gap-2 text-sm text-neutral-600 hover:text-sage-700 transition-colors"
                 >
                   <Mail className="h-4 w-4 text-neutral-400" />
                   <span>d4p@design4public.com</span>
+                </a>
+                <a
+                  href="tel:+82315992662"
+                  className="flex items-center gap-2 text-sm text-neutral-600 hover:text-sage-700 transition-colors"
+                >
+                  <Phone className="h-4 w-4 text-neutral-400" />
+                  <span>T 031 599 2662</span>
                 </a>
               </div>
             </div>
