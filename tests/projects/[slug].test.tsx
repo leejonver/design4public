@@ -23,6 +23,7 @@ const loadPage = () => import("../../app/projects/[slug]/page");
 describe("Project detail page", () => {
   beforeEach(() => {
     (api.fetchProjectBySlug as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(mockProject);
+    (api.fetchProjectPhotosWithItems as unknown as ReturnType<typeof vi.fn>).mockResolvedValue([]);
   });
 
   it("renders project information", async () => {

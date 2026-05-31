@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getSupabaseConfig, supabase } from "./supabase";
 import type { Tables } from "./database.types";
 
 type ProjectFilters = {
@@ -84,11 +84,12 @@ export async function fetchBrands() {
 
   // Fallback to direct REST API call if Supabase client returns empty data
   if (!data || data.length === 0) {
-    const url = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/brands?select=*&order=name_ko.asc`;
+    const { url: supabaseUrl, key } = getSupabaseConfig();
+    const url = `${supabaseUrl}/rest/v1/brands?select=*&order=name_ko.asc`;
     const response = await fetch(url, {
       headers: {
-        'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+        'apikey': key,
+        'Authorization': `Bearer ${key}`,
       },
       cache: 'no-store',
     });
@@ -106,11 +107,12 @@ export async function fetchBrands() {
 
 export async function fetchBrandBySlug(slug: string) {
   // Use REST API directly to avoid complex relationship issues with Supabase JS client
-  const brandUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/brands?select=id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,items(id,slug,name,description,image_url,nara_url)&slug=eq.${slug}`;
+  const { url: supabaseUrl, key } = getSupabaseConfig();
+  const brandUrl = `${supabaseUrl}/rest/v1/brands?select=id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,items(id,slug,name,description,image_url,nara_url)&slug=eq.${slug}`;
   const brandResponse = await fetch(brandUrl, {
     headers: {
-      'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+      'apikey': key,
+      'Authorization': `Bearer ${key}`,
     },
     cache: 'no-store',
   });
@@ -133,11 +135,11 @@ export async function fetchBrandBySlug(slug: string) {
   if (brand.items && brand.items.length > 0) {
     try {
       const itemIds = brand.items.map((item: any) => item.id).join(',');
-      const projectItemsUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/rest/v1/project_items?select=project_id,item_id,projects(id,slug,title,cover_image_url,year,status,project_images(id,image_url,order))&item_id=in.(${itemIds})`;
+      const projectItemsUrl = `${supabaseUrl}/rest/v1/project_items?select=project_id,item_id,projects(id,slug,title,cover_image_url,year,status,project_images(id,image_url,order))&item_id=in.(${itemIds})`;
       const projectItemsResponse = await fetch(projectItemsUrl, {
         headers: {
-          'apikey': process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-          'Authorization': `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!}`,
+          'apikey': key,
+          'Authorization': `Bearer ${key}`,
         },
         cache: 'no-store',
       });
@@ -250,8 +252,7 @@ export type PhotoWithItems = {
 
 // Fetch project photos with items linked to each photo
 export async function fetchProjectPhotosWithItems(projectId: string): Promise<PhotoWithItems[]> {
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const { url: baseUrl, key: apiKey } = getSupabaseConfig();
 
   // First, get project_photos with photo details
   const projectPhotosUrl = `${baseUrl}/rest/v1/project_photos?select=id,order,is_main,photo_id,photos(id,image_url,alt_text,title)&project_id=eq.${projectId}&order=order.asc`;
@@ -325,8 +326,7 @@ export async function fetchProjectPhotosWithItems(projectId: string): Promise<Ph
 
 // Fetch photos that contain a specific item
 export async function fetchItemPhotos(itemId: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  const { url: baseUrl, key: apiKey } = getSupabaseConfig();
 
   // Get photo_items for this item
   const photoItemsUrl = `${baseUrl}/rest/v1/photo_items?select=photo_id,photos(id,image_url,alt_text,title)&item_id=eq.${itemId}`;

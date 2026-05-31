@@ -6,8 +6,10 @@ vi.mock("../../lib/api", () => ({
     {
       id: "brand-1",
       slug: "brand-1",
-      name: "브랜드 1",
+      name_ko: "브랜드 1",
+      name_en: null,
       description: "설명",
+      logo_image_url: null,
       cover_image_url: null,
       website_url: null,
     },

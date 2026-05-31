@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
+import { getSupabaseConfig } from "@/lib/supabase";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const resendApiKey = process.env.RESEND_API_KEY;
 
 export async function POST(request: NextRequest) {
@@ -29,7 +28,8 @@ export async function POST(request: NextRequest) {
         }
 
         // Create Supabase client
-        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+        const { url, key } = getSupabaseConfig();
+        const supabase = createClient(url, key);
 
         // Insert inquiry into database
         const { error: dbError } = await supabase.from("inquiries").insert([
