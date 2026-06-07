@@ -70,7 +70,7 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
         collapsed ? 'w-[72px]' : 'w-[280px]'
       }`}
     >
-      <div className="flex items-center gap-2 border-b border-gray-200 px-3 py-5">
+      <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-4">
         {collapsed ? (
           <span className="flex-1 text-center text-lg font-bold text-v-primary-100">D4P</span>
         ) : (
@@ -94,7 +94,7 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
         </IconButton>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+      <nav className="flex-1 space-y-2 overflow-y-auto p-4">
         {items.map(({ key, href, label, Icon }) => {
           const active = isActive(href);
           const count = counts?.[key as keyof MenuCounts];
@@ -105,7 +105,7 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
               title={collapsed ? label : undefined}
               aria-label={collapsed ? label : undefined}
               className={`flex items-center rounded-md text-sm transition-colors ${
-                collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
+                collapsed ? 'justify-center px-0 py-2' : 'gap-2 px-4 py-2'
               } ${active ? 'bg-v-primary-100 font-semibold text-v-primary-200' : 'text-gray-700 hover:bg-gray-50'}`}
             >
               <Icon size={18} />
@@ -120,7 +120,7 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
         })}
       </nav>
 
-      <div className="border-t border-gray-200 p-3">
+      <div className="border-t border-gray-200 p-4">
         {collapsed ? (
           <div className="flex flex-col items-center gap-2">
             <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-v-primary-200 text-sm font-medium text-white">
@@ -138,7 +138,7 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
           </div>
         ) : (
           <>
-            <div className="mb-3 flex items-center gap-3">
+            <div className="mb-4 flex items-center gap-2">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-v-primary-200 text-sm font-medium text-white">
                 {user?.name?.charAt(0) || 'U'}
               </div>

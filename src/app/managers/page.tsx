@@ -3,7 +3,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Badge, Button, Callout, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
+import { Badge, Button, Callout, Card, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
 import {
   CloseOutlineIcon,
   ConfirmOutlineIcon,
@@ -255,7 +255,7 @@ export default function ManagersPage() {
       key: 'name',
       header: '이름',
       render: (m) => (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-v-primary-200 text-sm font-medium text-white">
             {m.name?.charAt(0) || '?'}
           </div>
@@ -447,7 +447,7 @@ export default function ManagersPage() {
       {feedback && (
         <Callout.Root
           colorPalette={feedback.type === 'success' ? 'success' : 'danger'}
-          className="mb-4 flex items-start justify-between gap-3"
+          className="mb-4 flex items-start justify-between gap-2"
         >
           <Text typography="body2" render={<p />}>
             {feedback.text}
@@ -464,59 +464,63 @@ export default function ManagersPage() {
         </Callout.Root>
       )}
 
-      <ListToolbar
-        search={search}
-        onSearchChange={handleSearch}
-        searchPlaceholder="이름 또는 이메일 검색"
-        filters={
-          <>
-            <FilterSelect
-              value={roleFilter}
-              onValueChange={handleRoleFilter}
-              options={ROLE_FILTER_OPTIONS}
-              placeholder="모든 권한"
-              width="w-40"
-            />
-            <FilterSelect
-              value={statusFilter}
-              onValueChange={handleStatusFilter}
-              options={STATUS_FILTER_OPTIONS}
-              placeholder="모든 상태"
-              width="w-40"
-            />
-          </>
-        }
-        sort={
-          <FilterSelect
-            value={sort}
-            onValueChange={handleSort}
-            options={SORT_OPTIONS}
-            placeholder="가입일순"
-            width="w-44"
+      <Card.Root>
+        <Card.Body>
+          <ListToolbar
+            search={search}
+            onSearchChange={handleSearch}
+            searchPlaceholder="이름 또는 이메일 검색"
+            filters={
+              <>
+                <FilterSelect
+                  value={roleFilter}
+                  onValueChange={handleRoleFilter}
+                  options={ROLE_FILTER_OPTIONS}
+                  placeholder="모든 권한"
+                  width="w-40"
+                />
+                <FilterSelect
+                  value={statusFilter}
+                  onValueChange={handleStatusFilter}
+                  options={STATUS_FILTER_OPTIONS}
+                  placeholder="모든 상태"
+                  width="w-40"
+                />
+              </>
+            }
+            sort={
+              <FilterSelect
+                value={sort}
+                onValueChange={handleSort}
+                options={SORT_OPTIONS}
+                placeholder="가입일순"
+                width="w-44"
+              />
+            }
           />
-        }
-      />
 
-      <DataTable
-        columns={columns}
-        rows={managers}
-        rowKey={(m) => m.id}
-        loading={loading}
-        empty={
-          <EmptyState
-            icon={<GroupOutlineIcon size={40} />}
-            title="관리자가 없습니다."
-            description="검색 조건을 변경해 보세요."
+          <DataTable
+            columns={columns}
+            rows={managers}
+            rowKey={(m) => m.id}
+            loading={loading}
+            empty={
+              <EmptyState
+                icon={<GroupOutlineIcon size={40} />}
+                title="관리자가 없습니다."
+                description="검색 조건을 변경해 보세요."
+              />
+            }
           />
-        }
-      />
 
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <Text typography="body3" className="text-gray-500">
-          총 {total}명
-        </Text>
-        <Pagination page={page} total={total} limit={LIMIT} onPageChange={setPage} />
-      </div>
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <Text typography="body3" className="text-gray-500">
+              총 {total}명
+            </Text>
+            <Pagination page={page} total={total} limit={LIMIT} onPageChange={setPage} />
+          </div>
+        </Card.Body>
+      </Card.Root>
 
       <ConfirmDialog
         open={!!deleteTarget}

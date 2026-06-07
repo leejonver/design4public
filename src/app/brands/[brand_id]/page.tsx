@@ -21,7 +21,7 @@ function addCacheBuster(url: string | null | undefined, updatedAt?: string): str
 
 function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:gap-4">
+    <div className="flex flex-col gap-2 px-4 py-2 sm:flex-row sm:gap-4">
       <div className="w-32 shrink-0 text-sm font-medium text-gray-500">{label}</div>
       <div className="flex-1 text-sm text-gray-900">{children}</div>
     </div>
@@ -76,7 +76,7 @@ export default function BrandDetailPage() {
   return (
     <MainLayout>
       <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <Button variant="outline" colorPalette="secondary" onClick={() => router.back()}>
             <ChevronLeftOutlineIcon size={16} />
             돌아가기

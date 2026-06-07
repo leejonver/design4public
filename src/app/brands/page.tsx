@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Callout, IconButton } from '@vapor-ui/core';
+import { Button, Callout, Card, IconButton } from '@vapor-ui/core';
 import {
   PlusOutlineIcon,
   ViewOnOutlineIcon,
@@ -243,51 +243,55 @@ export default function BrandsPage() {
 
       <SuccessCallout message={success} onClose={() => setSuccess(null)} />
 
-      <ListToolbar
-        search={controller.search}
-        onSearchChange={controller.setSearch}
-        searchPlaceholder="한글/영문 브랜드명 검색"
-        filters={
-          <FilterSelect
-            value={controller.filters.status ?? 'all'}
-            onValueChange={(value) => controller.setFilter('status', value)}
-            options={STATUS_OPTIONS}
+      <Card.Root>
+        <Card.Body>
+          <ListToolbar
+            search={controller.search}
+            onSearchChange={controller.setSearch}
+            searchPlaceholder="한글/영문 브랜드명 검색"
+            filters={
+              <FilterSelect
+                value={controller.filters.status ?? 'all'}
+                onValueChange={(value) => controller.setFilter('status', value)}
+                options={STATUS_OPTIONS}
+              />
+            }
+            sort={
+              <FilterSelect
+                value={sortValue}
+                onValueChange={(value) => controller.setSort(SORT_MAP[value] ?? SORT_MAP.latest)}
+                options={SORT_OPTIONS}
+              />
+            }
           />
-        }
-        sort={
-          <FilterSelect
-            value={sortValue}
-            onValueChange={(value) => controller.setSort(SORT_MAP[value] ?? SORT_MAP.latest)}
-            options={SORT_OPTIONS}
-          />
-        }
-      />
 
-      <DataTable
-        columns={columns}
-        rows={controller.items}
-        rowKey={(brand) => brand.id}
-        loading={controller.loading}
-        sortKey={controller.sort?.key}
-        sortDir={controller.sort?.dir}
-        onSortChange={controller.toggleSort}
-        empty={
-          <EmptyState
-            icon={<BookmarkOutlineIcon size={40} />}
-            title="등록된 브랜드가 없습니다."
-            description="검색 조건을 변경하거나 새 브랜드를 추가해 보세요."
+          <DataTable
+            columns={columns}
+            rows={controller.items}
+            rowKey={(brand) => brand.id}
+            loading={controller.loading}
+            sortKey={controller.sort?.key}
+            sortDir={controller.sort?.dir}
+            onSortChange={controller.toggleSort}
+            empty={
+              <EmptyState
+                icon={<BookmarkOutlineIcon size={40} />}
+                title="등록된 브랜드가 없습니다."
+                description="검색 조건을 변경하거나 새 브랜드를 추가해 보세요."
+              />
+            }
           />
-        }
-      />
 
-      <div className="mt-6">
-        <Pagination
-          page={controller.page}
-          total={controller.total}
-          limit={LIMIT}
-          onPageChange={controller.setPage}
-        />
-      </div>
+          <div className="mt-4">
+            <Pagination
+              page={controller.page}
+              total={controller.total}
+              limit={LIMIT}
+              onPageChange={controller.setPage}
+            />
+          </div>
+        </Card.Body>
+      </Card.Root>
 
       <ConfirmDialog
         open={Boolean(deleteTarget)}

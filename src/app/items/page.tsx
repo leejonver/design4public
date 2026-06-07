@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Badge, Button, Callout, IconButton } from '@vapor-ui/core';
+import { Badge, Button, Callout, Card, IconButton } from '@vapor-ui/core';
 import {
   PlusOutlineIcon,
   ViewOnOutlineIcon,
@@ -193,7 +193,7 @@ export default function ItemsPage() {
       width: 'w-32',
       nowrap: true,
       render: (item) => (
-        <div className="flex justify-end gap-1">
+        <div className="flex items-center justify-end gap-1">
           <IconButton
             size="sm"
             variant="ghost"
@@ -245,65 +245,67 @@ export default function ItemsPage() {
 
       <SuccessCallout message={success} onClose={() => setSuccess(null)} />
 
-      <ListToolbar
-        search={list.search}
-        onSearchChange={list.setSearch}
-        searchPlaceholder="아이템명 또는 설명 검색"
-        filters={
-          <>
-            <FilterSelect
-              value={list.filters.status ?? 'all'}
-              onValueChange={(v) => list.setFilter('status', v)}
-              options={STATUS_OPTIONS}
-              width="w-32"
-            />
-            <FilterSelect
-              value={list.filters.brandId ?? 'all'}
-              onValueChange={(v) => list.setFilter('brandId', v)}
-              options={brandOptions}
-              width="w-44"
-            />
-          </>
-        }
-        sort={
-          <FilterSelect
-            value={sortValue}
-            onValueChange={(v) => list.setSort({ key: v, dir: v === 'name' ? 'asc' : 'desc' })}
-            options={SORT_OPTIONS}
-            width="w-32"
+      <Card.Root>
+        <Card.Body>
+          <ListToolbar
+            search={list.search}
+            onSearchChange={list.setSearch}
+            searchPlaceholder="아이템명 또는 설명 검색"
+            filters={
+              <>
+                <FilterSelect
+                  value={list.filters.status ?? 'all'}
+                  onValueChange={(v) => list.setFilter('status', v)}
+                  options={STATUS_OPTIONS}
+                  width="w-32"
+                />
+                <FilterSelect
+                  value={list.filters.brandId ?? 'all'}
+                  onValueChange={(v) => list.setFilter('brandId', v)}
+                  options={brandOptions}
+                  width="w-44"
+                />
+              </>
+            }
+            sort={
+              <FilterSelect
+                value={sortValue}
+                onValueChange={(v) => list.setSort({ key: v, dir: v === 'name' ? 'asc' : 'desc' })}
+                options={SORT_OPTIONS}
+                width="w-32"
+              />
+            }
           />
-        }
-      />
 
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
-        <DataTable<Item>
-          columns={columns}
-          rows={list.items}
-          rowKey={(item) => item.id}
-          loading={list.loading}
-          sortKey={list.sort?.key}
-          sortDir={list.sort?.dir}
-          onSortChange={list.toggleSort}
-          empty={
-            <EmptyState
-              icon={<DashboardOutlineIcon size={40} />}
-              title="아이템이 없습니다."
-              description="검색 조건을 변경하거나 새 아이템을 추가해 보세요."
-            />
-          }
-        />
-      </div>
-
-      {list.total > PAGE_SIZE ? (
-        <div className="mt-4">
-          <Pagination
-            page={list.page}
-            total={list.total}
-            limit={PAGE_SIZE}
-            onPageChange={list.setPage}
+          <DataTable<Item>
+            columns={columns}
+            rows={list.items}
+            rowKey={(item) => item.id}
+            loading={list.loading}
+            sortKey={list.sort?.key}
+            sortDir={list.sort?.dir}
+            onSortChange={list.toggleSort}
+            empty={
+              <EmptyState
+                icon={<DashboardOutlineIcon size={40} />}
+                title="아이템이 없습니다."
+                description="검색 조건을 변경하거나 새 아이템을 추가해 보세요."
+              />
+            }
           />
-        </div>
-      ) : null}
+
+          {list.total > PAGE_SIZE ? (
+            <div className="mt-4">
+              <Pagination
+                page={list.page}
+                total={list.total}
+                limit={PAGE_SIZE}
+                onPageChange={list.setPage}
+              />
+            </div>
+          ) : null}
+        </Card.Body>
+      </Card.Root>
 
       <ConfirmDialog
         open={!!deleteTarget}

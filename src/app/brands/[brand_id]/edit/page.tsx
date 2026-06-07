@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { ImageUploader } from '@/components/ui';
+import { ImageUploader, PageHeader } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Brand, ImageData } from '@/types';
 
@@ -140,15 +140,15 @@ export default function EditBrandPage() {
 
   return (
     <MainLayout>
-      <div className="mb-6 flex items-center gap-3">
-        <Button variant="outline" colorPalette="secondary" onClick={() => router.back()}>
-          <ChevronLeftOutlineIcon size={16} />
-          돌아가기
-        </Button>
-        <Text typography="heading3" render={<h3 />} className="text-gray-900">
-          브랜드 편집: {brand.nameKo}
-        </Text>
-      </div>
+      <PageHeader
+        title={`브랜드 편집: ${brand.nameKo}`}
+        action={
+          <Button variant="outline" colorPalette="secondary" onClick={() => router.back()}>
+            <ChevronLeftOutlineIcon size={16} />
+            돌아가기
+          </Button>
+        }
+      />
 
       {error ? (
         <Callout.Root colorPalette="danger" className="mb-4">
@@ -165,18 +165,20 @@ export default function EditBrandPage() {
               </Text>
             </Card.Header>
             <Card.Body className="space-y-4">
-              <Field.Root>
-                <Field.Label>브랜드명 (한글)</Field.Label>
-                <TextInput value={nameKo} onValueChange={setNameKo} placeholder="예: 허먼밀러" />
-                {fieldErrors.nameKo ? (
-                  <Field.Error match>{fieldErrors.nameKo}</Field.Error>
-                ) : null}
-              </Field.Root>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Field.Root>
+                  <Field.Label>브랜드명 (한글)</Field.Label>
+                  <TextInput value={nameKo} onValueChange={setNameKo} placeholder="예: 허먼밀러" />
+                  {fieldErrors.nameKo ? (
+                    <Field.Error match>{fieldErrors.nameKo}</Field.Error>
+                  ) : null}
+                </Field.Root>
 
-              <Field.Root>
-                <Field.Label>브랜드명 (영문)</Field.Label>
-                <TextInput value={nameEn} onValueChange={setNameEn} placeholder="예: Herman Miller" />
-              </Field.Root>
+                <Field.Root>
+                  <Field.Label>브랜드명 (영문)</Field.Label>
+                  <TextInput value={nameEn} onValueChange={setNameEn} placeholder="예: Herman Miller" />
+                </Field.Root>
+              </div>
 
               <Field.Root>
                 <Field.Label>브랜드 설명</Field.Label>
@@ -232,24 +234,26 @@ export default function EditBrandPage() {
                 이미지
               </Text>
             </Card.Header>
-            <Card.Body className="space-y-6">
-              <div>
-                <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
-                  로고 이미지
-                </Text>
-                <ImageUploader value={logo} onChange={setLogo} folder="brands" multiple={false} />
-                <Text typography="body3" render={<p />} className="mt-1 text-gray-500">
-                  1:1 비율의 이미지를 권장합니다.
-                </Text>
-              </div>
-              <div>
-                <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
-                  커버 이미지
-                </Text>
-                <ImageUploader value={cover} onChange={setCover} folder="brands" multiple={false} />
-                <Text typography="body3" render={<p />} className="mt-1 text-gray-500">
-                  2:1 비율의 이미지를 권장합니다.
-                </Text>
+            <Card.Body>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
+                    로고 이미지
+                  </Text>
+                  <ImageUploader value={logo} onChange={setLogo} folder="brands" multiple={false} />
+                  <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
+                    1:1 비율의 이미지를 권장합니다.
+                  </Text>
+                </div>
+                <div>
+                  <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
+                    커버 이미지
+                  </Text>
+                  <ImageUploader value={cover} onChange={setCover} folder="brands" multiple={false} />
+                  <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
+                    2:1 비율의 이미지를 권장합니다.
+                  </Text>
+                </div>
               </div>
             </Card.Body>
           </Card.Root>

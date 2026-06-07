@@ -4,7 +4,7 @@
 
 import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Callout, IconButton } from '@vapor-ui/core';
+import { Callout, Card, IconButton } from '@vapor-ui/core';
 import {
   ViewOnOutlineIcon,
   EditOutlineIcon,
@@ -162,7 +162,7 @@ export default function PhotosPage() {
       width: 'w-32',
       nowrap: true,
       render: (photo) => (
-        <div className="flex justify-end gap-1">
+        <div className="flex items-center justify-end gap-1">
           <IconButton
             size="sm"
             variant="ghost"
@@ -199,30 +199,6 @@ export default function PhotosPage() {
     <MainLayout>
       <PageHeader title="사진 관리" />
 
-      <ListToolbar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="사진 제목, 설명 검색"
-        filters={
-          <FilterSelect
-            value={filters.connection ?? 'all'}
-            onValueChange={(v) => setFilter('connection', v)}
-            options={CONNECTION_OPTIONS}
-            placeholder="전체"
-            width="w-32"
-          />
-        }
-        sort={
-          <FilterSelect
-            value={sortValue}
-            onValueChange={handleSortChange}
-            options={SORT_OPTIONS}
-            placeholder="정렬"
-            width="w-32"
-          />
-        }
-      />
-
       {actionError || error ? (
         <Callout.Root colorPalette="danger" className="mb-4">
           {actionError ?? error}
@@ -231,28 +207,56 @@ export default function PhotosPage() {
 
       <SuccessCallout message={success} onClose={() => setSuccess(null)} />
 
-      <DataTable
-        columns={columns}
-        rows={photos}
-        rowKey={(photo) => photo.id}
-        loading={loading}
-        sortKey={sort?.key}
-        sortDir={sort?.dir}
-        onSortChange={toggleSort}
-        empty={
-          <EmptyState
-            icon={<ImageOutlineIcon size={40} />}
-            title="등록된 사진이 없습니다."
-            description="사진은 프로젝트·아이템 이미지 업로드 시 자동으로 추가됩니다."
+      <Card.Root>
+        <Card.Body>
+          <ListToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="사진 제목, 설명 검색"
+            filters={
+              <FilterSelect
+                value={filters.connection ?? 'all'}
+                onValueChange={(v) => setFilter('connection', v)}
+                options={CONNECTION_OPTIONS}
+                placeholder="전체"
+                width="w-32"
+              />
+            }
+            sort={
+              <FilterSelect
+                value={sortValue}
+                onValueChange={handleSortChange}
+                options={SORT_OPTIONS}
+                placeholder="정렬"
+                width="w-32"
+              />
+            }
           />
-        }
-      />
 
-      {total > LIMIT ? (
-        <div className="mt-6">
-          <Pagination page={page} total={total} limit={LIMIT} onPageChange={setPage} />
-        </div>
-      ) : null}
+          <DataTable
+            columns={columns}
+            rows={photos}
+            rowKey={(photo) => photo.id}
+            loading={loading}
+            sortKey={sort?.key}
+            sortDir={sort?.dir}
+            onSortChange={toggleSort}
+            empty={
+              <EmptyState
+                icon={<ImageOutlineIcon size={40} />}
+                title="등록된 사진이 없습니다."
+                description="사진은 프로젝트·아이템 이미지 업로드 시 자동으로 추가됩니다."
+              />
+            }
+          />
+
+          {total > LIMIT ? (
+            <div className="mt-4">
+              <Pagination page={page} total={total} limit={LIMIT} onPageChange={setPage} />
+            </div>
+          ) : null}
+        </Card.Body>
+      </Card.Root>
 
       <ConfirmDialog
         open={deleteTarget !== null}

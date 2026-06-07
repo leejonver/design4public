@@ -13,7 +13,7 @@ import type { Item } from '@/types';
 
 function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-[120px_1fr] gap-4 py-3">
+    <div className="grid grid-cols-1 gap-2 py-2 sm:grid-cols-[120px_1fr] sm:gap-4">
       <dt className="text-sm font-medium text-gray-500">{label}</dt>
       <dd className="text-sm text-gray-800">{children}</dd>
     </div>
@@ -171,7 +171,7 @@ export default function ItemDetailPage() {
                   )}
                 </InfoRow>
                 <InfoRow label="카테고리">
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {item.categories?.length ? (
                       item.categories.map((category) => (
                         <Badge key={category.id} colorPalette="primary" size="sm">
@@ -184,7 +184,7 @@ export default function ItemDetailPage() {
                   </div>
                 </InfoRow>
                 <InfoRow label="태그">
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {item.tags?.length ? (
                       item.tags.map((tag) => (
                         <Badge key={tag.id} colorPalette="hint" size="sm">
@@ -232,7 +232,7 @@ export default function ItemDetailPage() {
                 <Text typography="body1" render={<p />} className="font-medium text-gray-900">
                   {brand.name}
                 </Text>
-                <Text typography="body2" render={<p />} className="mt-0.5 text-gray-500">
+                <Text typography="body2" render={<p />} className="mt-1 text-gray-500">
                   {brand.description}
                 </Text>
               </div>

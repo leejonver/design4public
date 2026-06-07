@@ -74,7 +74,8 @@ export default function DataTable<T>({
   const hasWidths = columns.some((col) => col.width);
 
   return (
-    <Table.Root className="w-full">
+    <div className="w-full overflow-x-auto">
+    <Table.Root className="w-full min-w-[48rem]">
       {hasWidths ? (
         <Table.ColumnGroup>
           {columns.map((col) => (
@@ -163,5 +164,6 @@ export default function DataTable<T>({
         )}
       </Table.Body>
     </Table.Root>
+    </div>
   );
 }

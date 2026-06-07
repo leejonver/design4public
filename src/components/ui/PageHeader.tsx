@@ -15,7 +15,7 @@ export default function PageHeader({ title, description, action }: PageHeaderPro
           {title}
         </Text>
         {description ? (
-          <Text typography="body2" render={<p />} className="mt-1 text-gray-500">
+          <Text typography="body2" render={<p />} className="mt-2 text-gray-500">
             {description}
           </Text>
         ) : null}

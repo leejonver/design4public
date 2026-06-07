@@ -85,7 +85,7 @@ export default function PhotoEditPage() {
 
   return (
     <MainLayout>
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex items-center gap-2">
         <Button variant="outline" colorPalette="secondary" onClick={() => router.back()}>
           <ChevronLeftOutlineIcon size={16} />
           돌아가기
@@ -125,7 +125,7 @@ export default function PhotoEditPage() {
                   className="w-full rounded-lg object-cover"
                 />
               ) : null}
-              <Text typography="body3" render={<p />} className="mt-3 text-gray-500">
+              <Text typography="body3" render={<p />} className="mt-4 text-gray-500">
                 * 이미지는 변경할 수 없습니다. 이미지를 변경하려면 새 사진을 등록해주세요.
               </Text>
             </Card.Body>
@@ -188,7 +188,7 @@ export default function PhotoEditPage() {
             </Card.Body>
           </Card.Root>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2">
             <Button type="submit" colorPalette="primary" size="md" disabled={loading} className="w-full">
               {loading ? <Spinner size="md" /> : <SaveOutlineIcon size={16} />}
               {loading ? '저장 중...' : '변경사항 저장'}

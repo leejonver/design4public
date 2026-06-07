@@ -3,7 +3,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Badge, Button, Dialog, Field, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
+import { Badge, Button, Card, Dialog, Field, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
 import { EditOutlineIcon, PlusOutlineIcon, TrashOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
 import { PageHeader, ListToolbar, FilterSelect, DataTable, Pagination, ConfirmDialog } from '@/components/ui';
@@ -213,7 +213,7 @@ export default function CategoriesPage() {
       width: 'w-32',
       nowrap: true,
       render: (category) => (
-        <div className="flex justify-end gap-1">
+        <div className="flex items-center justify-end gap-1">
           <IconButton
             aria-label="편집"
             variant="ghost"
@@ -249,47 +249,51 @@ export default function CategoriesPage() {
         }
       />
 
-      <ListToolbar
-        search={search}
-        onSearchChange={setSearch}
-        searchPlaceholder="카테고리명 검색"
-        filters={
-          <FilterSelect
-            value={typeFilter}
-            onValueChange={(value) => setFilter('type', value)}
-            options={TYPE_FILTER_OPTIONS}
-            placeholder="전체"
-            width="w-40"
+      <Card.Root>
+        <Card.Body>
+          <ListToolbar
+            search={search}
+            onSearchChange={setSearch}
+            searchPlaceholder="카테고리명 검색"
+            filters={
+              <FilterSelect
+                value={typeFilter}
+                onValueChange={(value) => setFilter('type', value)}
+                options={TYPE_FILTER_OPTIONS}
+                placeholder="전체"
+                width="w-40"
+              />
+            }
+            sort={
+              <FilterSelect
+                value={sort?.key ?? 'name'}
+                onValueChange={handleSortSelect}
+                options={SORT_OPTIONS}
+                placeholder="이름순"
+                width="w-36"
+              />
+            }
           />
-        }
-        sort={
-          <FilterSelect
-            value={sort?.key ?? 'name'}
-            onValueChange={handleSortSelect}
-            options={SORT_OPTIONS}
-            placeholder="이름순"
-            width="w-36"
+
+          <DataTable
+            columns={columns}
+            rows={categories}
+            rowKey={(category) => category.id}
+            loading={loading}
+            empty="카테고리가 없습니다."
+            sortKey={sort?.key}
+            sortDir={sort?.dir}
+            onSortChange={toggleSort}
           />
-        }
-      />
 
-      <DataTable
-        columns={columns}
-        rows={categories}
-        rowKey={(category) => category.id}
-        loading={loading}
-        empty="카테고리가 없습니다."
-        sortKey={sort?.key}
-        sortDir={sort?.dir}
-        onSortChange={toggleSort}
-      />
-
-      <div className="mt-4 flex items-center justify-between gap-4">
-        <Text typography="body3" className="text-gray-500">
-          총 {total}개
-        </Text>
-        <Pagination page={page} total={total} limit={PAGE_SIZE} onPageChange={setPage} />
-      </div>
+          <div className="mt-4 flex items-center justify-between gap-4">
+            <Text typography="body3" className="text-gray-500">
+              총 {total}개
+            </Text>
+            <Pagination page={page} total={total} limit={PAGE_SIZE} onPageChange={setPage} />
+          </div>
+        </Card.Body>
+      </Card.Root>
 
       {/* 카테고리 추가/수정 다이얼로그 */}
       <Dialog.Root

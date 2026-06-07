@@ -17,7 +17,7 @@ import {
 } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { CategorySelect, EntityPicker, FreeTagSelect, PhotoUploader } from '@/components/ui';
+import { CategorySelect, EntityPicker, FreeTagSelect, PageHeader, PhotoUploader } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { ImageData, Project, ProjectStatus } from '@/types';
 
@@ -171,21 +171,20 @@ export default function EditProjectPage() {
 
   return (
     <MainLayout>
-      <div className="mb-6 flex items-center gap-3">
-        <Button
-          type="button"
-          variant="outline"
-          colorPalette="secondary"
-          size="md"
-          onClick={() => router.back()}
-        >
-          <ChevronLeftOutlineIcon size={16} />
-          돌아가기
-        </Button>
-        <Text typography="heading3" render={<h3 />} className="text-gray-900">
-          프로젝트 편집
-        </Text>
-      </div>
+      <PageHeader
+        title="프로젝트 편집"
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            colorPalette="secondary"
+            onClick={() => router.back()}
+          >
+            <ChevronLeftOutlineIcon size={16} />
+            돌아가기
+          </Button>
+        }
+      />
 
       {error ? (
         <Callout.Root colorPalette="danger" className="mb-4">
@@ -307,7 +306,7 @@ export default function EditProjectPage() {
               <Text typography="heading5" render={<h4 />} className="text-gray-900">
                 프로젝트 사진
               </Text>
-              <Text typography="body3" render={<p />} className="mt-1 text-gray-500">
+              <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
                 이미지를 업로드하고 제목·대표·순서를 설정하세요.
               </Text>
             </Card.Header>

@@ -46,7 +46,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-5">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
       <Card.Root className="w-full max-w-[400px] rounded-xl shadow-2xl">
         <Card.Body className="p-10">
           {/* 로고 및 타이틀 */}

@@ -16,7 +16,7 @@ export default function Pagination({ page, total, limit, onPageChange }: Paginat
   const canNext = page < totalPages;
 
   return (
-    <div className="flex items-center justify-center gap-3">
+    <div className="flex items-center justify-center gap-2">
       <Button
         variant="outline"
         colorPalette="secondary"

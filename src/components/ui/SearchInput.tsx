@@ -32,17 +32,17 @@ export default function SearchInput({
   }, [internal, value, debounceMs, onChange]);
 
   return (
-    <div className="relative">
+    <div className="relative w-full">
       <SearchOutlineIcon
         size={16}
-        className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+        className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
       />
       <TextInput
         type="search"
         value={internal}
         onValueChange={(v) => setInternal(v)}
         placeholder={placeholder}
-        className="pl-9"
+        className="w-full pl-9"
       />
     </div>
   );

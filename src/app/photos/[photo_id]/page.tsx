@@ -110,7 +110,7 @@ export default function PhotoDetailPage() {
   return (
     <MainLayout>
       <div className="mb-6 flex items-center justify-between gap-4">
-        <div className="flex min-w-0 items-center gap-3">
+        <div className="flex min-w-0 items-center gap-2">
           <Button variant="outline" colorPalette="secondary" onClick={() => router.push('/photos')}>
             <ChevronLeftOutlineIcon size={16} />
             돌아가기
@@ -180,7 +180,7 @@ export default function PhotoDetailPage() {
                 </div>
                 <div className="flex gap-4 py-2">
                   <dt className="w-24 shrink-0 text-sm font-medium text-gray-500">등록일</dt>
-                  <dd className="flex items-center gap-1.5 text-sm text-gray-900">
+                  <dd className="flex items-center gap-1 text-sm text-gray-900">
                     <CalendarOutlineIcon size={14} className="text-gray-400" />
                     {new Date(photo.createdAt).toLocaleDateString('ko-KR')}
                   </dd>
@@ -205,7 +205,7 @@ export default function PhotoDetailPage() {
                   {photo.connectedItems.map((item) => {
                     const thumb = item.images?.find((img) => img.isMain) ?? item.images?.[0];
                     return (
-                      <li key={item.id} className="flex items-center gap-3 py-2">
+                      <li key={item.id} className="flex items-center gap-2 py-2">
                         <Thumbnail src={thumb?.url} alt={item.name} className="h-9 w-9 rounded" />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium text-gray-900">{item.name}</div>
@@ -272,7 +272,7 @@ export default function PhotoDetailPage() {
               {usedInProjects.length > 0 ? (
                 <ul className="divide-y divide-gray-100">
                   {usedInProjects.map((project) => (
-                    <li key={project.id} className="flex items-center justify-between gap-3 py-2">
+                    <li key={project.id} className="flex items-center justify-between gap-2 py-2">
                       <span className="truncate text-sm text-gray-900">{project.title}</span>
                       <Button
                         variant="ghost"

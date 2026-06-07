@@ -21,7 +21,7 @@ import type { Item, Project } from '@/types';
 
 function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="grid grid-cols-1 gap-1 border-b border-gray-100 py-3 last:border-b-0 sm:grid-cols-[140px_1fr] sm:gap-4">
+    <div className="grid grid-cols-1 gap-2 border-b border-gray-100 py-2 last:border-b-0 sm:grid-cols-[140px_1fr] sm:gap-4">
       <Text typography="body2" className="text-gray-500">
         {label}
       </Text>
@@ -125,8 +125,8 @@ export default function ProjectDetailPage() {
 
   return (
     <MainLayout>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
           <Button
             type="button"
             variant="outline"
@@ -172,7 +172,7 @@ export default function ProjectDetailPage() {
             </Text>
           </Card.Header>
           <Card.Body>
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
               {project.images.map((image) => (
                 <div key={image.id} className="space-y-2">
                   <div className="overflow-hidden rounded-lg border border-gray-200">
@@ -233,7 +233,7 @@ export default function ProjectDetailPage() {
               </InfoRow>
               <InfoRow label="카테고리">
                 {project.categories?.length ? (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {project.categories.map((category) => (
                       <Badge key={category.id} colorPalette="primary" size="sm">
                         {category.name}
@@ -246,7 +246,7 @@ export default function ProjectDetailPage() {
               </InfoRow>
               <InfoRow label="태그">
                 {project.tags?.length ? (
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-2">
                     {project.tags.map((tag) => (
                       <Badge key={tag.id} colorPalette="hint" size="sm">
                         {tag.name}

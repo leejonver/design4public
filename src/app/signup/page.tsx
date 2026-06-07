@@ -75,14 +75,14 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-5">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
         <Card.Root className="w-full max-w-[500px] rounded-xl shadow-2xl">
           <Card.Body className="p-10 text-center">
             <CheckCircleOutlineIcon size={56} className="mx-auto text-green-500" />
             <Text typography="heading3" render={<h2 />} className="mt-4 text-gray-900">
               회원가입이 완료되었습니다!
             </Text>
-            <Text typography="body1" render={<p />} className="mt-3 text-gray-500">
+            <Text typography="body1" render={<p />} className="mt-4 text-gray-500">
               이메일 인증 후 관리자 승인이 필요합니다. 승인 완료 후 로그인이 가능합니다.
             </Text>
             <Button
@@ -100,7 +100,7 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-5">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-6">
       <Card.Root className="w-full max-w-[450px] rounded-xl shadow-2xl">
         <Card.Body className="p-10">
           {/* 로고 및 타이틀 */}
