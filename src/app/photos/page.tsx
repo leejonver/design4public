@@ -4,16 +4,24 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Badge, Button, Callout, IconButton } from '@vapor-ui/core';
+import { Badge, Callout, IconButton } from '@vapor-ui/core';
 import {
-  PlusOutlineIcon,
   ViewOnOutlineIcon,
   EditOutlineIcon,
   TrashOutlineIcon,
   ImageOutlineIcon,
 } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { PageHeader, SearchInput, DataTable, Pagination, ConfirmDialog } from '@/components/ui';
+import {
+  PageHeader,
+  SearchInput,
+  DataTable,
+  Pagination,
+  ConfirmDialog,
+  EmptyState,
+  ImagePlaceholder,
+  SuccessCallout,
+} from '@/components/ui';
 import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Photo } from '@/types';
@@ -28,6 +36,7 @@ export default function PhotosPage() {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   const [deleteTarget, setDeleteTarget] = useState<Photo | null>(null);
@@ -81,6 +90,7 @@ export default function PhotosPage() {
       const res = await api.delete(`/photos/${deleteTarget.id}`);
       if (res.success) {
         setDeleteTarget(null);
+        setSuccess('사진이 삭제되었습니다.');
         // If we deleted the last row on a page beyond the first, step back a page.
         if (photos.length === 1 && page > 1) {
           setPage((p) => p - 1);
@@ -111,9 +121,7 @@ export default function PhotosPage() {
             className="h-12 w-16 rounded object-cover"
           />
         ) : (
-          <div className="flex h-12 w-16 items-center justify-center rounded bg-gray-100">
-            <ImageOutlineIcon size={18} className="text-gray-400" />
-          </div>
+          <ImagePlaceholder className="h-12 w-16 rounded" />
         ),
     },
     {
@@ -187,15 +195,7 @@ export default function PhotosPage() {
 
   return (
     <MainLayout>
-      <PageHeader
-        title="사진 관리"
-        action={
-          <Button colorPalette="primary" onClick={() => router.push('/photos/new')}>
-            <PlusOutlineIcon size={16} />
-            새 사진 추가
-          </Button>
-        }
-      />
+      <PageHeader title="사진 관리" />
 
       <div className="mb-4 max-w-sm">
         <SearchInput value={search} onChange={handleSearch} placeholder="사진 제목, 설명 검색" />
@@ -207,12 +207,20 @@ export default function PhotosPage() {
         </Callout.Root>
       ) : null}
 
+      <SuccessCallout message={success} onClose={() => setSuccess(null)} />
+
       <DataTable
         columns={columns}
         rows={photos}
         rowKey={(photo) => photo.id}
         loading={loading}
-        empty="등록된 사진이 없습니다"
+        empty={
+          <EmptyState
+            icon={<ImageOutlineIcon size={40} />}
+            title="등록된 사진이 없습니다."
+            description="프로젝트·아이템 이미지 업로드 시 자동으로 추가됩니다."
+          />
+        }
       />
 
       {total > LIMIT ? (

@@ -34,13 +34,11 @@ export type ManagerRole = 'master' | 'admin' | 'content_manager';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 /**
- * 태그 타입 열거형
- * - project: 프로젝트 태그
- * - item: 아이템 태그
- * - photo: 사진 태그
- * - brand: 브랜드 태그
+ * 카테고리 타입 열거형 (엔티티별 고정 분류)
+ * - project: 프로젝트 카테고리
+ * - item: 아이템 카테고리
  */
-export type TagType = 'project' | 'item' | 'photo' | 'brand';
+export type CategoryType = 'project' | 'item';
 
 /**
  * 이미지 데이터 인터페이스
@@ -54,13 +52,22 @@ export interface ImageData {
 }
 
 /**
- * 태그 인터페이스
- * 콘텐츠 분류를 위한 태그 시스템
+ * 카테고리 인터페이스 (엔티티별 고정 분류, 카테고리 설정에서 관리)
+ */
+export interface Category {
+  id: string;
+  name: string;
+  type: CategoryType; // project | item
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * 태그 인터페이스 (type 무관 자유 라벨, 프로젝트/아이템/사진에 자유롭게 연결)
  */
 export interface Tag {
   id: string;
-  name: string; // 태그명 (1-20자, 한글/영문/숫자)
-  type: TagType; // 태그 타입 (project, item, photo, brand)
+  name: string; // 태그명
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식
 }
@@ -93,7 +100,8 @@ export interface Project {
   completionYear: number; // 완공연도 (1900-현재+10년)
   area?: number; // 면적 (m², 1 이상, 선택사항)
   images: ImageData[]; // 프로젝트 이미지 배열
-  tags: Tag[]; // 연결된 태그 배열
+  categories: Category[]; // 연결된 카테고리 (project 타입)
+  tags: Tag[]; // 연결된 자유 태그
   connectedItems: Item[]; // 연결된 아이템 배열
   inquiryUrl?: string; // 문의 URL (옵션)
   status: ProjectStatus;
@@ -112,7 +120,8 @@ export interface Item {
   images: ImageData[]; // 아이템 이미지 배열
   mallUrl?: string; // 나라장터 URL (옵션)
   brand: Brand; // 소속 브랜드
-  tags: Tag[]; // 연결된 태그 배열
+  categories: Category[]; // 연결된 카테고리 (item 타입)
+  tags: Tag[]; // 연결된 자유 태그
   slug: string; // URL 친화적인 식별자
   status: ItemStatus;
   createdAt: string; // ISO 8601 형식
@@ -133,7 +142,6 @@ export interface Brand {
   coverImageUrl?: string; // 커버 이미지 URL (옵션)
   websiteUrl?: string; // 브랜드 웹사이트 URL (옵션)
   status?: 'visible' | 'hidden'; // 노출 상태 (기본: visible)
-  tags?: Tag[]; // 연결된 브랜드 태그 (다중)
   slug: string; // URL 친화적인 식별자
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식
@@ -233,11 +241,11 @@ export interface BrandFormData {
 }
 
 /**
- * 태그 생성/수정 폼 데이터
+ * 카테고리 생성/수정 폼 데이터
  */
-export interface TagFormData {
-  name: string; // 1-20자, 한글/영문/숫자만
-  type: TagType; // 태그 타입 (project, item, photo, brand)
+export interface CategoryFormData {
+  name: string;
+  type: CategoryType; // project | item
 }
 
 /**

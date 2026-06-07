@@ -4,7 +4,12 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Badge, Button, Callout, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
-import { CloseOutlineIcon, ConfirmOutlineIcon, EditOutlineIcon } from '@vapor-ui/icons';
+import {
+  CloseOutlineIcon,
+  ConfirmOutlineIcon,
+  EditOutlineIcon,
+  GroupOutlineIcon,
+} from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
 import {
   PageHeader,
@@ -12,6 +17,7 @@ import {
   StatusBadge,
   ConfirmDialog,
   DataTable,
+  EmptyState,
   Pagination,
 } from '@/components/ui';
 import type { DataTableColumn } from '@/components/ui';
@@ -249,7 +255,7 @@ export default function ManagersPage() {
       header: '이름',
       render: (m) => (
         <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-v-primary-200 text-sm font-medium text-white">
             {m.name?.charAt(0) || '?'}
           </div>
           {editingId === m.id ? (
@@ -474,7 +480,13 @@ export default function ManagersPage() {
         rows={managers}
         rowKey={(m) => m.id}
         loading={loading}
-        empty="관리자가 없습니다."
+        empty={
+          <EmptyState
+            icon={<GroupOutlineIcon size={40} />}
+            title="관리자가 없습니다."
+            description="검색 조건을 변경해 보세요."
+          />
+        }
       />
 
       <div className="mt-4 flex items-center justify-between gap-4">

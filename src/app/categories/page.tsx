@@ -1,4 +1,4 @@
-// Design4Public CMS - 태그 관리 페이지
+// Design4Public CMS - 카테고리 설정 페이지
 
 'use client';
 
@@ -9,17 +9,15 @@ import MainLayout from '@/components/MainLayout';
 import { PageHeader, SearchInput, DataTable, ConfirmDialog } from '@/components/ui';
 import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { Tag, TagType } from '@/types';
+import type { Category, CategoryType } from '@/types';
 
-type TypeFilter = TagType | 'all';
+type TypeFilter = CategoryType | 'all';
 
 type BadgeColor = 'primary' | 'hint' | 'danger' | 'success' | 'warning' | 'contrast';
 
-const TYPE_OPTIONS: { value: TagType; label: string }[] = [
+const TYPE_OPTIONS: { value: CategoryType; label: string }[] = [
   { value: 'project', label: '프로젝트' },
   { value: 'item', label: '아이템' },
-  { value: 'photo', label: '사진' },
-  { value: 'brand', label: '브랜드' },
 ];
 
 const FILTER_OPTIONS: { value: TypeFilter; label: string }[] = [
@@ -27,72 +25,70 @@ const FILTER_OPTIONS: { value: TypeFilter; label: string }[] = [
   ...TYPE_OPTIONS,
 ];
 
-const TYPE_BADGE: Record<TagType, { label: string; colorPalette: BadgeColor }> = {
+const TYPE_BADGE: Record<CategoryType, { label: string; colorPalette: BadgeColor }> = {
   project: { label: '프로젝트', colorPalette: 'primary' },
   item: { label: '아이템', colorPalette: 'success' },
-  photo: { label: '사진', colorPalette: 'contrast' },
-  brand: { label: '브랜드', colorPalette: 'warning' },
 };
 
-// 태그명 검증 (1-20자, 한글/영문/숫자만)
+// 카테고리명 검증 (1-20자, 한글/영문/숫자만)
 function validateName(name: string): string | null {
   const value = name.trim();
-  if (!value) return '태그명을 입력해주세요.';
-  if (value.length < 1 || value.length > 20) return '태그명은 1-20자 사이여야 합니다.';
-  if (!/^[가-힣a-zA-Z0-9\s]+$/.test(value)) return '태그명은 한글, 영문, 숫자만 사용할 수 있습니다.';
+  if (!value) return '카테고리명을 입력해주세요.';
+  if (value.length < 1 || value.length > 20) return '카테고리명은 1-20자 사이여야 합니다.';
+  if (!/^[가-힣a-zA-Z0-9\s]+$/.test(value)) return '카테고리명은 한글, 영문, 숫자만 사용할 수 있습니다.';
   return null;
 }
 
-export default function TagsPage() {
-  const [tags, setTags] = useState<Tag[]>([]);
+export default function CategoriesPage() {
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
 
   // 생성/수정 다이얼로그 상태
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [editingTag, setEditingTag] = useState<Tag | null>(null);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formName, setFormName] = useState('');
-  const [formType, setFormType] = useState<TagType>('project');
+  const [formType, setFormType] = useState<CategoryType>('project');
   const [formError, setFormError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   // 삭제 확인 상태
-  const [deletingTag, setDeletingTag] = useState<Tag | null>(null);
+  const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // 태그 목록 가져오기
-  const fetchTags = useCallback(async () => {
+  // 카테고리 목록 가져오기
+  const fetchCategories = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await api.tags.getList({ limit: 1000 });
+      const res = await api.categories.getList({ limit: 1000 });
       if (res.success) {
-        setTags((res.data as { items?: Tag[] } | undefined)?.items ?? []);
+        setCategories((res.data as { items?: Category[] } | undefined)?.items ?? []);
       }
     } catch (error) {
-      console.error('태그 목록 로딩 오류:', error);
+      console.error('카테고리 목록 로딩 오류:', error);
     } finally {
       setLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchTags();
-  }, [fetchTags]);
+    fetchCategories();
+  }, [fetchCategories]);
 
   // 타입 + 검색어로 필터링
-  const filteredTags = useMemo(() => {
+  const filteredCategories = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    return tags.filter((tag) => {
-      const matchesType = typeFilter === 'all' || tag.type === typeFilter;
-      const matchesTerm = tag.name.toLowerCase().includes(term);
+    return categories.filter((category) => {
+      const matchesType = typeFilter === 'all' || category.type === typeFilter;
+      const matchesTerm = category.name.toLowerCase().includes(term);
       return matchesType && matchesTerm;
     });
-  }, [tags, searchTerm, typeFilter]);
+  }, [categories, searchTerm, typeFilter]);
 
   // 다이얼로그 열기 (생성)
   const openCreate = () => {
-    setEditingTag(null);
+    setEditingCategory(null);
     setFormName('');
     setFormType(typeFilter === 'all' ? 'project' : typeFilter);
     setFormError(null);
@@ -100,10 +96,10 @@ export default function TagsPage() {
   };
 
   // 다이얼로그 열기 (수정)
-  const openEdit = (tag: Tag) => {
-    setEditingTag(tag);
-    setFormName(tag.name);
-    setFormType(tag.type);
+  const openEdit = (category: Category) => {
+    setEditingCategory(category);
+    setFormName(category.name);
+    setFormType(category.type);
     setFormError(null);
     setDialogOpen(true);
   };
@@ -111,12 +107,12 @@ export default function TagsPage() {
   // 다이얼로그 닫기
   const closeDialog = () => {
     setDialogOpen(false);
-    setEditingTag(null);
+    setEditingCategory(null);
     setFormName('');
     setFormError(null);
   };
 
-  // 태그 저장
+  // 카테고리 저장
   const handleSave = async () => {
     const error = validateName(formName);
     if (error) {
@@ -129,60 +125,58 @@ export default function TagsPage() {
     const name = formName.trim();
 
     try {
-      if (editingTag) {
-        // 수정 - 태그 타입은 기존 값 유지 (변경 불가)
-        const res = await api.put(`/tags/${editingTag.id}`, { name, type: editingTag.type });
+      if (editingCategory) {
+        const res = await api.categories.update(editingCategory.id, { name, type: formType });
         if (res.success) {
-          await fetchTags();
+          await fetchCategories();
           closeDialog();
         } else {
-          setFormError(res.error ?? '태그 수정에 실패했습니다.');
+          setFormError(res.error ?? '카테고리 수정에 실패했습니다.');
         }
       } else {
-        // 새로 추가
-        const res = await api.post('/tags', { name, type: formType });
+        const res = await api.categories.create({ name, type: formType });
         if (res.success) {
-          await fetchTags();
+          await fetchCategories();
           closeDialog();
         } else {
-          setFormError(res.error ?? '태그 추가에 실패했습니다.');
+          setFormError(res.error ?? '카테고리 추가에 실패했습니다.');
         }
       }
     } catch (error) {
-      setFormError(`태그 저장 중 오류가 발생했습니다: ${(error as Error).message}`);
+      setFormError(`카테고리 저장 중 오류가 발생했습니다: ${(error as Error).message}`);
     } finally {
       setSaving(false);
     }
   };
 
-  // 태그 삭제
+  // 카테고리 삭제
   const handleDelete = async () => {
-    if (!deletingTag) return;
+    if (!deletingCategory) return;
     setDeleting(true);
     try {
-      const res = await api.tags.delete(deletingTag.id);
+      const res = await api.categories.delete(deletingCategory.id);
       if (res.success) {
-        await fetchTags();
-        setDeletingTag(null);
+        await fetchCategories();
+        setDeletingCategory(null);
       }
     } catch (error) {
-      console.error('태그 삭제 오류:', error);
+      console.error('카테고리 삭제 오류:', error);
     } finally {
       setDeleting(false);
     }
   };
 
-  const columns: DataTableColumn<Tag>[] = [
+  const columns: DataTableColumn<Category>[] = [
     {
       key: 'name',
-      header: '태그명',
-      render: (tag) => <span className="font-medium text-gray-900">{tag.name}</span>,
+      header: '카테고리명',
+      render: (category) => <span className="font-medium text-gray-900">{category.name}</span>,
     },
     {
       key: 'type',
       header: '타입',
-      render: (tag) => {
-        const info = TYPE_BADGE[tag.type];
+      render: (category) => {
+        const info = TYPE_BADGE[category.type];
         return (
           <Badge colorPalette={info.colorPalette} size="sm">
             {info.label}
@@ -194,14 +188,14 @@ export default function TagsPage() {
       key: 'actions',
       header: '작업',
       align: 'right',
-      render: (tag) => (
+      render: (category) => (
         <div className="flex justify-end gap-1">
           <IconButton
             aria-label="편집"
             variant="ghost"
             colorPalette="secondary"
             size="sm"
-            onClick={() => openEdit(tag)}
+            onClick={() => openEdit(category)}
           >
             <EditOutlineIcon size={16} />
           </IconButton>
@@ -210,7 +204,7 @@ export default function TagsPage() {
             variant="ghost"
             colorPalette="danger"
             size="sm"
-            onClick={() => setDeletingTag(tag)}
+            onClick={() => setDeletingCategory(category)}
           >
             <TrashOutlineIcon size={16} />
           </IconButton>
@@ -222,11 +216,11 @@ export default function TagsPage() {
   return (
     <MainLayout>
       <PageHeader
-        title="태그 관리"
+        title="카테고리 설정"
         action={
           <Button variant="fill" colorPalette="primary" onClick={openCreate}>
             <PlusOutlineIcon size={16} />
-            새 태그
+            새 카테고리
           </Button>
         }
       />
@@ -234,7 +228,7 @@ export default function TagsPage() {
       {/* 검색 + 타입 필터 */}
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="w-72">
-          <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="태그명 검색" />
+          <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="카테고리명 검색" />
         </div>
         <Select.Root
           value={typeFilter}
@@ -252,16 +246,16 @@ export default function TagsPage() {
         </Select.Root>
       </div>
 
-      {/* 태그 테이블 */}
+      {/* 카테고리 테이블 */}
       <DataTable
         columns={columns}
-        rows={filteredTags}
-        rowKey={(tag) => tag.id}
+        rows={filteredCategories}
+        rowKey={(category) => category.id}
         loading={loading}
-        empty="태그가 없습니다."
+        empty="카테고리가 없습니다."
       />
 
-      {/* 태그 추가/수정 다이얼로그 */}
+      {/* 카테고리 추가/수정 다이얼로그 */}
       <Dialog.Root
         open={dialogOpen}
         onOpenChange={(next) => {
@@ -269,18 +263,17 @@ export default function TagsPage() {
         }}
       >
         <Dialog.Popup>
-          <Dialog.Title>{editingTag ? '태그 수정' : '새 태그 추가'}</Dialog.Title>
+          <Dialog.Title>{editingCategory ? '카테고리 수정' : '새 카테고리 추가'}</Dialog.Title>
           <Dialog.Body>
             <div className="space-y-4">
               <Field.Root>
-                <Field.Label>태그 타입</Field.Label>
+                <Field.Label>타입</Field.Label>
                 <Select.Root
                   value={formType}
                   onValueChange={(value) => {
-                    if (value) setFormType(value as TagType);
+                    if (value) setFormType(value as CategoryType);
                   }}
                   items={TYPE_OPTIONS}
-                  disabled={Boolean(editingTag)}
                 >
                   <Select.Trigger className="w-full" />
                   <Select.Popup>
@@ -291,20 +284,17 @@ export default function TagsPage() {
                     ))}
                   </Select.Popup>
                 </Select.Root>
-                {editingTag ? (
-                  <Field.Description>타입은 변경할 수 없습니다.</Field.Description>
-                ) : null}
               </Field.Root>
 
               <Field.Root>
-                <Field.Label>태그명</Field.Label>
+                <Field.Label>카테고리명</Field.Label>
                 <TextInput
                   value={formName}
                   onValueChange={(value) => {
                     setFormName(value);
                     if (formError) setFormError(null);
                   }}
-                  placeholder="태그명을 입력하세요"
+                  placeholder="카테고리명을 입력하세요"
                   maxLength={20}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') {
@@ -326,22 +316,22 @@ export default function TagsPage() {
               취소
             </Button>
             <Button variant="fill" colorPalette="primary" onClick={handleSave} disabled={saving}>
-              {saving ? <Spinner size="md" /> : editingTag ? '수정' : '추가'}
+              {saving ? <Spinner size="md" /> : editingCategory ? '수정' : '추가'}
             </Button>
           </Dialog.Footer>
         </Dialog.Popup>
       </Dialog.Root>
 
-      {/* 태그 삭제 확인 */}
+      {/* 카테고리 삭제 확인 */}
       <ConfirmDialog
-        open={Boolean(deletingTag)}
-        title="태그 삭제"
-        description="이 태그를 삭제하시겠습니까?"
+        open={Boolean(deletingCategory)}
+        title="카테고리 삭제"
+        description="이 카테고리를 삭제하시겠습니까?"
         confirmText="삭제"
         danger
         loading={deleting}
         onConfirm={handleDelete}
-        onCancel={() => setDeletingTag(null)}
+        onCancel={() => setDeletingCategory(null)}
       />
     </MainLayout>
   );

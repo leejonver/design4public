@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { ITEM_SELECT, mapItem } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
-import { syncItemPhotos, syncTags } from '@/lib/image-sync'
+import { syncItemPhotos, syncCategories, syncFreeTags } from '@/lib/image-sync'
 
 export async function GET(request: NextRequest) {
   try {
@@ -48,7 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { name, description, mallUrl, brandId, images, tags, status } = body
+    const { name, description, mallUrl, brandId, images, categories, tags, status } = body
 
     if (!name) {
       return NextResponse.json({ success: false, error: '아이템 이름은 필수입니다.' }, { status: 400 })
@@ -74,7 +74,8 @@ export async function POST(request: NextRequest) {
     if (error) throw error
 
     await syncItemPhotos(item.id, images ?? [])
-    await syncTags('item_tags', 'item_id', item.id, tags ?? [])
+    await syncCategories('item_categories', 'item_id', item.id, categories ?? [])
+    await syncFreeTags('item_tags', 'item_id', item.id, tags ?? [])
 
     const { data: full } = await supabaseAdmin
       .from('items')

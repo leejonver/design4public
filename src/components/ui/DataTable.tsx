@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Spinner, Table, Text } from '@vapor-ui/core';
+import { Skeleton, Table, Text } from '@vapor-ui/core';
 
 export interface DataTableColumn<T> {
   key: string;
@@ -15,9 +15,11 @@ export interface DataTableProps<T> {
   rows: T[];
   rowKey: (row: T) => string;
   loading?: boolean;
-  empty?: string;
+  empty?: React.ReactNode;
   onRowClick?: (row: T) => void;
 }
+
+const SKELETON_ROWS = 5;
 
 const ALIGN_CLASS: Record<NonNullable<DataTableColumn<unknown>['align']>, string> = {
   left: 'text-left',
@@ -48,17 +50,25 @@ export default function DataTable<T>({
       </Table.Header>
       <Table.Body>
         {loading ? (
-          <Table.Row>
-            <Table.Cell colSpan={columns.length} className="py-10 text-center">
-              <Spinner size="md" />
-            </Table.Cell>
-          </Table.Row>
+          Array.from({ length: SKELETON_ROWS }).map((_, rowIndex) => (
+            <Table.Row key={`skeleton-${rowIndex}`}>
+              {columns.map((col) => (
+                <Table.Cell key={col.key} className={alignClass(col.align)}>
+                  <Skeleton className="h-4 w-3/4 rounded" />
+                </Table.Cell>
+              ))}
+            </Table.Row>
+          ))
         ) : rows.length === 0 ? (
           <Table.Row>
             <Table.Cell colSpan={columns.length} className="py-10 text-center">
-              <Text typography="body2" className="text-gray-400">
-                {empty}
-              </Text>
+              {typeof empty === 'string' ? (
+                <Text typography="body2" className="text-gray-400">
+                  {empty}
+                </Text>
+              ) : (
+                empty
+              )}
             </Table.Cell>
           </Table.Row>
         ) : (

@@ -239,6 +239,19 @@ export default function ProjectDetailPage() {
                   <span className="text-gray-400">등록되지 않음</span>
                 )}
               </InfoRow>
+              <InfoRow label="카테고리">
+                {project.categories?.length ? (
+                  <div className="flex flex-wrap gap-1">
+                    {project.categories.map((category) => (
+                      <Badge key={category.id} colorPalette="primary" size="sm">
+                        {category.name}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </InfoRow>
               <InfoRow label="태그">
                 {project.tags?.length ? (
                   <div className="flex flex-wrap gap-1">

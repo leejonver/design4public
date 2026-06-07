@@ -3,7 +3,6 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
-import { syncTags } from '@/lib/image-sync'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -28,8 +27,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status, tags } =
-      body
+    const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status } = body
 
     const update: Record<string, unknown> = {}
     if (nameKo !== undefined) update.name_ko = nameKo
@@ -64,7 +62,6 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       const { error } = await supabaseAdmin.from('brands').update(update).eq('id', params.id)
       if (error) throw error
     }
-    if (tags !== undefined) await syncTags('brand_tags', 'brand_id', params.id, tags)
 
     const { data: full } = await supabaseAdmin
       .from('brands')
@@ -88,7 +85,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
   try {
     await requireRole('content_manager')
     // §6-3: detach the brand's items first (items.brand_id -> NULL) before deleting the brand,
-    // so the brand FK can never block the delete. brand_tags cascade on brand delete.
+    // so the brand FK can never block the delete.
     const { error: detachError } = await supabaseAdmin
       .from('items')
       .update({ brand_id: null })

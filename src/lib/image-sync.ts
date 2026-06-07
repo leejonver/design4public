@@ -90,16 +90,58 @@ export async function syncItemPhotos(itemId: string, refs: PhotoRef[]): Promise<
 }
 
 /** Replaces a parent's tag links in a join table. */
-export async function syncTags(
-  table: 'project_tags' | 'item_tags' | 'photo_tags' | 'brand_tags',
-  fk: string,
+/** Replaces a parent's CATEGORY links (typed classification) by category id. */
+export async function syncCategories(
+  table: 'project_categories' | 'item_categories',
+  fk: 'project_id' | 'item_id',
   parentId: string,
-  tagIds: string[],
+  categoryIds: string[],
 ): Promise<void> {
   await supabaseAdmin.from(table).delete().eq(fk, parentId)
-  if (!tagIds?.length) return
-  const rows = tagIds.map((tag_id) => ({ [fk]: parentId, tag_id }))
-  // `table` is a union of join-table names, so the typed Insert can't be resolved statically.
+  if (!categoryIds?.length) return
+  const rows = categoryIds.map((category_id) => ({ [fk]: parentId, category_id }))
+  const { error } = await supabaseAdmin.from(table).insert(rows as never)
+  if (error) throw error
+}
+
+/** Find-or-create a free tag by name (names are UNIQUE). */
+async function ensureTagId(name: string): Promise<string | null> {
+  const n = name.trim()
+  if (!n) return null
+  const { data: existing } = await supabaseAdmin
+    .from('tags')
+    .select('id')
+    .eq('name', n)
+    .limit(1)
+    .maybeSingle()
+  if (existing) return existing.id
+  const { data, error } = await supabaseAdmin.from('tags').insert({ name: n }).select('id').single()
+  if (error) {
+    // unique-name race: re-fetch the winner
+    const { data: again } = await supabaseAdmin
+      .from('tags')
+      .select('id')
+      .eq('name', n)
+      .limit(1)
+      .maybeSingle()
+    return again?.id ?? null
+  }
+  return data.id
+}
+
+/** Replaces a parent's FREE-TAG links. Accepts tag NAMES (created on use). */
+export async function syncFreeTags(
+  table: 'project_tags' | 'item_tags' | 'photo_tags',
+  fk: 'project_id' | 'item_id' | 'photo_id',
+  parentId: string,
+  tagNames: string[],
+): Promise<void> {
+  await supabaseAdmin.from(table).delete().eq(fk, parentId)
+  if (!tagNames?.length) return
+  const unique = [...new Set(tagNames.map((t) => t.trim()).filter(Boolean))]
+  const ids = (await Promise.all(unique.map(ensureTagId))).filter(Boolean) as string[]
+  if (!ids.length) return
+  const rows = ids.map((tag_id) => ({ [fk]: parentId, tag_id }))
   const { error } = await supabaseAdmin.from(table).insert(rows as never)
   if (error) throw error
 }

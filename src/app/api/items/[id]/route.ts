@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { ITEM_SELECT, mapItem } from '@/lib/dto'
-import { syncItemPhotos, syncTags } from '@/lib/image-sync'
+import { syncItemPhotos, syncCategories, syncFreeTags } from '@/lib/image-sync'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -27,7 +27,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { name, description, mallUrl, brandId, images, tags, status } = body
+    const { name, description, mallUrl, brandId, images, categories, tags, status } = body
 
     const update: Record<string, unknown> = {}
     if (name !== undefined) update.name = name
@@ -41,7 +41,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       if (error) throw error
     }
     if (images !== undefined) await syncItemPhotos(params.id, images)
-    if (tags !== undefined) await syncTags('item_tags', 'item_id', params.id, tags)
+    if (categories !== undefined) await syncCategories('item_categories', 'item_id', params.id, categories ?? [])
+    if (tags !== undefined) await syncFreeTags('item_tags', 'item_id', params.id, tags ?? [])
 
     const { data: full } = await supabaseAdmin
       .from('items')

@@ -20,6 +20,9 @@ import {
   DataTable,
   Pagination,
   ConfirmDialog,
+  EmptyState,
+  ImagePlaceholder,
+  SuccessCallout,
 } from '@/components/ui';
 import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
@@ -41,6 +44,7 @@ export default function ItemsPage() {
   const [brands, setBrands] = useState<Brand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
@@ -113,6 +117,7 @@ export default function ItemsPage() {
     setDeleting(false);
     setDeleteTarget(null);
     if (res.success) {
+      setSuccess('아이템이 삭제되었습니다.');
       fetchItems();
     } else {
       setError(res.error || '아이템 삭제에 실패했습니다.');
@@ -137,9 +142,10 @@ export default function ItemsPage() {
             className="h-14 w-14 rounded-md object-cover"
           />
         ) : (
-          <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50">
-            <DashboardOutlineIcon size={20} className="text-gray-300" />
-          </div>
+          <ImagePlaceholder
+            className="h-14 w-14 rounded-md"
+            icon={<DashboardOutlineIcon size={20} />}
+          />
         );
       },
     },
@@ -245,6 +251,8 @@ export default function ItemsPage() {
         </Callout.Root>
       ) : null}
 
+      <SuccessCallout message={success} onClose={() => setSuccess(null)} />
+
       <Card.Root>
         <Card.Body className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -296,7 +304,13 @@ export default function ItemsPage() {
             rows={pagedItems}
             rowKey={(item) => item.id}
             loading={loading}
-            empty="아이템이 없습니다."
+            empty={
+              <EmptyState
+                icon={<DashboardOutlineIcon size={40} />}
+                title="아이템이 없습니다."
+                description="검색 조건을 변경하거나 새 아이템을 추가해 보세요."
+              />
+            }
           />
 
           {total > PAGE_SIZE ? (

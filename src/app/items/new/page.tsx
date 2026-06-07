@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { PageHeader, ImageUploader, TagSelect } from '@/components/ui';
+import { PageHeader, ImageUploader, CategorySelect, FreeTagSelect } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Brand, ImageData, ItemStatus } from '@/types';
 
@@ -27,6 +27,7 @@ export default function NewItemPage() {
   const [brandId, setBrandId] = useState('');
   const [status, setStatus] = useState<ItemStatus>('available');
   const [images, setImages] = useState<ImageData[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
   const [saving, setSaving] = useState(false);
@@ -78,6 +79,7 @@ export default function NewItemPage() {
       brandId,
       status,
       images,
+      categories,
       tags,
     });
     setSaving(false);
@@ -183,8 +185,13 @@ export default function NewItemPage() {
               </Field.Root>
 
               <Field.Root>
+                <Field.Label>카테고리</Field.Label>
+                <CategorySelect type="item" value={categories} onChange={setCategories} />
+              </Field.Root>
+
+              <Field.Root>
                 <Field.Label>태그</Field.Label>
-                <TagSelect type="item" value={tags} onChange={setTags} />
+                <FreeTagSelect value={tags} onChange={setTags} />
               </Field.Root>
 
               <Field.Root>

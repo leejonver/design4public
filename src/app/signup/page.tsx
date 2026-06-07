@@ -75,7 +75,7 @@ export default function SignupPage() {
 
   if (success) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-5">
         <Card.Root className="w-full max-w-[500px] rounded-xl shadow-2xl">
           <Card.Body className="p-10 text-center">
             <CheckCircleOutlineIcon size={56} className="mx-auto text-green-500" />
@@ -100,12 +100,12 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-5">
       <Card.Root className="w-full max-w-[450px] rounded-xl shadow-2xl">
         <Card.Body className="p-10">
           {/* 로고 및 타이틀 */}
           <div className="mb-8 text-center">
-            <Text typography="heading2" render={<h1 />} className="text-blue-600">
+            <Text typography="heading2" render={<h1 />} className="text-v-primary-100">
               Design4Public
             </Text>
             <Text typography="body1" render={<p />} className="mt-2 text-gray-500">
@@ -243,7 +243,7 @@ export default function SignupPage() {
             <Text typography="body2" render={<span />} className="text-gray-500">
               이미 계정이 있으신가요?{' '}
             </Text>
-            <Link href="/login" className="text-blue-600 hover:underline">
+            <Link href="/login" className="text-v-primary-100 hover:underline">
               로그인
             </Link>
           </div>

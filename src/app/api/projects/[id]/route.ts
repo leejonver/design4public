@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PROJECT_SELECT, mapProject } from '@/lib/dto'
-import { syncProjectPhotos, syncProjectItems, syncTags } from '@/lib/image-sync'
+import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -27,7 +27,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { name, description, location, completionYear, area, tags, connectedItems, photos, images, inquiryUrl, status } =
+    const { name, description, location, completionYear, area, categories, tags, connectedItems, photos, images, inquiryUrl, status } =
       body
 
     const update: Record<string, unknown> = {}
@@ -47,7 +47,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (photos !== undefined) await syncProjectPhotos(params.id, photos)
     else if (images !== undefined) await syncProjectPhotos(params.id, images)
     if (connectedItems !== undefined) await syncProjectItems(params.id, connectedItems)
-    if (tags !== undefined) await syncTags('project_tags', 'project_id', params.id, tags)
+    if (categories !== undefined) await syncCategories('project_categories', 'project_id', params.id, categories ?? [])
+    if (tags !== undefined) await syncFreeTags('project_tags', 'project_id', params.id, tags ?? [])
 
     const { data: full } = await supabaseAdmin
       .from('projects')

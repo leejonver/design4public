@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { EntityPicker, TagSelect } from '@/components/ui';
+import { FreeTagSelect } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Photo } from '@/types';
 
@@ -24,7 +24,6 @@ export default function PhotoEditPage() {
   const [title, setTitle] = useState('');
   const [altText, setAltText] = useState('');
   const [description, setDescription] = useState('');
-  const [connectedItems, setConnectedItems] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
   useEffect(() => {
@@ -36,8 +35,7 @@ export default function PhotoEditPage() {
           setTitle(res.data.title || '');
           setAltText(res.data.altText || '');
           setDescription(res.data.description || '');
-          setConnectedItems(res.data.connectedItems?.map((item) => item.id) || []);
-          setTags(res.data.tags?.map((tag) => tag.id) || []);
+          setTags(res.data.tags?.map((tag) => tag.name) || []);
         } else {
           setError('사진을 불러오는데 실패했습니다.');
         }
@@ -56,10 +54,9 @@ export default function PhotoEditPage() {
     setError(null);
     try {
       const res = await api.put(`/photos/${photo_id}`, {
-        altText: altText || null,
         title: title || null,
+        altText: altText || null,
         description: description || null,
-        connectedItems,
         tags,
       });
 
@@ -180,18 +177,13 @@ export default function PhotoEditPage() {
           <Card.Root>
             <Card.Header>
               <Text typography="heading5" render={<h4 />} className="text-gray-900">
-                연결 정보
+                태그
               </Text>
             </Card.Header>
             <Card.Body className="space-y-4">
               <Field.Root>
-                <Field.Label>연결된 아이템</Field.Label>
-                <EntityPicker kind="item" value={connectedItems} onChange={setConnectedItems} />
-              </Field.Root>
-
-              <Field.Root>
                 <Field.Label>태그</Field.Label>
-                <TagSelect type="photo" value={tags} onChange={setTags} />
+                <FreeTagSelect value={tags} onChange={setTags} />
               </Field.Root>
             </Card.Body>
           </Card.Root>

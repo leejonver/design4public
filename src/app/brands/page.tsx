@@ -21,6 +21,9 @@ import {
   ConfirmDialog,
   DataTable,
   Pagination,
+  EmptyState,
+  ImagePlaceholder,
+  SuccessCallout,
   type DataTableColumn,
 } from '@/components/ui';
 import { api } from '@/lib/api';
@@ -51,6 +54,7 @@ export default function BrandsPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -97,6 +101,7 @@ export default function BrandsPage() {
       const response = await api.delete(`/brands/${deleteTarget.id}`);
       if (response.success) {
         setDeleteTarget(null);
+        setSuccess('브랜드가 삭제되었습니다.');
         fetchBrands();
       } else {
         setError(response.error || '브랜드 삭제에 실패했습니다.');
@@ -122,9 +127,10 @@ export default function BrandsPage() {
             className="h-12 w-12 rounded-full object-cover"
           />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-            <BookmarkOutlineIcon size={20} />
-          </div>
+          <ImagePlaceholder
+            className="h-12 w-12 rounded-full"
+            icon={<BookmarkOutlineIcon size={20} />}
+          />
         ),
     },
     {
@@ -156,7 +162,7 @@ export default function BrandsPage() {
             href={brand.websiteUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+            className="inline-flex items-center gap-1 text-v-primary-100 hover:underline"
             onClick={(e) => e.stopPropagation()}
           >
             <LinkOutlineIcon size={14} />
@@ -222,6 +228,8 @@ export default function BrandsPage() {
         </Callout.Root>
       ) : null}
 
+      <SuccessCallout message={success} onClose={() => setSuccess(null)} />
+
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div className="w-72">
           <SearchInput
@@ -249,7 +257,13 @@ export default function BrandsPage() {
         rows={brands}
         rowKey={(brand) => brand.id}
         loading={loading}
-        empty="등록된 브랜드가 없습니다."
+        empty={
+          <EmptyState
+            icon={<BookmarkOutlineIcon size={40} />}
+            title="등록된 브랜드가 없습니다."
+            description="검색 조건을 변경하거나 새 브랜드를 추가해 보세요."
+          />
+        }
       />
 
       <div className="mt-6">

@@ -10,6 +10,7 @@ import {
   mapItem,
   mapProject,
   mapPhoto,
+  mapCategory,
   mapTag,
 } from '@/lib/dto'
 
@@ -21,14 +22,22 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const q = (searchParams.get('q') || '').trim()
 
-    const empty = { projects: [], items: [], brands: [], photos: [], tags: [], total: 0 }
+    const empty = {
+      projects: [],
+      items: [],
+      brands: [],
+      photos: [],
+      categories: [],
+      tags: [],
+      total: 0,
+    }
     if (!q) {
       return NextResponse.json({ success: true, data: empty })
     }
 
     const like = `%${q}%`
 
-    const [projects, items, brands, photos, tags] = await Promise.all([
+    const [projects, items, brands, photos, categories, tags] = await Promise.all([
       supabaseAdmin
         .from('projects')
         .select(PROJECT_SELECT)
@@ -49,6 +58,7 @@ export async function GET(request: NextRequest) {
         .select(PHOTO_SELECT)
         .or(`title.ilike.${like},alt_text.ilike.${like},description.ilike.${like}`)
         .limit(LIMIT),
+      supabaseAdmin.from('categories').select('*').ilike('name', like).limit(LIMIT),
       supabaseAdmin.from('tags').select('*').ilike('name', like).limit(LIMIT),
     ])
 
@@ -56,6 +66,7 @@ export async function GET(request: NextRequest) {
     if (items.error) throw items.error
     if (brands.error) throw brands.error
     if (photos.error) throw photos.error
+    if (categories.error) throw categories.error
     if (tags.error) throw tags.error
 
     const data = {
@@ -63,6 +74,7 @@ export async function GET(request: NextRequest) {
       items: (items.data ?? []).map(mapItem),
       brands: (brands.data ?? []).map(mapBrand),
       photos: (photos.data ?? []).map(mapPhoto),
+      categories: (categories.data ?? []).map(mapCategory),
       tags: (tags.data ?? []).map(mapTag),
       total: 0,
     }
@@ -71,6 +83,7 @@ export async function GET(request: NextRequest) {
       data.items.length +
       data.brands.length +
       data.photos.length +
+      data.categories.length +
       data.tags.length
 
     return NextResponse.json({ success: true, data })

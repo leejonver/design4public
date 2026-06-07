@@ -46,12 +46,12 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-5">
       <Card.Root className="w-full max-w-[400px] rounded-xl shadow-2xl">
         <Card.Body className="p-10">
           {/* 로고 및 타이틀 */}
           <div className="mb-8 text-center">
-            <Text typography="heading2" render={<h1 />} className="text-blue-600">
+            <Text typography="heading2" render={<h1 />} className="text-v-primary-100">
               Design4Public
             </Text>
             <Text typography="body1" render={<p />} className="mt-2 text-gray-500">
@@ -140,7 +140,7 @@ export default function LoginPage() {
             <Text typography="body2" render={<span />} className="text-gray-500">
               계정이 없으신가요?{' '}
             </Text>
-            <Link href="/signup" className="text-blue-600 hover:underline">
+            <Link href="/signup" className="text-v-primary-100 hover:underline">
               회원가입
             </Link>
           </div>

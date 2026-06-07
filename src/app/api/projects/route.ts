@@ -3,7 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PROJECT_SELECT, mapProject } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
-import { syncProjectPhotos, syncProjectItems, syncTags } from '@/lib/image-sync'
+import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
 
 export async function GET(request: NextRequest) {
   try {
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { name, description, location, completionYear, area, tags, connectedItems, photos, inquiryUrl, status } =
+    const { name, description, location, completionYear, area, categories, tags, connectedItems, photos, inquiryUrl, status } =
       body
 
     if (!name) {
@@ -76,7 +76,8 @@ export async function POST(request: NextRequest) {
 
     await syncProjectPhotos(project.id, photos ?? [])
     await syncProjectItems(project.id, connectedItems ?? [])
-    await syncTags('project_tags', 'project_id', project.id, tags ?? [])
+    await syncCategories('project_categories', 'project_id', project.id, categories ?? [])
+    await syncFreeTags('project_tags', 'project_id', project.id, tags ?? [])
 
     const { data: full } = await supabaseAdmin
       .from('projects')

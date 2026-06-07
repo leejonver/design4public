@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
-import { syncPhotoItems, syncTags } from '@/lib/image-sync'
+import { syncPhotoItems, syncFreeTags } from '@/lib/image-sync'
 
 export async function GET(_request: NextRequest, { params }: { params: { photo_id: string } }) {
   try {
@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest, { params }: { params: { photo_id
       if (error) throw error
     }
     if (connectedItems !== undefined) await syncPhotoItems(params.photo_id, connectedItems)
-    if (tags !== undefined) await syncTags('photo_tags', 'photo_id', params.photo_id, tags)
+    if (tags !== undefined) await syncFreeTags('photo_tags', 'photo_id', params.photo_id, tags)
 
     const { data: full } = await supabaseAdmin
       .from('photos')

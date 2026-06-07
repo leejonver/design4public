@@ -175,15 +175,27 @@ export const itemsApi = {
   delete: (id: string) => apiDelete(`/items/${id}`),
 }
 
-// 태그 관련 API
+// 카테고리 관련 API (typed classification: project | item)
+export const categoriesApi = {
+  getList: (params?: { type?: string; search?: string; page?: number; limit?: number }) =>
+    apiGet('/categories', params),
+
+  getById: (id: string) => apiGet(`/categories/${id}`),
+
+  create: (data: { name: string; type: string }) => apiPost('/categories', data),
+
+  update: (id: string, data: { name?: string; type?: string }) => apiPut(`/categories/${id}`, data),
+
+  delete: (id: string) => apiDelete(`/categories/${id}`),
+}
+
+// 태그 관련 API (free-form labels, no type)
 export const tagsApi = {
-  getList: (params?: { search?: string; page?: number; limit?: number }) =>
+  getList: (params?: { search?: string; limit?: number }) =>
     apiGet('/tags', params),
-  
+
   create: (data: { name: string }) => apiPost('/tags', data),
-  
-  update: (id: string, data: { name: string }) => apiPut(`/tags/${id}`, data),
-  
+
   delete: (id: string) => apiDelete(`/tags/${id}`),
 }
 
@@ -210,6 +222,7 @@ export const api = {
   projects: projectsApi,
   brands: brandsApi,
   items: itemsApi,
+  categories: categoriesApi,
   tags: tagsApi,
   managers: managersApi,
 }

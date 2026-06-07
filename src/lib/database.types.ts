@@ -7,7 +7,8 @@
 export type ProjectStatus = 'draft' | 'published' | 'hidden'
 export type ItemStatus = 'available' | 'discontinued' | 'hidden'
 export type BrandStatus = 'visible' | 'hidden'
-export type TagType = 'project' | 'item' | 'photo' | 'brand'
+// Categories are the typed classification (project|item). Free tags have no type.
+export type CategoryType = 'project' | 'item'
 export type UserRole = 'master' | 'admin' | 'content_manager'
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
 
@@ -108,16 +109,26 @@ type PhotoInsert = {
   updated_at?: string
 }
 
+type CategoryRow = {
+  id: string
+  name: string
+  type: CategoryType
+  created_at: string
+}
+type CategoryInsert = {
+  id?: string
+  name: string
+  type: CategoryType
+  created_at?: string
+}
 type TagRow = {
   id: string
   name: string
-  type: TagType
   created_at: string
 }
 type TagInsert = {
   id?: string
   name: string
-  type: TagType
   created_at?: string
 }
 
@@ -181,6 +192,18 @@ type ProjectItemRow = {
   item_id: string
   created_at: string
 }
+// category joins (typed classification)
+type ProjectCategoryRow = {
+  project_id: string
+  category_id: string
+  created_at: string
+}
+type ItemCategoryRow = {
+  item_id: string
+  category_id: string
+  created_at: string
+}
+// free-tag joins
 type ProjectTagRow = {
   project_id: string
   tag_id: string
@@ -192,14 +215,7 @@ type ItemTagRow = {
   created_at: string
 }
 type PhotoTagRow = {
-  id: string
   photo_id: string
-  tag_id: string
-  created_at: string
-}
-type BrandTagRow = {
-  id: string
-  brand_id: string
   tag_id: string
   created_at: string
 }
@@ -219,15 +235,17 @@ export interface Database {
       brands: TableDef<BrandRow, BrandInsert>
       items: TableDef<ItemRow, ItemInsert>
       photos: TableDef<PhotoRow, PhotoInsert>
+      categories: TableDef<CategoryRow, CategoryInsert>
       tags: TableDef<TagRow, TagInsert>
       profiles: TableDef<ProfileRow, ProfileInsert>
       project_photos: TableDef<ProjectPhotoRow, ProjectPhotoInsert>
       photo_items: TableDef<PhotoItemRow, PhotoItemInsert>
       project_items: TableDef<ProjectItemRow, Omit<ProjectItemRow, 'created_at'> & { created_at?: string }>
+      project_categories: TableDef<ProjectCategoryRow, Omit<ProjectCategoryRow, 'created_at'> & { created_at?: string }>
+      item_categories: TableDef<ItemCategoryRow, Omit<ItemCategoryRow, 'created_at'> & { created_at?: string }>
       project_tags: TableDef<ProjectTagRow, Omit<ProjectTagRow, 'created_at'> & { created_at?: string }>
       item_tags: TableDef<ItemTagRow, Omit<ItemTagRow, 'created_at'> & { created_at?: string }>
-      photo_tags: TableDef<PhotoTagRow, Omit<PhotoTagRow, 'id' | 'created_at'> & { id?: string; created_at?: string }>
-      brand_tags: TableDef<BrandTagRow, Omit<BrandTagRow, 'id' | 'created_at'> & { id?: string; created_at?: string }>
+      photo_tags: TableDef<PhotoTagRow, Omit<PhotoTagRow, 'created_at'> & { created_at?: string }>
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }

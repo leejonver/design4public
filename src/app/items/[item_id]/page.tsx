@@ -172,6 +172,19 @@ export default function ItemDetailPage() {
                     <span className="text-gray-400">등록되지 않음</span>
                   )}
                 </InfoRow>
+                <InfoRow label="카테고리">
+                  <div className="flex flex-wrap gap-1">
+                    {item.categories?.length ? (
+                      item.categories.map((category) => (
+                        <Badge key={category.id} colorPalette="primary" size="sm">
+                          {category.name}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </div>
+                </InfoRow>
                 <InfoRow label="태그">
                   <div className="flex flex-wrap gap-1">
                     {item.tags?.length ? (

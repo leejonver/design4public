@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase-admin'
-import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
+import { requireUser, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
-import { syncPhotoItems, syncTags } from '@/lib/image-sync'
 
 export async function GET(request: NextRequest) {
   try {
@@ -51,47 +50,5 @@ export async function GET(request: NextRequest) {
       { success: false, error: '사진 목록을 가져오는데 실패했습니다.' },
       { status: 500 },
     )
-  }
-}
-
-export async function POST(request: NextRequest) {
-  try {
-    await requireRole('content_manager')
-    const body = await request.json()
-    const { imageUrl, altText, title, description, connectedItems, tags } = body
-
-    if (!imageUrl) {
-      return NextResponse.json({ success: false, error: '이미지 URL은 필수입니다.' }, { status: 400 })
-    }
-
-    const { data: photo, error } = await supabaseAdmin
-      .from('photos')
-      .insert({
-        image_url: imageUrl,
-        alt_text: altText ?? null,
-        title: title ?? null,
-        description: description ?? null,
-      })
-      .select('id')
-      .single()
-    if (error) throw error
-
-    await syncPhotoItems(photo.id, connectedItems ?? [])
-    await syncTags('photo_tags', 'photo_id', photo.id, tags ?? [])
-
-    const { data: full } = await supabaseAdmin
-      .from('photos')
-      .select(PHOTO_SELECT)
-      .eq('id', photo.id)
-      .single()
-
-    return NextResponse.json(
-      { success: true, data: full ? mapPhoto(full) : null, message: '사진이 생성되었습니다.' },
-      { status: 201 },
-    )
-  } catch (error) {
-    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
-    console.error('Photos POST error:', error)
-    return NextResponse.json({ success: false, error: '사진 생성에 실패했습니다.' }, { status: 500 })
   }
 }

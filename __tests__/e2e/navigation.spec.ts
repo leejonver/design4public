@@ -33,9 +33,9 @@ test.describe('사이드바 네비게이션', () => {
     await expect(nav.getByRole('link', { name: /사진/ })).toBeVisible()
     await expect(nav.getByRole('link', { name: /아이템/ })).toBeVisible()
     await expect(nav.getByRole('link', { name: /브랜드/ })).toBeVisible()
-    await expect(nav.getByRole('link', { name: /태그/ })).toBeVisible()
-    // 관리자 메뉴는 마스터 권한에서만 노출됩니다.
-    await expect(nav.getByRole('link', { name: /관리자/ })).toBeVisible()
+    await expect(nav.getByRole('link', { name: /카테고리 설정/ })).toBeVisible()
+    // 사용자관리 메뉴는 마스터 권한에서만 노출됩니다.
+    await expect(nav.getByRole('link', { name: /사용자관리/ })).toBeVisible()
   })
 
   test('프로젝트 메뉴 클릭 시 프로젝트 페이지로 이동해야 합니다', async ({ page }) => {
@@ -58,13 +58,13 @@ test.describe('사이드바 네비게이션', () => {
     await expect(page).toHaveURL(/\/brands$/)
   })
 
-  test('태그 메뉴 클릭 시 태그 페이지로 이동해야 합니다', async ({ page }) => {
-    await page.getByRole('navigation').getByRole('link', { name: /태그/ }).click()
-    await expect(page).toHaveURL(/\/tags$/)
+  test('카테고리 설정 메뉴 클릭 시 카테고리 페이지로 이동해야 합니다', async ({ page }) => {
+    await page.getByRole('navigation').getByRole('link', { name: /카테고리 설정/ }).click()
+    await expect(page).toHaveURL(/\/categories$/)
   })
 
-  test('관리자 메뉴 클릭 시 관리자 페이지로 이동해야 합니다', async ({ page }) => {
-    await page.getByRole('navigation').getByRole('link', { name: /관리자/ }).click()
+  test('사용자관리 메뉴 클릭 시 관리자 페이지로 이동해야 합니다', async ({ page }) => {
+    await page.getByRole('navigation').getByRole('link', { name: /사용자관리/ }).click()
     await expect(page).toHaveURL(/\/managers$/)
   })
 

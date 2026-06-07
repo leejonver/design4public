@@ -6,6 +6,7 @@ import { CorrectOutlineIcon, ImageOutlineIcon, XIcon } from '@vapor-ui/icons';
 import { api } from '@/lib/api';
 import type { Item, Photo } from '@/types';
 import SearchInput from './SearchInput';
+import ImagePlaceholder from './ImagePlaceholder';
 
 export interface EntityPickerProps {
   kind: 'item' | 'photo';
@@ -172,7 +173,7 @@ export default function EntityPicker({
                       aria-pressed={isSelected}
                       className={`relative flex flex-col gap-1 rounded-md border p-2 text-left transition-colors ${
                         isSelected
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-v-primary bg-v-primary-100'
                           : 'border-gray-200 hover:bg-gray-50'
                       }`}
                     >
@@ -180,13 +181,14 @@ export default function EntityPicker({
                         // eslint-disable-next-line @next/next/no-img-element
                         <img src={opt.thumb} alt="" className="h-20 w-full rounded object-cover" />
                       ) : (
-                        <div className="flex h-20 w-full items-center justify-center rounded bg-gray-100">
-                          <ImageOutlineIcon size={20} className="text-gray-400" />
-                        </div>
+                        <ImagePlaceholder
+                          className="h-20 w-full rounded"
+                          icon={<ImageOutlineIcon size={20} />}
+                        />
                       )}
                       <span className="truncate text-xs text-gray-700">{opt.label}</span>
                       {isSelected ? (
-                        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-blue-600 text-white">
+                        <span className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-v-primary-200 text-white">
                           <CorrectOutlineIcon size={12} />
                         </span>
                       ) : null}

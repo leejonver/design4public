@@ -7,7 +7,6 @@ import Link from 'next/link';
 import { Badge, Button, Callout, Card, IconButton, Select } from '@vapor-ui/core';
 import {
   EditOutlineIcon,
-  ImageOutlineIcon,
   PlusOutlineIcon,
   TrashOutlineIcon,
   ViewOnOutlineIcon,
@@ -16,10 +15,13 @@ import MainLayout from '@/components/MainLayout';
 import {
   ConfirmDialog,
   DataTable,
+  EmptyState,
+  ImagePlaceholder,
   PageHeader,
   Pagination,
   SearchInput,
   StatusBadge,
+  SuccessCallout,
 } from '@/components/ui';
 import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
@@ -40,6 +42,7 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [page, setPage] = useState(1);
 
   const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
@@ -78,6 +81,7 @@ export default function ProjectsPage() {
       const response = await api.delete(`/projects/${deleteTarget.id}`);
       if (response.success) {
         setDeleteTarget(null);
+        setSuccess('프로젝트가 삭제되었습니다.');
         fetchProjects();
       } else {
         setError(response.error || '프로젝트 삭제에 실패했습니다.');
@@ -118,9 +122,7 @@ export default function ProjectsPage() {
             className="h-12 w-12 rounded object-cover"
           />
         ) : (
-          <div className="flex h-12 w-12 items-center justify-center rounded bg-gray-100">
-            <ImageOutlineIcon size={18} className="text-gray-400" />
-          </div>
+          <ImagePlaceholder className="h-12 w-12 rounded" />
         );
       },
     },
@@ -238,6 +240,8 @@ export default function ProjectsPage() {
         </Callout.Root>
       ) : null}
 
+      <SuccessCallout message={success} onClose={() => setSuccess(null)} />
+
       <Card.Root>
         <Card.Body>
           <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -271,7 +275,12 @@ export default function ProjectsPage() {
             rows={pagedProjects}
             rowKey={(project) => project.id}
             loading={loading}
-            empty="프로젝트가 없습니다."
+            empty={
+              <EmptyState
+                title="프로젝트가 없습니다."
+                description="검색 조건을 변경하거나 새 프로젝트를 추가해 보세요."
+              />
+            }
           />
 
           {filteredProjects.length > 0 ? (

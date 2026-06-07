@@ -4,7 +4,7 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Badge, Button, Card, Spinner, Text } from '@vapor-ui/core';
+import { Button, Card, Spinner, Text } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, EditOutlineIcon, LinkOutlineIcon, BookmarkOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
@@ -167,19 +167,6 @@ export default function BrandDetailPage() {
                     </a>
                   ) : (
                     <span className="text-gray-400">등록되지 않음</span>
-                  )}
-                </InfoRow>
-                <InfoRow label="태그">
-                  {brand.tags && brand.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
-                      {brand.tags.map((tag) => (
-                        <Badge key={tag.id} colorPalette="primary" size="md">
-                          {tag.name}
-                        </Badge>
-                      ))}
-                    </div>
-                  ) : (
-                    <span className="text-gray-400">없음</span>
                   )}
                 </InfoRow>
                 <InfoRow label="등록일">

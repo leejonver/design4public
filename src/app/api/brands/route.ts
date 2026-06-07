@@ -3,7 +3,6 @@ import { supabaseAdmin } from '@/lib/supabase-admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
-import { syncTags } from '@/lib/image-sync'
 
 export async function GET(request: NextRequest) {
   try {
@@ -49,8 +48,7 @@ export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status, tags } =
-      body
+    const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status } = body
 
     if (!nameKo) {
       return NextResponse.json(
@@ -79,8 +77,6 @@ export async function POST(request: NextRequest) {
       .select('id')
       .single()
     if (error) throw error
-
-    await syncTags('brand_tags', 'brand_id', brand.id, tags ?? [])
 
     const { data: full } = await supabaseAdmin
       .from('brands')

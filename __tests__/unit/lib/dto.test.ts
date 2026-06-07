@@ -92,7 +92,6 @@ describe('mapTag', () => {
     expect(mapTag(tagRow)).toEqual({
       id: 't1',
       name: 'Chair',
-      type: 'item',
       createdAt: '2024-01-01T00:00:00Z',
       updatedAt: '2024-01-02T00:00:00Z',
     })
@@ -111,14 +110,8 @@ describe('mapBrand', () => {
     expect(brand.nameEn).toBe('Hanssem')
   })
 
-  it('maps tags from brand_tags(tags), filtering nulls — never hardcoded []', () => {
-    const brand = mapBrand(brandRow)
-    expect(brand.tags).toHaveLength(1)
-    expect(brand.tags?.[0].name).toBe('BrandTag')
-  })
-
-  it('returns an empty tags array only when the join is empty', () => {
-    expect(mapBrand({ ...brandRow, brand_tags: [] }).tags).toEqual([])
+  it('does not expose tags (brands have no tags/categories)', () => {
+    expect((mapBrand(brandRow) as { tags?: unknown }).tags).toBeUndefined()
   })
 })
 

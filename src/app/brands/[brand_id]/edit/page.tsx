@@ -7,7 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { ImageUploader, TagSelect } from '@/components/ui';
+import { ImageUploader } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Brand, ImageData } from '@/types';
 
@@ -32,7 +32,6 @@ export default function EditBrandPage() {
   const [description, setDescription] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [status, setStatus] = useState('visible');
-  const [tags, setTags] = useState<string[]>([]);
   const [logo, setLogo] = useState<ImageData[]>([]);
   const [cover, setCover] = useState<ImageData[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,7 +51,6 @@ export default function EditBrandPage() {
           setDescription(data.description ?? '');
           setWebsiteUrl(data.websiteUrl ?? '');
           setStatus(data.status ?? 'visible');
-          setTags((data.tags ?? []).map((tag) => tag.id));
           if (data.logoImageUrl) {
             setLogo([{ id: data.logoImageUrl, url: data.logoImageUrl, alt: '', isMain: true }]);
           }
@@ -100,7 +98,6 @@ export default function EditBrandPage() {
         status,
         logoImageUrl: logo[0]?.url ?? null,
         coverImageUrl: cover[0]?.url ?? null,
-        tags,
       };
       const response = await api.put(`/brands/${brandId}`, body);
       if (response.success) {
@@ -229,11 +226,6 @@ export default function EditBrandPage() {
                     <Select.Item value="hidden">숨김</Select.Item>
                   </Select.Popup>
                 </Select.Root>
-              </Field.Root>
-
-              <Field.Root>
-                <Field.Label>태그</Field.Label>
-                <TagSelect type="brand" value={tags} onChange={setTags} />
               </Field.Root>
             </Card.Body>
           </Card.Root>

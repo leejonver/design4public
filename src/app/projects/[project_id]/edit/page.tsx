@@ -17,7 +17,7 @@ import {
 } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { EntityPicker, TagSelect } from '@/components/ui';
+import { CategorySelect, EntityPicker, FreeTagSelect } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Project, ProjectStatus } from '@/types';
 
@@ -49,6 +49,7 @@ export default function EditProjectPage() {
   const [status, setStatus] = useState<ProjectStatus>('draft');
   const [inquiryUrl, setInquiryUrl] = useState('');
 
+  const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [connectedItems, setConnectedItems] = useState<string[]>([]);
   const [photoIds, setPhotoIds] = useState<string[]>([]);
@@ -72,7 +73,8 @@ export default function EditProjectPage() {
           setArea(proj.area != null ? String(proj.area) : '');
           setStatus(proj.status);
           setInquiryUrl(proj.inquiryUrl || '');
-          setTags(proj.tags?.map((t) => t.id) || []);
+          setCategories(proj.categories?.map((c) => c.id) || []);
+          setTags(proj.tags?.map((t) => t.name) || []);
           setConnectedItems(proj.connectedItems?.map((i) => i.id) || []);
 
           const images = proj.images || [];
@@ -130,6 +132,7 @@ export default function EditProjectPage() {
         completionYear: Number(completionYear),
         area: area.trim() ? Number(area) : undefined,
         status,
+        categories,
         tags,
         connectedItems,
         photos: photoIds.map((photoId, index) => ({
@@ -329,11 +332,22 @@ export default function EditProjectPage() {
           <Card.Root>
             <Card.Header>
               <Text typography="heading5" render={<h4 />} className="text-gray-900">
+                프로젝트 카테고리
+              </Text>
+            </Card.Header>
+            <Card.Body>
+              <CategorySelect type="project" value={categories} onChange={setCategories} />
+            </Card.Body>
+          </Card.Root>
+
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading5" render={<h4 />} className="text-gray-900">
                 프로젝트 태그
               </Text>
             </Card.Header>
             <Card.Body>
-              <TagSelect type="project" value={tags} onChange={setTags} />
+              <FreeTagSelect value={tags} onChange={setTags} />
             </Card.Body>
           </Card.Root>
 

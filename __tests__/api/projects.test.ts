@@ -50,7 +50,8 @@ jest.mock('@/lib/supabase-admin', () => ({
 jest.mock('@/lib/image-sync', () => ({
   syncProjectPhotos: jest.fn().mockResolvedValue(undefined),
   syncProjectItems: jest.fn().mockResolvedValue(undefined),
-  syncTags: jest.fn().mockResolvedValue(undefined),
+  syncCategories: jest.fn().mockResolvedValue(undefined),
+  syncFreeTags: jest.fn().mockResolvedValue(undefined),
 }))
 
 // jsdom/whatwg-fetch 환경에서 NextResponse.json 의 body 스트림이 유실되므로

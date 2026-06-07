@@ -30,31 +30,31 @@ jest.mock('@/contexts/AuthContext', () => ({
 
 describe('Sidebar Component', () => {
   it('사이드바가 렌더링되어야 합니다', () => {
-    render(<Sidebar />)
+    render(<Sidebar collapsed={false} onToggle={() => {}} />)
 
     expect(screen.getByText(/design4public/i)).toBeInTheDocument()
     expect(screen.getByText('콘텐츠관리자')).toBeInTheDocument()
   })
 
   it('모든 메뉴 항목이 표시되어야 합니다', () => {
-    render(<Sidebar />)
+    render(<Sidebar collapsed={false} onToggle={() => {}} />)
 
     expect(screen.getByText('프로젝트')).toBeInTheDocument()
     expect(screen.getByText('아이템')).toBeInTheDocument()
     expect(screen.getByText('브랜드')).toBeInTheDocument()
-    expect(screen.getByText('태그')).toBeInTheDocument()
-    expect(screen.getAllByText('관리자').length).toBeGreaterThan(0)
+    expect(screen.getByText('사진')).toBeInTheDocument()
+    expect(screen.getByText('카테고리 설정')).toBeInTheDocument()
   })
 
   it('사용자 정보가 표시되어야 합니다', () => {
-    render(<Sidebar />)
+    render(<Sidebar collapsed={false} onToggle={() => {}} />)
 
     expect(screen.getByText('Test User')).toBeInTheDocument()
     expect(screen.queryByText('test@test.com')).not.toBeInTheDocument()
   })
 
   it('로그아웃 버튼이 표시되어야 합니다', () => {
-    render(<Sidebar />)
+    render(<Sidebar collapsed={false} onToggle={() => {}} />)
 
     expect(screen.getByText('로그아웃')).toBeInTheDocument()
   })
