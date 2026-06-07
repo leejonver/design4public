@@ -169,9 +169,7 @@ export default function EditBrandPage() {
                 <Field.Label>브랜드명 (한글)</Field.Label>
                 <TextInput value={nameKo} onValueChange={setNameKo} placeholder="예: 허먼밀러" />
                 {fieldErrors.nameKo ? (
-                  <Text typography="body3" className="mt-1 text-red-500">
-                    {fieldErrors.nameKo}
-                  </Text>
+                  <Field.Error match>{fieldErrors.nameKo}</Field.Error>
                 ) : null}
               </Field.Root>
 
@@ -189,9 +187,7 @@ export default function EditBrandPage() {
                   placeholder="브랜드에 대한 자세한 설명을 입력하세요"
                 />
                 {fieldErrors.description ? (
-                  <Text typography="body3" className="mt-1 text-red-500">
-                    {fieldErrors.description}
-                  </Text>
+                  <Field.Error match>{fieldErrors.description}</Field.Error>
                 ) : null}
               </Field.Root>
 
@@ -204,9 +200,7 @@ export default function EditBrandPage() {
                   placeholder="https://example.com"
                 />
                 {fieldErrors.websiteUrl ? (
-                  <Text typography="body3" className="mt-1 text-red-500">
-                    {fieldErrors.websiteUrl}
-                  </Text>
+                  <Field.Error match>{fieldErrors.websiteUrl}</Field.Error>
                 ) : null}
               </Field.Root>
 
@@ -265,7 +259,7 @@ export default function EditBrandPage() {
               <Button
                 colorPalette="primary"
                 variant="fill"
-                size="lg"
+                size="md"
                 className="w-full"
                 disabled={loading}
                 onClick={handleSubmit}

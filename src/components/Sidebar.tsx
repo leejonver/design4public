@@ -10,6 +10,7 @@ import {
   BookmarkOutlineIcon,
   SettingOutlineIcon,
   GroupOutlineIcon,
+  HomeOutlineIcon,
   ChevronLeftOutlineIcon,
   ChevronRightOutlineIcon,
   OutOutlineIcon,
@@ -32,6 +33,7 @@ export interface SidebarProps {
 }
 
 const NAV = [
+  { key: 'home', href: '/home-settings', label: '홈 화면 설정', Icon: HomeOutlineIcon },
   { key: 'projects', href: '/projects', label: '프로젝트', Icon: FolderOutlineIcon },
   { key: 'items', href: '/items', label: '아이템', Icon: DashboardOutlineIcon },
   { key: 'brands', href: '/brands', label: '브랜드', Icon: BookmarkOutlineIcon },

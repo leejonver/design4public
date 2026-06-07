@@ -17,6 +17,7 @@ type ProjectRow = {
   id: string
   title: string
   description: string | null
+  client: string | null
   location: string | null
   year: number | null
   area: number | null
@@ -30,6 +31,7 @@ type ProjectInsert = {
   id?: string
   title: string
   description?: string | null
+  client?: string | null
   location?: string | null
   year?: number | null
   area?: number | null
@@ -220,6 +222,19 @@ type PhotoTagRow = {
   created_at: string
 }
 
+type SiteSettingsRow = {
+  id: boolean
+  featured_project_id: string | null
+  updated_at: string
+}
+type HomeFeaturedRow = {
+  id: string
+  entity_type: 'project' | 'item' | 'photo' | 'brand'
+  entity_id: string
+  order: number
+  created_at: string
+}
+
 // `Relationships: []` is required for the type to satisfy postgrest-js GenericSchema.
 type TableDef<Row, Insert> = {
   Row: Row
@@ -246,6 +261,8 @@ export interface Database {
       project_tags: TableDef<ProjectTagRow, Omit<ProjectTagRow, 'created_at'> & { created_at?: string }>
       item_tags: TableDef<ItemTagRow, Omit<ItemTagRow, 'created_at'> & { created_at?: string }>
       photo_tags: TableDef<PhotoTagRow, Omit<PhotoTagRow, 'created_at'> & { created_at?: string }>
+      site_settings: TableDef<SiteSettingsRow, Omit<SiteSettingsRow, 'updated_at'> & { updated_at?: string }>
+      home_featured: TableDef<HomeFeaturedRow, Omit<HomeFeaturedRow, 'id' | 'created_at'> & { id?: string; created_at?: string }>
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }

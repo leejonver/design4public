@@ -8,23 +8,37 @@ import { supabaseAdmin } from './supabase-admin'
 export interface ImageInput {
   url: string
   alt?: string | null
+  title?: string | null
   isMain?: boolean
 }
 
 /** Accepts uploaded image descriptors (or bare URL strings) or existing photo ids. */
 export type PhotoRef = string | ImageInput | { photoId: string; isMain?: boolean }
 
-async function ensurePhotoId(url: string, alt?: string | null): Promise<string> {
+/** Find-or-create a photo by URL; updates title/alt when provided (so per-photo titles persist). */
+async function ensurePhotoId(
+  url: string,
+  alt?: string | null,
+  title?: string | null,
+): Promise<string> {
   const { data: existing } = await supabaseAdmin
     .from('photos')
     .select('id')
     .eq('image_url', url)
     .limit(1)
     .maybeSingle()
-  if (existing) return existing.id
+  if (existing) {
+    if (title !== undefined || alt !== undefined) {
+      const patch: { title?: string | null; alt_text?: string | null } = {}
+      if (title !== undefined) patch.title = title
+      if (alt !== undefined) patch.alt_text = alt
+      await supabaseAdmin.from('photos').update(patch).eq('id', existing.id)
+    }
+    return existing.id
+  }
   const { data, error } = await supabaseAdmin
     .from('photos')
-    .insert({ image_url: url, alt_text: alt ?? null })
+    .insert({ image_url: url, alt_text: alt ?? null, title: title ?? null })
     .select('id')
     .single()
   if (error) throw error
@@ -42,7 +56,10 @@ async function resolvePhotoIds(
     } else if ('photoId' in ref) {
       out.push({ photoId: ref.photoId, isMain: ref.isMain ?? i === 0 })
     } else {
-      out.push({ photoId: await ensurePhotoId(ref.url, ref.alt), isMain: ref.isMain ?? i === 0 })
+      out.push({
+        photoId: await ensurePhotoId(ref.url, ref.alt, ref.title),
+        isMain: ref.isMain ?? i === 0,
+      })
     }
   }
   // enforce a single main

@@ -185,7 +185,12 @@ export default function CategoriesPage() {
       key: 'name',
       header: '카테고리명',
       sortable: true,
-      render: (category) => <span className="font-medium text-gray-900">{category.name}</span>,
+      truncate: true,
+      render: (category) => (
+        <span className="font-medium text-gray-900" title={category.name}>
+          {category.name}
+        </span>
+      ),
     },
     {
       key: 'type',
@@ -334,11 +339,7 @@ export default function CategoriesPage() {
                     }
                   }}
                 />
-                {formError ? (
-                  <Text typography="body3" render={<p />} className="text-red-600">
-                    {formError}
-                  </Text>
-                ) : null}
+                {formError ? <Field.Error match>{formError}</Field.Error> : null}
               </Field.Root>
             </div>
           </Dialog.Body>

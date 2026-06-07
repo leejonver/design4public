@@ -49,6 +49,21 @@ export interface ImageData {
   url: string; // 이미지 URL (절대경로 및 CDN URL 지원)
   alt: string; // 대체 텍스트 (접근성을 위해 필수)
   isMain?: boolean; // 대표 이미지 여부 (기본: false)
+  title?: string; // 사진 제목 (선택)
+  order?: number; // 표시 순서 (0-기반)
+}
+
+/**
+ * 홈 화면 설정 (Featured 프로젝트 + 메인 노출 목록)
+ */
+export interface HomeFeaturedItem {
+  entityType: 'project' | 'item' | 'photo' | 'brand';
+  entityId: string;
+  order: number;
+}
+export interface HomeSettings {
+  featuredProjectId: string | null;
+  featured: HomeFeaturedItem[];
 }
 
 /**
@@ -96,6 +111,7 @@ export interface Project {
   id: string;
   name: string; // 프로젝트명 (2-100자)
   description: string; // 설명 (10-1000자)
+  client?: string; // 클라이언트(발주처)
   location: string; // 지역 (예: "서울시 강남구")
   completionYear: number; // 완공연도 (1900-현재+10년)
   area?: number; // 면적 (m², 1 이상, 선택사항)

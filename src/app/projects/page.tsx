@@ -156,8 +156,13 @@ export default function ProjectsPage() {
     {
       key: 'location',
       header: '지역',
-      width: 'w-32',
-      render: (project) => <span className="text-gray-700">{project.location || '-'}</span>,
+      width: 'w-40',
+      truncate: true,
+      render: (project) => (
+        <span className="text-gray-700" title={project.location || undefined}>
+          {project.location || '-'}
+        </span>
+      ),
     },
     {
       key: 'year',
@@ -182,11 +187,12 @@ export default function ProjectsPage() {
       key: 'categories',
       header: '카테고리',
       width: 'w-48',
+      nowrap: true,
       render: (project) =>
         project.categories.length === 0 ? (
           <span className="text-gray-400">-</span>
         ) : (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex items-center gap-1">
             {project.categories.slice(0, 2).map((category) => (
               <Badge key={category.id} colorPalette="hint" size="sm">
                 {category.name}

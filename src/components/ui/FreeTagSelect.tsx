@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button, Callout, Spinner, TextInput } from '@vapor-ui/core';
-import { PlusOutlineIcon, XIcon } from '@vapor-ui/icons';
+import { CloseOutlineIcon, PlusOutlineIcon } from '@vapor-ui/icons';
 import { api } from '@/lib/api';
 import type { Tag } from '@/types';
 
@@ -77,7 +77,7 @@ export default function FreeTagSelect({ value, onChange }: FreeTagSelectProps) {
                 onClick={() => remove(name)}
                 className="ml-1 inline-flex"
               >
-                <XIcon size={12} />
+                <CloseOutlineIcon size={12} />
               </button>
             </Badge>
           ))

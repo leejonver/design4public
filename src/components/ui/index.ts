@@ -25,6 +25,9 @@ export type { PaginationProps } from './Pagination';
 export { default as ImageUploader } from './ImageUploader';
 export type { ImageUploaderProps } from './ImageUploader';
 
+export { default as PhotoUploader } from './PhotoUploader';
+export type { PhotoUploaderProps } from './PhotoUploader';
+
 export { default as CategorySelect } from './CategorySelect';
 export type { CategorySelectProps } from './CategorySelect';
 

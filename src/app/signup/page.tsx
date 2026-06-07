@@ -148,9 +148,7 @@ export default function SignupPage() {
                 />
               </div>
               {fieldErrors.name ? (
-                <Text typography="body3" render={<p />} className="mt-1 text-red-600">
-                  {fieldErrors.name}
-                </Text>
+                <Field.Error match>{fieldErrors.name}</Field.Error>
               ) : null}
             </Field.Root>
 
@@ -172,9 +170,7 @@ export default function SignupPage() {
                 />
               </div>
               {fieldErrors.email ? (
-                <Text typography="body3" render={<p />} className="mt-1 text-red-600">
-                  {fieldErrors.email}
-                </Text>
+                <Field.Error match>{fieldErrors.email}</Field.Error>
               ) : null}
             </Field.Root>
 
@@ -196,9 +192,7 @@ export default function SignupPage() {
                 />
               </div>
               {fieldErrors.password ? (
-                <Text typography="body3" render={<p />} className="mt-1 text-red-600">
-                  {fieldErrors.password}
-                </Text>
+                <Field.Error match>{fieldErrors.password}</Field.Error>
               ) : null}
             </Field.Root>
 
@@ -220,9 +214,7 @@ export default function SignupPage() {
                 />
               </div>
               {fieldErrors.confirmPassword ? (
-                <Text typography="body3" render={<p />} className="mt-1 text-red-600">
-                  {fieldErrors.confirmPassword}
-                </Text>
+                <Field.Error match>{fieldErrors.confirmPassword}</Field.Error>
               ) : null}
             </Field.Root>
 

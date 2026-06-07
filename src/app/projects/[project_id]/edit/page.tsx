@@ -17,9 +17,9 @@ import {
 } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { CategorySelect, EntityPicker, FreeTagSelect } from '@/components/ui';
+import { CategorySelect, EntityPicker, FreeTagSelect, PhotoUploader } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { Project, ProjectStatus } from '@/types';
+import type { ImageData, Project, ProjectStatus } from '@/types';
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: '초안' },
@@ -43,6 +43,7 @@ export default function EditProjectPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [client, setClient] = useState('');
   const [location, setLocation] = useState('');
   const [completionYear, setCompletionYear] = useState('');
   const [area, setArea] = useState('');
@@ -52,8 +53,7 @@ export default function EditProjectPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [connectedItems, setConnectedItems] = useState<string[]>([]);
-  const [photoIds, setPhotoIds] = useState<string[]>([]);
-  const [mainPhotoId, setMainPhotoId] = useState('');
+  const [photos, setPhotos] = useState<ImageData[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -68,6 +68,7 @@ export default function EditProjectPage() {
           const proj = response.data;
           setName(proj.name);
           setDescription(proj.description);
+          setClient(proj.client || '');
           setLocation(proj.location);
           setCompletionYear(String(proj.completionYear));
           setArea(proj.area != null ? String(proj.area) : '');
@@ -77,10 +78,10 @@ export default function EditProjectPage() {
           setTags(proj.tags?.map((t) => t.name) || []);
           setConnectedItems(proj.connectedItems?.map((i) => i.id) || []);
 
-          const images = proj.images || [];
-          setPhotoIds(images.map((img) => img.id));
-          const mainImage = images.find((img) => img.isMain) || images[0];
-          setMainPhotoId(mainImage?.id || '');
+          const images = [...(proj.images || [])].sort(
+            (a, b) => (a.order ?? 0) - (b.order ?? 0),
+          );
+          setPhotos(images);
         } else {
           setError('프로젝트를 불러오는데 실패했습니다.');
         }
@@ -112,7 +113,7 @@ export default function EditProjectPage() {
     if (inquiryUrl.trim() && !isValidUrl(inquiryUrl.trim()))
       next.inquiryUrl = '올바른 URL을 입력해주세요.';
 
-    if (photoIds.length === 0) next.photos = '최소 1장의 사진을 선택해주세요.';
+    if (photos.length === 0) next.photos = '최소 1장의 사진을 업로드해주세요.';
 
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -124,10 +125,10 @@ export default function EditProjectPage() {
 
     setLoading(true);
     try {
-      const effectiveMain = photoIds.includes(mainPhotoId) ? mainPhotoId : photoIds[0];
       const body = {
         name: name.trim(),
         description: description.trim(),
+        client: client.trim() || undefined,
         location: location.trim(),
         completionYear: Number(completionYear),
         area: area.trim() ? Number(area) : undefined,
@@ -135,9 +136,10 @@ export default function EditProjectPage() {
         categories,
         tags,
         connectedItems,
-        photos: photoIds.map((photoId, index) => ({
-          photoId,
-          isMain: photoId === effectiveMain,
+        photos: photos.map((p, index) => ({
+          url: p.url,
+          title: p.title,
+          isMain: p.isMain,
           order: index,
         })),
         inquiryUrl: inquiryUrl.trim(),
@@ -229,6 +231,15 @@ export default function EditProjectPage() {
                 ) : null}
               </Field.Root>
 
+              <Field.Root>
+                <Field.Label>클라이언트</Field.Label>
+                <TextInput
+                  value={client}
+                  onValueChange={setClient}
+                  placeholder="클라이언트(발주처) (선택)"
+                />
+              </Field.Root>
+
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field.Root>
                   <Field.Label>프로젝트 지역</Field.Label>
@@ -297,17 +308,11 @@ export default function EditProjectPage() {
                 프로젝트 사진
               </Text>
               <Text typography="body3" render={<p />} className="mt-1 text-gray-500">
-                대표 이미지를 선택하면 목록과 상세에서 우선 노출됩니다.
+                이미지를 업로드하고 제목·대표·순서를 설정하세요.
               </Text>
             </Card.Header>
             <Card.Body>
-              <EntityPicker
-                kind="photo"
-                value={photoIds}
-                onChange={setPhotoIds}
-                mainId={mainPhotoId}
-                onMainChange={setMainPhotoId}
-              />
+              <PhotoUploader folder="projects" value={photos} onChange={setPhotos} />
               {errors.photos ? (
                 <Text typography="body3" className="mt-2 text-red-600">
                   {errors.photos}

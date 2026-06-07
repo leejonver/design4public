@@ -228,6 +228,12 @@ export const managersApi = {
   delete: (id: string) => apiDelete(`/managers/${id}`),
 }
 
+// 홈 화면 설정 API
+export const homeSettingsApi = {
+  get: () => apiGet('/home-settings'),
+  update: (data: unknown) => apiPut('/home-settings', data),
+}
+
 // 통합 API 객체
 export const api = {
   get: apiGet,
@@ -243,4 +249,5 @@ export const api = {
   tags: tagsApi,
   photos: photosApi,
   managers: managersApi,
+  homeSettings: homeSettingsApi,
 }

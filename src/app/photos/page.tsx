@@ -137,11 +137,15 @@ export default function PhotosPage() {
       key: 'title',
       header: '제목',
       sortable: true,
-      render: (photo) => (
-        <span className="font-medium text-gray-900">
-          {photo.title || photo.altText || '제목 없음'}
-        </span>
-      ),
+      truncate: true,
+      render: (photo) => {
+        const label = photo.title || photo.altText || '제목 없음';
+        return (
+          <span className="font-medium text-gray-900" title={label}>
+            {label}
+          </span>
+        );
+      },
     },
     {
       key: 'connectedItems',

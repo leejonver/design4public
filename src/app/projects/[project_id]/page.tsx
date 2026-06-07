@@ -207,6 +207,7 @@ export default function ProjectDetailPage() {
               <InfoRow label="설명">
                 <p className="whitespace-pre-wrap">{project.description}</p>
               </InfoRow>
+              <InfoRow label="클라이언트">{project.client || '-'}</InfoRow>
               <InfoRow label="프로젝트 지역">{project.location}</InfoRow>
               <InfoRow label="완공연도">{project.completionYear}년</InfoRow>
               <InfoRow label="면적">

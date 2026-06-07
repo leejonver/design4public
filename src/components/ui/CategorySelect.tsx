@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Badge, Button, Callout, Popover, Spinner, TextInput } from '@vapor-ui/core';
-import { CorrectOutlineIcon, PlusOutlineIcon, XIcon } from '@vapor-ui/icons';
+import { CloseOutlineIcon, CorrectOutlineIcon, PlusOutlineIcon } from '@vapor-ui/icons';
 import { api } from '@/lib/api';
 import type { Category, CategoryType } from '@/types';
 
@@ -82,7 +82,7 @@ export default function CategorySelect({ type, value, onChange }: CategorySelect
                 onClick={() => toggle(category.id)}
                 className="ml-1 inline-flex"
               >
-                <XIcon size={12} />
+                <CloseOutlineIcon size={12} />
               </button>
             </Badge>
           ))

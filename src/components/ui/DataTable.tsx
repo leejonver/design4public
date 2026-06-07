@@ -15,6 +15,8 @@ export interface DataTableColumn<T> {
   sortable?: boolean;
   /** Prevents wrapping in the header + cells (use for Badge / short status cells). */
   nowrap?: boolean;
+  /** Clamps cell content to a single line with ellipsis (Korean wraps at word boundaries). */
+  truncate?: boolean;
 }
 
 export interface DataTableProps<T> {
@@ -87,7 +89,7 @@ export default function DataTable<T>({
             return (
               <Table.Heading
                 key={col.key}
-                className={cx('bg-gray-50', align(col.align), col.nowrap && 'whitespace-nowrap')}
+                className={cx('bg-gray-50 whitespace-nowrap break-keep', align(col.align))}
               >
                 {col.sortable && onSortChange ? (
                   <button
@@ -143,16 +145,19 @@ export default function DataTable<T>({
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : undefined}
             >
-              {columns.map((col) => (
-                <Table.Cell
-                  key={col.key}
-                  className={cx(align(col.align), col.nowrap && 'whitespace-nowrap')}
-                >
-                  {col.render
-                    ? col.render(row)
-                    : (row as unknown as Record<string, React.ReactNode>)[col.key]}
-                </Table.Cell>
-              ))}
+              {columns.map((col) => {
+                const content = col.render
+                  ? col.render(row)
+                  : (row as unknown as Record<string, React.ReactNode>)[col.key];
+                return (
+                  <Table.Cell
+                    key={col.key}
+                    className={cx(align(col.align), 'break-keep', col.nowrap && 'whitespace-nowrap')}
+                  >
+                    {col.truncate ? <div className="line-clamp-1 break-keep">{content}</div> : content}
+                  </Table.Cell>
+                );
+              })}
             </Table.Row>
           ))
         )}

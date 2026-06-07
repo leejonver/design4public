@@ -164,13 +164,14 @@ export default function ItemsPage() {
       key: 'categories',
       header: '카테고리',
       width: 'w-56',
+      nowrap: true,
       render: (item) => {
         const categories = item.categories ?? [];
         if (categories.length === 0) {
           return <span className="text-gray-300">-</span>;
         }
         return (
-          <div className="flex flex-wrap gap-1">
+          <div className="flex items-center gap-1">
             {categories.slice(0, 2).map((category) => (
               <Badge key={category.id} colorPalette="contrast" size="sm">
                 {category.name}

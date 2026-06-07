@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { PageHeader, ImageUploader, CategorySelect, FreeTagSelect } from '@/components/ui';
+import { PageHeader, PhotoUploader, CategorySelect, FreeTagSelect } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Brand, ImageData, ItemStatus } from '@/types';
 
@@ -26,7 +26,7 @@ export default function NewItemPage() {
   const [mallUrl, setMallUrl] = useState('');
   const [brandId, setBrandId] = useState('');
   const [status, setStatus] = useState<ItemStatus>('available');
-  const [images, setImages] = useState<ImageData[]>([]);
+  const [photos, setPhotos] = useState<ImageData[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
@@ -78,7 +78,7 @@ export default function NewItemPage() {
       mallUrl: mallUrl.trim() || null,
       brandId,
       status,
-      images,
+      images: photos.map((p, i) => ({ url: p.url, title: p.title, isMain: p.isMain, order: i })),
       categories,
       tags,
     });
@@ -151,9 +151,9 @@ export default function NewItemPage() {
               <Text typography="heading5">아이템 이미지</Text>
             </Card.Header>
             <Card.Body>
-              <ImageUploader value={images} onChange={setImages} folder="items" multiple max={5} />
+              <PhotoUploader value={photos} onChange={setPhotos} folder="items" max={5} />
               <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
-                최대 5장까지 업로드 가능합니다. 첫 번째 이미지가 대표 이미지로 설정됩니다.
+                최대 5장까지 업로드할 수 있으며, 각 사진의 제목과 대표 사진, 순서를 지정할 수 있습니다.
               </Text>
             </Card.Body>
           </Card.Root>

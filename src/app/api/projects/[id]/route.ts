@@ -27,12 +27,13 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { name, description, location, completionYear, area, categories, tags, connectedItems, photos, images, inquiryUrl, status } =
+    const { name, description, client, location, completionYear, area, categories, tags, connectedItems, photos, images, inquiryUrl, status } =
       body
 
     const update: Record<string, unknown> = {}
     if (name !== undefined) update.title = name
     if (description !== undefined) update.description = description
+    if (client !== undefined) update.client = client
     if (location !== undefined) update.location = location
     if (completionYear !== undefined) update.year = completionYear
     if (area !== undefined) update.area = area

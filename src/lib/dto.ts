@@ -48,11 +48,13 @@ function mapImagesFromPhotos(join: Row[] | null | undefined): ImageData[] {
     .filter((j) => j.photos)
     .slice()
     .sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0) || (a.order ?? 0) - (b.order ?? 0))
-    .map((j) => ({
+    .map((j, i) => ({
       id: j.photos.id,
       url: j.photos.image_url,
       alt: j.photos.alt_text ?? '',
       isMain: !!j.is_main,
+      title: j.photos.title ?? undefined,
+      order: j.order ?? i,
     }))
 }
 
@@ -93,6 +95,7 @@ export function mapProject(r: Row): Project {
     id: r.id,
     name: r.title,
     description: r.description ?? '',
+    client: r.client ?? undefined,
     location: r.location ?? '',
     completionYear: r.year ?? 0,
     area: r.area ?? undefined,

@@ -131,16 +131,24 @@ export default function BrandsPage() {
     {
       key: 'name_ko',
       header: '브랜드명',
-      width: 'w-56',
       sortable: true,
-      render: (brand) => <span className="font-medium text-gray-900">{brand.nameKo}</span>,
+      truncate: true,
+      render: (brand) => (
+        <span className="font-medium text-gray-900" title={brand.nameKo}>
+          {brand.nameKo}
+        </span>
+      ),
     },
     {
       key: 'nameEn',
       header: '영문',
+      width: 'w-48',
+      truncate: true,
       render: (brand) =>
         brand.nameEn ? (
-          <span className="text-gray-600">{brand.nameEn}</span>
+          <span className="text-gray-600" title={brand.nameEn}>
+            {brand.nameEn}
+          </span>
         ) : (
           <span className="text-gray-300">-</span>
         ),
@@ -156,6 +164,7 @@ export default function BrandsPage() {
       key: 'websiteUrl',
       header: 'URL',
       width: 'w-28',
+      nowrap: true,
       render: (brand) =>
         brand.websiteUrl ? (
           <a
@@ -177,6 +186,7 @@ export default function BrandsPage() {
       header: '작업',
       width: 'w-32',
       align: 'right',
+      nowrap: true,
       render: (brand) => (
         <div className="flex items-center justify-end gap-1">
           <IconButton

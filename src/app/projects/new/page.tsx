@@ -17,9 +17,9 @@ import {
 } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { CategorySelect, EntityPicker, FreeTagSelect } from '@/components/ui';
+import { CategorySelect, EntityPicker, FreeTagSelect, PhotoUploader } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { ProjectStatus } from '@/types';
+import type { ImageData, ProjectStatus } from '@/types';
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: '초안' },
@@ -41,6 +41,7 @@ export default function NewProjectPage() {
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [client, setClient] = useState('');
   const [location, setLocation] = useState('');
   const [completionYear, setCompletionYear] = useState(String(new Date().getFullYear()));
   const [area, setArea] = useState('');
@@ -50,8 +51,7 @@ export default function NewProjectPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [connectedItems, setConnectedItems] = useState<string[]>([]);
-  const [photoIds, setPhotoIds] = useState<string[]>([]);
-  const [mainPhotoId, setMainPhotoId] = useState('');
+  const [photos, setPhotos] = useState<ImageData[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +75,7 @@ export default function NewProjectPage() {
     if (inquiryUrl.trim() && !isValidUrl(inquiryUrl.trim()))
       next.inquiryUrl = '올바른 URL을 입력해주세요.';
 
-    if (photoIds.length === 0) next.photos = '최소 1장의 사진을 선택해주세요.';
+    if (photos.length === 0) next.photos = '최소 1장의 사진을 업로드해주세요.';
 
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -87,10 +87,10 @@ export default function NewProjectPage() {
 
     setLoading(true);
     try {
-      const effectiveMain = photoIds.includes(mainPhotoId) ? mainPhotoId : photoIds[0];
       const body = {
         name: name.trim(),
         description: description.trim(),
+        client: client.trim() || undefined,
         location: location.trim(),
         completionYear: Number(completionYear),
         area: area.trim() ? Number(area) : undefined,
@@ -98,9 +98,10 @@ export default function NewProjectPage() {
         categories,
         tags,
         connectedItems,
-        photos: photoIds.map((photoId, index) => ({
-          photoId,
-          isMain: photoId === effectiveMain,
+        photos: photos.map((p, index) => ({
+          url: p.url,
+          title: p.title,
+          isMain: p.isMain,
           order: index,
         })),
         inquiryUrl: inquiryUrl.trim(),
@@ -182,6 +183,15 @@ export default function NewProjectPage() {
                 ) : null}
               </Field.Root>
 
+              <Field.Root>
+                <Field.Label>클라이언트</Field.Label>
+                <TextInput
+                  value={client}
+                  onValueChange={setClient}
+                  placeholder="클라이언트(발주처) (선택)"
+                />
+              </Field.Root>
+
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <Field.Root>
                   <Field.Label>프로젝트 지역</Field.Label>
@@ -250,17 +260,11 @@ export default function NewProjectPage() {
                 프로젝트 사진
               </Text>
               <Text typography="body3" render={<p />} className="mt-1 text-gray-500">
-                대표 이미지를 선택하면 목록과 상세에서 우선 노출됩니다.
+                이미지를 업로드하고 제목·대표·순서를 설정하세요.
               </Text>
             </Card.Header>
             <Card.Body>
-              <EntityPicker
-                kind="photo"
-                value={photoIds}
-                onChange={setPhotoIds}
-                mainId={mainPhotoId}
-                onMainChange={setMainPhotoId}
-              />
+              <PhotoUploader folder="projects" value={photos} onChange={setPhotos} />
               {errors.photos ? (
                 <Text typography="body3" className="mt-2 text-red-600">
                   {errors.photos}

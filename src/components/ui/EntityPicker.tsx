@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { Button, Callout, Dialog, IconButton, Spinner } from '@vapor-ui/core';
-import { CorrectOutlineIcon, ImageOutlineIcon, XIcon } from '@vapor-ui/icons';
+import { CloseOutlineIcon, CorrectOutlineIcon, ImageOutlineIcon } from '@vapor-ui/icons';
 import { api } from '@/lib/api';
-import type { Item, Photo } from '@/types';
+import type { Brand, Item, Photo, Project } from '@/types';
 import SearchInput from './SearchInput';
 import ImagePlaceholder from './ImagePlaceholder';
 
 export interface EntityPickerProps {
-  kind: 'item' | 'photo';
+  kind: 'item' | 'photo' | 'project' | 'brand';
   value: string[];
   onChange: (ids: string[]) => void;
   mainId?: string;
@@ -30,6 +30,29 @@ function itemToOption(item: Item): Option {
 function photoToOption(photo: Photo): Option {
   return { id: photo.id, label: photo.title || photo.altText || '제목 없음', thumb: photo.imageUrl };
 }
+
+function projectToOption(project: Project): Option {
+  const main = project.images?.find((img) => img.isMain) ?? project.images?.[0];
+  return { id: project.id, label: project.name, thumb: main?.url };
+}
+
+function brandToOption(brand: Brand): Option {
+  return { id: brand.id, label: brand.name || brand.nameKo, thumb: brand.logoImageUrl };
+}
+
+const ENDPOINTS: Record<EntityPickerProps['kind'], string> = {
+  item: '/items',
+  photo: '/photos',
+  project: '/projects',
+  brand: '/brands',
+};
+
+const TRIGGER_LABELS: Record<EntityPickerProps['kind'], string> = {
+  item: '아이템 선택',
+  photo: '사진 선택',
+  project: '프로젝트 선택',
+  brand: '브랜드 선택',
+};
 
 export default function EntityPicker({
   kind,
@@ -53,16 +76,17 @@ export default function EntityPicker({
       limit: 200,
       ...(search.trim() ? { search: search.trim() } : {}),
     };
-    const endpoint = kind === 'item' ? '/items' : '/photos';
+    const endpoint = ENDPOINTS[kind];
     api
-      .get<{ items: (Item | Photo)[]; total: number }>(endpoint, params)
+      .get<{ items: unknown[]; total: number }>(endpoint, params)
       .then((res) => {
         if (!active) return;
         if (res.success && res.data) {
-          const mapped =
-            kind === 'item'
-              ? (res.data.items as Item[]).map(itemToOption)
-              : (res.data.items as Photo[]).map(photoToOption);
+          let mapped: Option[];
+          if (kind === 'item') mapped = (res.data.items as Item[]).map(itemToOption);
+          else if (kind === 'photo') mapped = (res.data.items as Photo[]).map(photoToOption);
+          else if (kind === 'project') mapped = (res.data.items as Project[]).map(projectToOption);
+          else mapped = (res.data.items as Brand[]).map(brandToOption);
           setOptions(mapped);
           setKnown((prev) => {
             const next = { ...prev };
@@ -96,7 +120,7 @@ export default function EntityPicker({
   };
 
   const selected: Option[] = value.map((id) => known[id] ?? { id, label: id });
-  const triggerLabel = kind === 'item' ? '아이템 선택' : '사진 선택';
+  const triggerLabel = TRIGGER_LABELS[kind];
 
   return (
     <div className="space-y-3">
@@ -131,7 +155,7 @@ export default function EntityPicker({
                 aria-label="선택 제거"
                 onClick={() => remove(opt.id)}
               >
-                <XIcon size={14} />
+                <CloseOutlineIcon size={14} />
               </IconButton>
             </div>
           ))}

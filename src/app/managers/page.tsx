@@ -313,7 +313,12 @@ export default function ManagersPage() {
     {
       key: 'email',
       header: '이메일',
-      render: (m) => <span className="text-gray-600">{m.email}</span>,
+      truncate: true,
+      render: (m) => (
+        <span className="text-gray-600" title={m.email}>
+          {m.email}
+        </span>
+      ),
     },
     {
       key: 'role',

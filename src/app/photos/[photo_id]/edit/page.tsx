@@ -189,7 +189,7 @@ export default function PhotoEditPage() {
           </Card.Root>
 
           <div className="flex flex-col gap-3">
-            <Button type="submit" colorPalette="primary" size="lg" disabled={loading} className="w-full">
+            <Button type="submit" colorPalette="primary" size="md" disabled={loading} className="w-full">
               {loading ? <Spinner size="md" /> : <SaveOutlineIcon size={16} />}
               {loading ? '저장 중...' : '변경사항 저장'}
             </Button>

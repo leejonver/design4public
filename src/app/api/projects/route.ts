@@ -53,7 +53,7 @@ export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
     const body = await request.json()
-    const { name, description, location, completionYear, area, categories, tags, connectedItems, photos, inquiryUrl, status } =
+    const { name, description, client, location, completionYear, area, categories, tags, connectedItems, photos, inquiryUrl, status } =
       body
 
     if (!name) {
@@ -70,6 +70,7 @@ export async function POST(request: NextRequest) {
       .insert({
         title: name,
         description: description ?? null,
+        client: client ?? null,
         location: location ?? null,
         year: completionYear ?? null,
         area: area ?? null,
