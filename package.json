@@ -27,7 +27,6 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@next/swc-darwin-arm64": "^14.2.32",
     "@playwright/test": "^1.55.1",
     "@tailwindcss/postcss": "^4",
     "@testing-library/jest-dom": "^6.8.0",
@@ -48,6 +47,9 @@
     "ts-node": "^10.9.2",
     "typescript": "^5",
     "whatwg-fetch": "^3.6.20"
+  },
+  "optionalDependencies": {
+    "@next/swc-darwin-arm64": "^14.2.32"
   },
   "overrides": {
     "@supabase/auth-helpers-nextjs": {
