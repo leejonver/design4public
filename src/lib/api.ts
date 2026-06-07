@@ -5,7 +5,7 @@ import type { UploadResponse } from '@/types'
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
 
 // API 응답 타입 정의
-interface ApiResponse<T = any> {
+interface ApiResponse<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;
@@ -18,18 +18,11 @@ async function apiRequest<T>(
   options: RequestInit = {}
 ): Promise<ApiResponse<T>> {
   
-  const defaultHeaders: { 'Content-Type': string; 'Authorization'?: string } = {
+  const defaultHeaders: { 'Content-Type': string } = {
     'Content-Type': 'application/json',
   }
 
-  // 토큰이 있으면 Authorization 헤더 추가
-  if (typeof window !== 'undefined') {
-    const token = localStorage.getItem('authToken')
-    if (token) {
-      defaultHeaders['Authorization'] = `Bearer ${token}`
-    }
-  }
-
+  // 인증은 @supabase/ssr 쿠키 세션으로 처리된다(동일 출처 요청에 자동 포함).
   const config: RequestInit = {
     ...options,
     headers: {
@@ -70,7 +63,7 @@ export async function apiGet<T>(endpoint: string, params?: Record<string, string
 }
 
 // POST 요청
-export async function apiPost<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+export async function apiPost<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
   const url = endpoint.startsWith('/api') ? endpoint : `${API_BASE_URL}${endpoint}`
   return apiRequest<T>(url, {
     method: 'POST',
@@ -79,7 +72,7 @@ export async function apiPost<T>(endpoint: string, data?: any): Promise<ApiRespo
 }
 
 // PUT 요청
-export async function apiPut<T>(endpoint: string, data?: any): Promise<ApiResponse<T>> {
+export async function apiPut<T>(endpoint: string, data?: unknown): Promise<ApiResponse<T>> {
   const url = endpoint.startsWith('/api') ? endpoint : `${API_BASE_URL}${endpoint}`
   return apiRequest<T>(url, {
     method: 'PUT',
@@ -105,19 +98,9 @@ export async function apiUpload(file: File, folder?: string): Promise<ApiRespons
       formData.append('folder', folder);
     }
 
-    const headers: Record<string, string> = {};
-
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('authToken');
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-    }
-
     const response = await fetch(url, {
       method: 'POST',
       body: formData,
-      headers,
     });
 
     if (!response.ok) {
@@ -157,9 +140,9 @@ export const projectsApi = {
   
   getById: (id: string) => apiGet(`/projects/${id}`),
   
-  create: (data: any) => apiPost('/projects', data),
-  
-  update: (id: string, data: any) => apiPut(`/projects/${id}`, data),
+  create: (data: unknown) => apiPost('/projects', data),
+
+  update: (id: string, data: unknown) => apiPut(`/projects/${id}`, data),
   
   delete: (id: string) => apiDelete(`/projects/${id}`),
 }
@@ -171,9 +154,9 @@ export const brandsApi = {
   
   getById: (id: string) => apiGet(`/brands/${id}`),
   
-  create: (data: any) => apiPost('/brands', data),
+  create: (data: unknown) => apiPost('/brands', data),
   
-  update: (id: string, data: any) => apiPut(`/brands/${id}`, data),
+  update: (id: string, data: unknown) => apiPut(`/brands/${id}`, data),
   
   delete: (id: string) => apiDelete(`/brands/${id}`),
 }
@@ -185,9 +168,9 @@ export const itemsApi = {
   
   getById: (id: string) => apiGet(`/items/${id}`),
   
-  create: (data: any) => apiPost('/items', data),
+  create: (data: unknown) => apiPost('/items', data),
   
-  update: (id: string, data: any) => apiPut(`/items/${id}`, data),
+  update: (id: string, data: unknown) => apiPut(`/items/${id}`, data),
   
   delete: (id: string) => apiDelete(`/items/${id}`),
 }
@@ -206,12 +189,12 @@ export const tagsApi = {
 
 // 관리자 관련 API
 export const managersApi = {
-  getList: (params?: { status?: string; role?: string; search?: string; page?: number; limit?: number }) =>
+  getList: (params?: { status?: string; role?: string; search?: string; sort?: string; page?: number; limit?: number }) =>
     apiGet('/managers', params),
   
   getById: (id: string) => apiGet(`/managers/${id}`),
   
-  update: (id: string, data: any) => apiPut(`/managers/${id}`, data),
+  update: (id: string, data: unknown) => apiPut(`/managers/${id}`, data),
   
   delete: (id: string) => apiDelete(`/managers/${id}`),
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { requireRole, authErrorResponse } from '@/lib/auth'
 
 // Route Segment Config - Vercel 제한 완화
 export const runtime = 'nodejs';
@@ -8,6 +9,7 @@ export const maxDuration = 60; // 최대 60초
 
 export async function POST(request: NextRequest) {
   try {
+    await requireRole('content_manager')
     const formData = await request.formData()
     const file = formData.get('file') as File
     const folder = formData.get('folder') as string || 'uploads'
@@ -92,6 +94,7 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
     console.error('Upload API error:', error)
     return NextResponse.json(
       { success: false, error: '서버 오류가 발생했습니다.' },

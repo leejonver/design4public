@@ -1,206 +1,261 @@
 /**
- * 프로젝트 API 테스트
- * Phase 1: CRUD 기본 작업 테스트
+ * 프로젝트 API 라우트 테스트 (renewal: cookie 인증 + RBAC + DTO 매핑)
+ * - GET: 인증된 사용자에게 { success, data:{ items, total, page, limit } } 반환,
+ *        items[0]의 tags/connectedItems 가 실제 매핑되는지 검증.
+ * - POST: requireRole 거부 시 403 envelope 검증 + 정상 생성 경로 검증.
  */
 
 import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import type { SessionUser } from '@/lib/auth'
 import { GET, POST } from '@/app/api/projects/route'
+import { requireUser, requireRole, AuthError } from '@/lib/auth'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
-// Supabase 모킹
-jest.mock('@/lib/supabase', () => {
-  const supabase = { from: jest.fn() }
-  const supabaseAdmin = { from: jest.fn(), rpc: jest.fn() }
-  return { supabase, supabaseAdmin }
+// auth: requireUser/requireRole 는 jest.fn, AuthError/authErrorResponse 는 실제 동작 유지.
+jest.mock('@/lib/auth', () => {
+  class AuthError extends Error {
+    status: number
+    constructor(status: number, message: string) {
+      super(message)
+      this.name = 'AuthError'
+      this.status = status
+    }
+  }
+  const authErrorResponse = (error: unknown) => {
+    if (error instanceof AuthError) {
+      return new Response(JSON.stringify({ success: false, error: error.message }), {
+        status: error.status,
+        headers: { 'content-type': 'application/json' },
+      })
+    }
+    throw error
+  }
+  return {
+    AuthError,
+    authErrorResponse,
+    requireUser: jest.fn(),
+    requireRole: jest.fn(),
+    getCurrentUser: jest.fn(),
+    hasRole: jest.fn(),
+  }
 })
 
-describe('Projects API Routes', () => {
+// 서비스 롤 클라이언트: 체이너블 쿼리 빌더로 모킹.
+jest.mock('@/lib/supabase-admin', () => ({
+  supabaseAdmin: { from: jest.fn() },
+}))
+
+// 이미지/관계 동기화는 no-op.
+jest.mock('@/lib/image-sync', () => ({
+  syncProjectPhotos: jest.fn().mockResolvedValue(undefined),
+  syncProjectItems: jest.fn().mockResolvedValue(undefined),
+  syncTags: jest.fn().mockResolvedValue(undefined),
+}))
+
+// jsdom/whatwg-fetch 환경에서 NextResponse.json 의 body 스트림이 유실되므로
+// 일반 Response 를 반환하도록 NextResponse.json 을 스파이한다.
+function jsonResponse(body: unknown, init?: ResponseInit): Response {
+  return new Response(JSON.stringify(body), {
+    status: init?.status ?? 200,
+    headers: { 'content-type': 'application/json', ...(init?.headers as Record<string, string> | undefined) },
+  })
+}
+
+type QBResult = { data: unknown; error: unknown; count?: number }
+
+// then 으로 {data,error,count} 를 resolve 하는 체이너블 빌더.
+function makeQB(result: QBResult): Record<string, unknown> {
+  const methods = [
+    'select', 'insert', 'update', 'upsert', 'delete',
+    'eq', 'or', 'order', 'range', 'limit', 'single', 'maybeSingle', 'in', 'not',
+  ]
+  const qb: Record<string, unknown> = {}
+  methods.forEach((m) => {
+    qb[m] = jest.fn(() => qb)
+  })
+  qb.then = (resolve: (r: QBResult) => unknown) => resolve(result)
+  return qb
+}
+
+const fromMock = supabaseAdmin.from as unknown as jest.Mock
+
+const fakeUser: SessionUser = {
+  id: 'u1',
+  email: 'admin@test.com',
+  name: '관리자',
+  role: 'master',
+  status: 'approved',
+}
+
+const tagRow = {
+  id: 't1',
+  name: '공공디자인',
+  type: 'project',
+  created_at: '2024-01-01T00:00:00.000Z',
+  updated_at: '2024-01-01T00:00:00.000Z',
+}
+
+const brandRow = {
+  id: 'b1',
+  name_ko: '브랜드',
+  name_en: 'Brand',
+  description: '브랜드 설명',
+  logo_image_url: null,
+  cover_image_url: null,
+  website_url: null,
+  status: 'visible',
+  slug: 'brand',
+  brand_tags: [],
+  created_at: '2024-01-01T00:00:00.000Z',
+  updated_at: '2024-01-01T00:00:00.000Z',
+}
+
+const itemRow = {
+  id: 'i1',
+  name: 'Bench',
+  description: '벤치',
+  nara_url: null,
+  slug: 'bench',
+  status: 'available',
+  brands: brandRow,
+  item_tags: [],
+  photo_items: [],
+  created_at: '2024-01-01T00:00:00.000Z',
+  updated_at: '2024-01-01T00:00:00.000Z',
+}
+
+function projectRow(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    id: 'p1',
+    title: '테스트 프로젝트',
+    description: '설명',
+    location: '서울',
+    year: 2024,
+    area: 100,
+    inquiry_url: null,
+    slug: 'test-project',
+    status: 'published',
+    project_tags: [{ tags: tagRow }],
+    project_items: [{ items: itemRow }],
+    project_photos: [{ is_main: true, order: 0, photos: { id: 'ph1', image_url: 'https://cdn/img.jpg', alt_text: 'alt' } }],
+    created_at: '2024-01-01T00:00:00.000Z',
+    updated_at: '2024-01-02T00:00:00.000Z',
+    ...overrides,
+  }
+}
+
+function makeRequest(url: string, body?: unknown): NextRequest {
+  const init = body
+    ? { method: 'POST', body: JSON.stringify(body), headers: { 'content-type': 'application/json' } }
+    : undefined
+  return new Request(url, init) as unknown as NextRequest
+}
+
+describe('Projects API Routes (renewal)', () => {
   beforeEach(() => {
     jest.clearAllMocks()
-    jest.spyOn(NextResponse, 'json').mockImplementation((body: any, init?: ResponseInit) => {
-      return new Response(JSON.stringify(body), {
-        status: init?.status ?? 200,
-        headers: { 'Content-Type': 'application/json', ...(init?.headers as HeadersInit | undefined) },
-      }) as any
-    })
+    jest.spyOn(console, 'error').mockImplementation(() => {})
+    jest
+      .spyOn(NextResponse, 'json')
+      .mockImplementation(jsonResponse as unknown as typeof NextResponse.json)
+    fromMock.mockReset()
+    jest.mocked(requireUser).mockResolvedValue(fakeUser)
+    jest.mocked(requireRole).mockResolvedValue(fakeUser)
   })
 
   afterEach(() => {
     jest.restoreAllMocks()
   })
 
-  const createRequest = (url: string, body?: unknown) => ({
-    url,
-    json: async () => body,
-  }) as any
-
-  const createQueryBuilder = (result: { data: any; error: any; count?: number }) => {
-    const builder: any = {}
-    builder.eq = jest.fn(() => builder)
-    builder.order = jest.fn(() => builder)
-    builder.or = jest.fn(() => builder)
-    builder.range = jest.fn(() => Promise.resolve(result))
-    return builder
-  }
-
   describe('GET /api/projects', () => {
-    it('프로젝트 목록을 반환해야 합니다', async () => {
-      const mockProjects = [
-        {
-          id: '1',
-          title: '테스트 프로젝트 1',
-          description: '설명',
-          status: 'published',
-          created_at: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          title: '테스트 프로젝트 2',
-          description: '설명',
-          status: 'draft',
-          created_at: new Date().toISOString(),
-        },
-      ]
+    it('인증된 사용자에게 { success, data:{ items, total, page, limit } } 를 반환한다', async () => {
+      fromMock.mockReturnValue(makeQB({ data: [projectRow()], error: null, count: 1 }))
 
-      const { supabaseAdmin } = require('@/lib/supabase')
-      const builder = createQueryBuilder({
-        data: mockProjects,
-        error: null,
-        count: 2,
-      })
-      supabaseAdmin.from.mockReturnValue({
-        select: jest.fn(() => builder),
-      })
+      const res = await GET(makeRequest('http://localhost/api/projects?page=1'))
+      const json = await res.json()
 
-      const response = await GET(createRequest('http://localhost:3000/api/projects'))
-      const data = await response.json()
-
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.items).toHaveLength(2)
-      expect(data.data.items[0].name).toBe('테스트 프로젝트 1')
+      expect(res.status).toBe(200)
+      expect(json.success).toBe(true)
+      expect(json.data.items).toHaveLength(1)
+      expect(json.data.total).toBe(1)
+      expect(json.data.page).toBe(1)
+      expect(json.data.limit).toBe(10)
     })
 
-    it('상태 필터링이 동작해야 합니다', async () => {
-      const { supabaseAdmin } = require('@/lib/supabase')
-      
-      const mockFilteredProjects = [
-        {
-          id: '1',
-          title: '게시된 프로젝트',
-          status: 'published',
-          created_at: new Date().toISOString(),
-        },
-      ]
+    it('items[0] 의 tags/connectedItems 가 실제로 매핑된다 (하드코딩 [] 아님)', async () => {
+      fromMock.mockReturnValue(makeQB({ data: [projectRow()], error: null, count: 1 }))
 
-      const builder = createQueryBuilder({
-        data: mockFilteredProjects,
-        error: null,
-        count: 1,
-      })
-      builder.eq = jest.fn(() => builder)
-      supabaseAdmin.from.mockReturnValue({
-        select: jest.fn(() => builder),
-      })
+      const res = await GET(makeRequest('http://localhost/api/projects?page=1'))
+      const json = await res.json()
 
-      const response = await GET(createRequest('http://localhost:3000/api/projects?status=published'))
-      const data = await response.json()
-
-      expect(data.success).toBe(true)
-      expect(data.data.items).toHaveLength(1)
-      expect(data.data.items[0].status).toBe('published')
+      const project = json.data.items[0]
+      expect(project.name).toBe('테스트 프로젝트')
+      expect(project.tags).toHaveLength(1)
+      expect(project.tags[0].name).toBe('공공디자인')
+      expect(project.connectedItems).toHaveLength(1)
+      expect(project.connectedItems[0].name).toBe('Bench')
+      expect(project.connectedItems[0].brand.name).toBe('브랜드')
+      expect(project.images).toHaveLength(1)
+      expect(project.images[0].isMain).toBe(true)
     })
 
-    it('데이터베이스 에러 시 500 에러를 반환해야 합니다', async () => {
-      const { supabaseAdmin } = require('@/lib/supabase')
-      
-      const builder = createQueryBuilder({
-        data: null,
-        error: { message: 'Database error' },
-        count: undefined,
-      })
-      supabaseAdmin.from.mockReturnValue({
-        select: jest.fn(() => builder),
-      })
+    it('DB 에러 시 500 envelope 를 반환한다', async () => {
+      fromMock.mockReturnValue(makeQB({ data: null, error: { message: 'db error' } }))
 
-      const response = await GET(createRequest('http://localhost:3000/api/projects'))
-      const data = await response.json()
+      const res = await GET(makeRequest('http://localhost/api/projects'))
+      const json = await res.json()
 
-      expect(response.status).toBe(500)
-      expect(data.success).toBe(false)
+      expect(res.status).toBe(500)
+      expect(json.success).toBe(false)
     })
   })
 
   describe('POST /api/projects', () => {
-    it('새 프로젝트를 생성해야 합니다', async () => {
-      const newProject = {
-        title: '새 프로젝트',
-        description: '프로젝트 설명',
-        location: '서울',
-        year: 2024,
-        area: 100,
-        status: 'draft',
-      }
+    it('RBAC: requireRole 거부 시 403 { success:false } 를 반환한다', async () => {
+      jest.mocked(requireRole).mockRejectedValueOnce(new AuthError(403, '권한이 없습니다.'))
 
-      const mockCreatedProject = {
-        id: 'new-id',
-        ...newProject,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }
+      const res = await POST(makeRequest('http://localhost/api/projects', { name: '새 프로젝트' }))
+      const json = await res.json()
 
-      const { supabaseAdmin } = require('@/lib/supabase')
-      supabaseAdmin.rpc.mockReturnValue({
-        single: jest.fn().mockResolvedValue({
-          data: mockCreatedProject,
-          error: null,
-        }),
-      })
-
-      const response = await POST(createRequest('http://localhost:3000/api/projects', newProject))
-      const data = await response.json()
-
-      expect(response.status).toBe(200)
-      expect(data.success).toBe(true)
-      expect(data.data.title).toBe('새 프로젝트')
-      expect(data.data.id).toBeDefined()
+      expect(res.status).toBe(403)
+      expect(json.success).toBe(false)
+      expect(json.error).toBe('권한이 없습니다.')
     })
 
-    it('필수 필드가 누락되면 400 에러를 반환해야 합니다', async () => {
-      const invalidProject = {
-        description: '설명만 있음',
-      }
+    it('이름이 없으면 400 을 반환한다', async () => {
+      const res = await POST(makeRequest('http://localhost/api/projects', { description: '이름 없음' }))
+      const json = await res.json()
 
-      const { supabaseAdmin } = require('@/lib/supabase')
-      supabaseAdmin.rpc.mockReturnValue({
-        single: jest.fn().mockResolvedValue({
-          data: null,
-          error: { message: 'Create error' },
+      expect(res.status).toBe(400)
+      expect(json.success).toBe(false)
+    })
+
+    it('정상 생성 시 201 envelope + 매핑된 관계를 반환한다', async () => {
+      fromMock
+        .mockReturnValueOnce(makeQB({ data: null, error: null })) // slug 중복 검사
+        .mockReturnValueOnce(makeQB({ data: { id: 'new-id' }, error: null })) // insert
+        .mockReturnValueOnce(makeQB({ data: projectRow({ id: 'new-id', title: '새 프로젝트' }), error: null })) // 최종 select
+
+      const res = await POST(
+        makeRequest('http://localhost/api/projects', {
+          name: '새 프로젝트',
+          description: '설명',
+          location: '서울',
+          tags: ['t1'],
+          connectedItems: ['i1'],
+          photos: ['https://cdn/img.jpg'],
         }),
-      })
+      )
+      const json = await res.json()
 
-      supabaseAdmin.from
-        .mockReturnValueOnce({
-          select: jest.fn(() => createQueryBuilder({ data: [], error: null })),
-        }) // slug check
-        .mockReturnValueOnce({
-          insert: jest.fn(() => ({
-            select: jest.fn(() => ({ single: jest.fn().mockResolvedValue({ data: { id: 'new-id' }, error: null }) })),
-          })),
-        })
-        .mockReturnValueOnce({ insert: jest.fn(() => ({ error: null })) }) // images
-        .mockReturnValueOnce({ insert: jest.fn(() => ({ error: null })) }) // tags
-        .mockReturnValueOnce({ insert: jest.fn(() => ({ error: null })) }) // items
-        .mockReturnValueOnce({
-          select: jest.fn(() => ({
-            eq: jest.fn(() => ({ single: jest.fn().mockResolvedValue({ data: { id: 'new-id', title: '', project_images: [], project_tags: [], project_items: [], status: 'draft', created_at: '', updated_at: '', inquiry_url: null, description: null, location: null, year: null, area: null }, error: null }) })),
-          })),
-        })
-
-      const response = await POST(createRequest('http://localhost:3000/api/projects', invalidProject))
-      const data = await response.json()
-
-      expect(response.status).toBe(500)
-      expect(data.success).toBe(false)
+      expect(res.status).toBe(201)
+      expect(json.success).toBe(true)
+      expect(json.data.id).toBe('new-id')
+      expect(json.data.name).toBe('새 프로젝트')
+      expect(json.data.tags).toHaveLength(1)
+      expect(json.data.connectedItems).toHaveLength(1)
+      expect(json.message).toBeDefined()
     })
   })
 })

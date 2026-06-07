@@ -1,465 +1,503 @@
-// Design4Public CMS - 관리자 관리 페이지
+// Design4Public CMS - 관리자 관리 페이지 (마스터 전용, §8)
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Tag, 
-  Space, 
-  Typography, 
-  Input,
-  Select,
-  Badge,
-  Avatar,
-  message,
-  Popconfirm
-} from 'antd';
-import { 
-  UserOutlined, 
-  SearchOutlined,
-  CrownOutlined,
-  SafetyCertificateOutlined,
-  FileTextOutlined,
-  EditOutlined,
-  CheckOutlined,
-  CloseOutlined
-} from '@ant-design/icons';
+import { useCallback, useEffect, useState } from 'react';
+import { Badge, Button, Callout, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
+import { CloseOutlineIcon, ConfirmOutlineIcon, EditOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import {
+  PageHeader,
+  SearchInput,
+  StatusBadge,
+  ConfirmDialog,
+  DataTable,
+  Pagination,
+} from '@/components/ui';
+import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import type { Manager, ManagerRole, ApprovalStatus } from '@/types';
-import type { ColumnsType } from 'antd/es/table';
 
-const { Title } = Typography;
-const { Search } = Input;
+const LIMIT = 10;
+
+const ROLE_LABELS: Record<ManagerRole, string> = {
+  master: '마스터',
+  admin: '관리자',
+  content_manager: '콘텐츠매니저',
+};
+
+type Option = { value: string; label: string };
+
+const ROLE_OPTIONS: Option[] = [
+  { value: 'master', label: '마스터' },
+  { value: 'admin', label: '관리자' },
+  { value: 'content_manager', label: '콘텐츠매니저' },
+];
+
+const ROLE_FILTER_OPTIONS: Option[] = [{ value: 'all', label: '모든 권한' }, ...ROLE_OPTIONS];
+
+const STATUS_FILTER_OPTIONS: Option[] = [
+  { value: 'all', label: '모든 상태' },
+  { value: 'approved', label: '승인됨' },
+  { value: 'pending', label: '승인대기' },
+  { value: 'rejected', label: '거부됨' },
+];
+
+const SORT_OPTIONS: Option[] = [
+  { value: 'created_at', label: '가입일순' },
+  { value: 'last_login_at', label: '최근 로그인순' },
+  { value: 'name', label: '이름순' },
+  { value: 'email', label: '이메일순' },
+];
+
+type SelectSize = 'sm' | 'md' | 'lg' | 'xl';
+
+function SelectField({
+  value,
+  onValueChange,
+  options,
+  ariaLabel,
+  disabled,
+  size = 'md',
+  className,
+}: {
+  value: string;
+  onValueChange: (v: string) => void;
+  options: Option[];
+  ariaLabel: string;
+  disabled?: boolean;
+  size?: SelectSize;
+  className?: string;
+}) {
+  return (
+    <Select.Root
+      value={value}
+      onValueChange={(v) => {
+        if (v !== null) onValueChange(v);
+      }}
+      items={options}
+      disabled={disabled}
+      size={size}
+    >
+      <Select.Trigger aria-label={ariaLabel} className={className} />
+      <Select.Popup>
+        {options.map((o) => (
+          <Select.Item key={o.value} value={o.value}>
+            {o.label}
+          </Select.Item>
+        ))}
+      </Select.Popup>
+    </Select.Root>
+  );
+}
+
+const formatDate = (d?: string) => (d ? new Date(d).toLocaleDateString('ko-KR') : '-');
 
 export default function ManagersPage() {
-  const [searchTerm, setSearchTerm] = useState('');
+  const { user, isMaster, loading: authLoading } = useAuth();
+
+  const [managers, setManagers] = useState<Manager[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+
+  const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<ManagerRole | 'all'>('all');
   const [statusFilter, setStatusFilter] = useState<ApprovalStatus | 'all'>('all');
-  const [managers, setManagers] = useState<Manager[]>([]);
-  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [sort, setSort] = useState('created_at');
+
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'danger'; text: string } | null>(null);
+
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  const { user } = useAuth();
+  const [deleteTarget, setDeleteTarget] = useState<Manager | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  // 마스터 권한 확인
-  const isMaster = user?.role === 'master';
-
-  // 관리자 목록 가져오기
-  useEffect(() => {
-    if (isMaster) {
-      fetchManagers();
-    }
-  }, [isMaster]);
-
-  const fetchManagers = async () => {
+  const fetchManagers = useCallback(async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await api.get<{items: Manager[]}>('/managers');
-      if (response.success) {
-        setManagers(response.data?.items || []);
+      const res = await api.managers.getList({
+        search: search || undefined,
+        role: roleFilter === 'all' ? undefined : roleFilter,
+        status: statusFilter === 'all' ? undefined : statusFilter,
+        sort,
+        page,
+        limit: LIMIT,
+      });
+      if (res.success) {
+        const data = res.data as { items: Manager[]; total: number } | undefined;
+        setManagers(data?.items ?? []);
+        setTotal(data?.total ?? 0);
       } else {
-        message.error('관리자 목록을 불러오는데 실패했습니다.');
+        setFeedback({ type: 'danger', text: res.error || '관리자 목록을 불러오는데 실패했습니다.' });
       }
-    } catch (error) {
-      console.error('관리자 목록 로딩 오류:', error);
-      message.error('관리자 목록을 불러오는 중 오류가 발생했습니다.');
+    } catch (e) {
+      setFeedback({
+        type: 'danger',
+        text: e instanceof Error ? e.message : '관리자 목록을 불러오는 중 오류가 발생했습니다.',
+      });
     } finally {
       setLoading(false);
     }
+  }, [search, roleFilter, statusFilter, sort, page]);
+
+  useEffect(() => {
+    if (isMaster) fetchManagers();
+  }, [isMaster, fetchManagers]);
+
+  // 필터 변경 시 첫 페이지로 이동
+  const handleSearch = (v: string) => {
+    setSearch(v);
+    setPage(1);
+  };
+  const handleRoleFilter = (v: string) => {
+    setRoleFilter(v as ManagerRole | 'all');
+    setPage(1);
+  };
+  const handleStatusFilter = (v: string) => {
+    setStatusFilter(v as ApprovalStatus | 'all');
+    setPage(1);
+  };
+  const handleSort = (v: string) => {
+    setSort(v);
+    setPage(1);
   };
 
-  // 필터링된 관리자 목록
-  const filteredManagers = managers.filter(manager => {
-    const matchesSearch = manager.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         manager.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === 'all' || manager.role === roleFilter;
-    const matchesStatus = statusFilter === 'all' || manager.approvalStatus === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
-
-  // 권한별 아이콘 매핑
-  const getRoleIcon = (role: ManagerRole) => {
-    switch (role) {
-      case 'master':
-        return <CrownOutlined style={{ color: '#ff4d4f' }} />;
-      case 'admin':
-        return <SafetyCertificateOutlined style={{ color: '#1890ff' }} />;
-      case 'content_manager':
-        return <FileTextOutlined style={{ color: '#52c41a' }} />;
-      default:
-        return <UserOutlined />;
+  // 공통 업데이트: 서버 가드(403/409) 메시지를 Callout으로 노출한다.
+  const applyUpdate = async (
+    id: string,
+    patch: { name: string } | { role: ManagerRole } | { approvalStatus: ApprovalStatus },
+    successText: string,
+  ): Promise<boolean> => {
+    try {
+      const res = await api.managers.update(id, patch);
+      if (res.success) {
+        const updated = res.data as Manager | null;
+        if (updated) {
+          setManagers((prev) => prev.map((m) => (m.id === id ? updated : m)));
+        }
+        setFeedback({ type: 'success', text: successText });
+        return true;
+      }
+      setFeedback({ type: 'danger', text: res.error || '수정에 실패했습니다.' });
+      return false;
+    } catch (e) {
+      setFeedback({
+        type: 'danger',
+        text: e instanceof Error ? e.message : '수정 중 오류가 발생했습니다.',
+      });
+      return false;
     }
   };
 
-  // 권한별 텍스트 매핑
-  const getRoleText = (role: ManagerRole) => {
-    switch (role) {
-      case 'master':
-        return '마스터';
-      case 'admin':
-        return '관리자';
-      case 'content_manager':
-        return '콘텐츠매니저';
-      default:
-        return role;
-    }
-  };
+  const handleRoleChange = (id: string, role: ManagerRole) =>
+    applyUpdate(id, { role }, '권한이 변경되었습니다.');
 
-  // 승인 상태별 색상 매핑
-  const getStatusColor = (status: ApprovalStatus) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'error';
-      default:
-        return 'default';
-    }
-  };
-
-  // 승인 상태별 텍스트 매핑
-  const getStatusText = (status: ApprovalStatus) => {
-    switch (status) {
-      case 'approved':
-        return '승인됨';
-      case 'pending':
-        return '승인대기';
-      case 'rejected':
-        return '거부됨';
-      default:
-        return status;
-    }
-  };
-
-  // 권한 변경
-  const handleRoleChange = (managerId: string, newRole: ManagerRole) => {
-    setManagers(prevManagers =>
-      prevManagers.map(manager =>
-        manager.id === managerId
-          ? { ...manager, role: newRole, updatedAt: new Date().toISOString() }
-          : manager
-      )
+  const handleApproval = (id: string, approvalStatus: ApprovalStatus) =>
+    applyUpdate(
+      id,
+      { approvalStatus },
+      approvalStatus === 'approved' ? '승인되었습니다.' : '거부되었습니다.',
     );
-    message.success('권한이 변경되었습니다.');
-  };
 
-  // 승인 상태 변경
-  const handleApprovalChange = (managerId: string, newStatus: ApprovalStatus) => {
-    setManagers(prevManagers =>
-      prevManagers.map(manager =>
-        manager.id === managerId
-          ? { ...manager, approvalStatus: newStatus, updatedAt: new Date().toISOString() }
-          : manager
-      )
-    );
-    message.success(`승인 상태가 '${getStatusText(newStatus)}'로 변경되었습니다.`);
+  const startEditName = (m: Manager) => {
+    setEditingId(m.id);
+    setEditingName(m.name);
   };
-
-  // 관리자 삭제
-  const handleDelete = (managerId: string) => {
-    setManagers(prevManagers => prevManagers.filter(manager => manager.id !== managerId));
-    message.success('관리자가 삭제되었습니다.');
+  const cancelEditName = () => {
+    setEditingId(null);
+    setEditingName('');
   };
-
-  // 관리자 이름 편집 시작
-  const handleEditName = (managerId: string, currentName: string) => {
-    setEditingNameId(managerId);
-    setEditingName(currentName);
-  };
-
-  // 관리자 이름 편집 저장
-  const handleSaveName = (managerId: string) => {
-    if (!editingName.trim()) {
-      message.error('이름을 입력해주세요.');
+  const saveEditName = async (id: string) => {
+    const name = editingName.trim();
+    if (!name) {
+      setFeedback({ type: 'danger', text: '이름을 입력해주세요.' });
       return;
     }
-
-    setManagers(prevManagers =>
-      prevManagers.map(manager =>
-        manager.id === managerId
-          ? { ...manager, name: editingName.trim(), updatedAt: new Date().toISOString() }
-          : manager
-      )
-    );
-    message.success('관리자 이름이 수정되었습니다.');
-    setEditingNameId(null);
-    setEditingName('');
+    const ok = await applyUpdate(id, { name }, '이름이 수정되었습니다.');
+    if (ok) cancelEditName();
   };
 
-  // 관리자 이름 편집 취소
-  const handleCancelEditName = () => {
-    setEditingNameId(null);
-    setEditingName('');
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const res = await api.managers.delete(deleteTarget.id);
+      if (res.success) {
+        setManagers((prev) => prev.filter((m) => m.id !== deleteTarget.id));
+        setTotal((t) => Math.max(0, t - 1));
+        setFeedback({ type: 'success', text: '관리자가 삭제되었습니다.' });
+        setDeleteTarget(null);
+      } else {
+        setFeedback({ type: 'danger', text: res.error || '관리자 삭제에 실패했습니다.' });
+      }
+    } catch (e) {
+      setFeedback({
+        type: 'danger',
+        text: e instanceof Error ? e.message : '관리자 삭제 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<Manager> = [
+  const columns: DataTableColumn<Manager>[] = [
     {
-      title: '관리자',
-      key: 'manager',
-      render: (_, record: Manager) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <Avatar size={40} style={{ backgroundColor: '#1890ff' }}>
-            {record.name.charAt(0)}
-          </Avatar>
-          <div style={{ flex: 1 }}>
-            {editingNameId === record.id ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Input
-                  size="small"
-                  value={editingName}
-                  onChange={(e) => setEditingName(e.target.value)}
-                  onPressEnter={() => handleSaveName(record.id)}
-                  style={{ width: '150px' }}
-                  placeholder="이름을 입력하세요"
-                />
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CheckOutlined />}
-                  style={{ color: '#52c41a' }}
-                  onClick={() => handleSaveName(record.id)}
-                />
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<CloseOutlined />}
-                  onClick={handleCancelEditName}
-                />
-              </div>
-            ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div>
-                  <div style={{ fontWeight: 500, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    {record.name}
-                    {isMaster && record.id !== user?.id && (
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<EditOutlined />}
-                        style={{ padding: '0 4px' }}
-                        onClick={() => handleEditName(record.id, record.name)}
-                      />
-                    )}
-                  </div>
-                  <div style={{ fontSize: '12px', color: '#666' }}>{record.email}</div>
-                </div>
-              </div>
-            )}
+      key: 'name',
+      header: '이름',
+      render: (m) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-sm font-medium text-white">
+            {m.name?.charAt(0) || '?'}
           </div>
+          {editingId === m.id ? (
+            <div className="flex items-center gap-1">
+              <TextInput
+                value={editingName}
+                onValueChange={setEditingName}
+                placeholder="이름을 입력하세요"
+                aria-label="이름 편집"
+                className="w-40"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') saveEditName(m.id);
+                  if (e.key === 'Escape') cancelEditName();
+                }}
+              />
+              <IconButton
+                size="sm"
+                variant="ghost"
+                colorPalette="success"
+                aria-label="이름 저장"
+                onClick={() => saveEditName(m.id)}
+              >
+                <ConfirmOutlineIcon size={16} />
+              </IconButton>
+              <IconButton
+                size="sm"
+                variant="ghost"
+                colorPalette="secondary"
+                aria-label="편집 취소"
+                onClick={cancelEditName}
+              >
+                <CloseOutlineIcon size={16} />
+              </IconButton>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1">
+              <span className="font-medium text-gray-900">{m.name || '(이름 없음)'}</span>
+              {m.id !== user?.id && (
+                <IconButton
+                  size="sm"
+                  variant="ghost"
+                  colorPalette="secondary"
+                  aria-label="이름 수정"
+                  onClick={() => startEditName(m)}
+                >
+                  <EditOutlineIcon size={14} />
+                </IconButton>
+              )}
+            </div>
+          )}
         </div>
       ),
     },
     {
-      title: '권한',
-      dataIndex: 'role',
+      key: 'email',
+      header: '이메일',
+      render: (m) => <span className="text-gray-600">{m.email}</span>,
+    },
+    {
       key: 'role',
-      render: (role: ManagerRole, record: Manager) => (
-        <Space>
-          {getRoleIcon(role)}
-          <span>{getRoleText(role)}</span>
-        </Space>
-      ),
+      header: '역할',
+      render: (m) =>
+        m.id === user?.id ? (
+          <Badge colorPalette="primary" size="sm">
+            {ROLE_LABELS[m.role]}
+          </Badge>
+        ) : (
+          <SelectField
+            value={m.role}
+            onValueChange={(v) => handleRoleChange(m.id, v as ManagerRole)}
+            options={ROLE_OPTIONS}
+            ariaLabel="역할 변경"
+            size="sm"
+            className="w-32"
+          />
+        ),
     },
     {
-      title: '승인 상태',
-      dataIndex: 'approvalStatus',
       key: 'approvalStatus',
-      render: (status: ApprovalStatus) => (
-        <Badge
-          status={getStatusColor(status) as any}
-          text={getStatusText(status)}
-        />
-      ),
+      header: '승인상태',
+      render: (m) => <StatusBadge kind="approval" value={m.approvalStatus} />,
     },
     {
-      title: '최근 로그인',
-      dataIndex: 'lastLoginAt',
       key: 'lastLoginAt',
-      render: (date?: string) => (
-        date ? new Date(date).toLocaleDateString('ko-KR') : '로그인 기록 없음'
+      header: '최근 로그인',
+      render: (m) => (
+        <span className="text-gray-600">
+          {m.lastLoginAt ? formatDate(m.lastLoginAt) : '로그인 기록 없음'}
+        </span>
       ),
     },
     {
-      title: '등록일',
-      dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString('ko-KR'),
+      header: '가입일',
+      render: (m) => <span className="text-gray-600">{formatDate(m.createdAt)}</span>,
     },
-  ];
-
-  // 마스터만 작업 컬럼 추가
-  if (isMaster) {
-    columns.push({
-      title: '작업',
+    {
       key: 'actions',
-      width: 200,
-      render: (_, record: Manager) => (
-        <Space wrap>
-          {/* 권한 변경 */}
-          {record.id !== user?.id && (
-            <Select
-              size="small"
-              value={record.role}
-              style={{ width: 120 }}
-              onChange={(newRole) => handleRoleChange(record.id, newRole)}
-              options={[
-                { label: '마스터', value: 'master' },
-                { label: '관리자', value: 'admin' },
-                { label: '콘텐츠매니저', value: 'content_manager' },
-              ]}
-            />
-          )}
-
-          {/* 승인 관련 버튼 */}
-          {record.approvalStatus === 'pending' && (
-            <Space>
-              <Button 
-                type="primary" 
-                size="small"
-                style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
-                onClick={() => handleApprovalChange(record.id, 'approved')}
+      header: '작업',
+      render: (m) => (
+        <div className="flex flex-wrap items-center gap-2">
+          {m.approvalStatus === 'pending' && (
+            <>
+              <Button
+                size="sm"
+                variant="fill"
+                colorPalette="success"
+                onClick={() => handleApproval(m.id, 'approved')}
               >
                 승인
               </Button>
-              <Button 
-                danger
-                size="small"
-                onClick={() => handleApprovalChange(record.id, 'rejected')}
+              <Button
+                size="sm"
+                variant="outline"
+                colorPalette="danger"
+                onClick={() => handleApproval(m.id, 'rejected')}
               >
-                거절
+                거부
               </Button>
-            </Space>
+            </>
           )}
-
-          {/* 삭제 버튼 (자기 자신은 삭제 불가) */}
-          {record.id !== user?.id && (
-            <Popconfirm
-              title="관리자 삭제"
-              description="이 관리자를 삭제하시겠습니까?"
-              okText="삭제"
-              cancelText="취소"
-              onConfirm={() => handleDelete(record.id)}
+          {m.id !== user?.id && (
+            <Button
+              size="sm"
+              variant="ghost"
+              colorPalette="danger"
+              onClick={() => setDeleteTarget(m)}
             >
-              <Button 
-                danger
-                size="small"
-              >
-                삭제
-              </Button>
-            </Popconfirm>
+              삭제
+            </Button>
           )}
-        </Space>
+        </div>
       ),
-    });
+    },
+  ];
+
+  if (authLoading) {
+    return (
+      <MainLayout>
+        <div className="flex items-center justify-center py-20">
+          <Spinner size="lg" />
+        </div>
+      </MainLayout>
+    );
   }
 
-  // 마스터 권한이 없는 경우 접근 제한
+  // 클라이언트 측 권한 가드 (미들웨어/서버 가드와 더불어 마스터만 접근)
   if (!isMaster) {
     return (
       <MainLayout>
-        <Card>
-          <div style={{ textAlign: 'center', padding: '60px 0' }}>
-            <SafetyCertificateOutlined style={{ fontSize: '64px', color: '#bfbfbf', marginBottom: '16px' }} />
-            <Title level={3} type="secondary">접근 권한이 없습니다</Title>
-            <p>관리자 관리 페이지는 마스터 권한이 필요합니다.</p>
-          </div>
-        </Card>
+        <div className="flex flex-col items-center justify-center gap-2 py-20 text-center">
+          <Text typography="heading4" render={<h3 />} className="text-gray-700">
+            접근 권한이 없습니다
+          </Text>
+          <Text typography="body2" render={<p />} className="text-gray-500">
+            관리자 관리 페이지는 마스터 권한이 필요합니다.
+          </Text>
+        </div>
       </MainLayout>
     );
   }
 
   return (
     <MainLayout>
-      <div>
-        <div style={{ marginBottom: '24px' }}>
-          <Title level={2} style={{ margin: 0 }}>
-            관리자 관리
-          </Title>
-          <p style={{ color: '#666', marginTop: '8px' }}>
-            시스템 관리자들의 권한을 승인하고 관리합니다.
-          </p>
+      <PageHeader title="관리자 관리" description="시스템 관리자들의 권한을 승인하고 관리합니다." />
+
+      <Callout.Root colorPalette="primary" className="mb-4">
+        <Text typography="body2" render={<p />}>
+          신규 가입자는 이메일 인증 후 관리자 승인이 필요합니다. 승인 대기 중인 계정을 검토하여 승인 또는 거부해 주세요.
+        </Text>
+      </Callout.Root>
+
+      {feedback && (
+        <Callout.Root
+          colorPalette={feedback.type === 'success' ? 'success' : 'danger'}
+          className="mb-4 flex items-start justify-between gap-3"
+        >
+          <Text typography="body2" render={<p />}>
+            {feedback.text}
+          </Text>
+          <IconButton
+            size="sm"
+            variant="ghost"
+            colorPalette="secondary"
+            aria-label="알림 닫기"
+            onClick={() => setFeedback(null)}
+          >
+            <CloseOutlineIcon size={16} />
+          </IconButton>
+        </Callout.Root>
+      )}
+
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="w-full sm:w-72">
+          <SearchInput value={search} onChange={handleSearch} placeholder="이름 또는 이메일 검색" />
         </div>
-
-        <Card>
-          {/* 검색 및 필터 */}
-          <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <Search
-              placeholder="관리자명 또는 이메일 검색"
-              allowClear
-              style={{ width: 300 }}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              prefix={<SearchOutlined />}
-            />
-            <Select
-              style={{ width: 150 }}
-              value={roleFilter}
-              onChange={setRoleFilter}
-              options={[
-                { label: '모든 권한', value: 'all' },
-                { label: '마스터', value: 'master' },
-                { label: '관리자', value: 'admin' },
-                { label: '콘텐츠매니저', value: 'content_manager' },
-              ]}
-            />
-            <Select
-              style={{ width: 150 }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { label: '모든 상태', value: 'all' },
-                { label: '승인됨', value: 'approved' },
-                { label: '승인대기', value: 'pending' },
-                { label: '거부됨', value: 'rejected' },
-              ]}
-            />
-          </div>
-
-          {/* 통계 정보 */}
-          <div style={{ marginBottom: '16px', display: 'flex', gap: '24px' }}>
-            <div>
-              <span style={{ color: '#666' }}>총 관리자: </span>
-              <strong>{managers.length}명</strong>
-            </div>
-            <div>
-              <span style={{ color: '#666' }}>승인 대기: </span>
-              <strong style={{ color: '#fa8c16' }}>
-                {managers.filter(m => m.approvalStatus === 'pending').length}명
-              </strong>
-            </div>
-            <div>
-              <span style={{ color: '#666' }}>활성 관리자: </span>
-              <strong style={{ color: '#52c41a' }}>
-                {managers.filter(m => m.approvalStatus === 'approved').length}명
-              </strong>
-            </div>
-          </div>
-
-          {/* 관리자 테이블 */}
-          <Table
-            columns={columns}
-            dataSource={filteredManagers}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              total: filteredManagers.length,
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}개`,
-            }}
-            scroll={{ x: 800 }}
-          />
-        </Card>
+        <SelectField
+          value={roleFilter}
+          onValueChange={handleRoleFilter}
+          options={ROLE_FILTER_OPTIONS}
+          ariaLabel="역할 필터"
+          className="w-40"
+        />
+        <SelectField
+          value={statusFilter}
+          onValueChange={handleStatusFilter}
+          options={STATUS_FILTER_OPTIONS}
+          ariaLabel="승인상태 필터"
+          className="w-40"
+        />
+        <SelectField
+          value={sort}
+          onValueChange={handleSort}
+          options={SORT_OPTIONS}
+          ariaLabel="정렬 기준"
+          className="w-44"
+        />
       </div>
+
+      <DataTable
+        columns={columns}
+        rows={managers}
+        rowKey={(m) => m.id}
+        loading={loading}
+        empty="관리자가 없습니다."
+      />
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <Text typography="body3" className="text-gray-500">
+          총 {total}명
+        </Text>
+        <Pagination page={page} total={total} limit={LIMIT} onPageChange={setPage} />
+      </div>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="관리자 삭제"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.name || deleteTarget.email}" 관리자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+            : undefined
+        }
+        confirmText="삭제"
+        danger
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </MainLayout>
   );
 }

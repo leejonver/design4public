@@ -4,359 +4,235 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Card, 
-  Form, 
-  Input, 
-  Button, 
-  Select, 
-  Upload, 
-  Space, 
-  Typography, 
-  Row,
-  Col,
-  message,
-  Switch,
-  Divider,
-  Spin
-} from 'antd';
-import type { UploadProps, UploadFile } from 'antd';
-import { 
-  ArrowLeftOutlined, 
-  SaveOutlined, 
-  PlusOutlined,
-  UploadOutlined,
-  LinkOutlined,
-  AppstoreOutlined,
-  ShopOutlined,
-  TagsOutlined
-} from '@ant-design/icons';
+import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
+import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import { PageHeader, ImageUploader, TagSelect } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { ItemFormData, ItemStatus } from '@/types';
+import type { Brand, ImageData, ItemStatus } from '@/types';
 
-const { Title } = Typography;
-const { TextArea } = Input;
+const STATUS_OPTIONS = [
+  { label: '구입가능', value: 'available' },
+  { label: '단종', value: 'discontinued' },
+  { label: '숨김', value: 'hidden' },
+] as const;
 
 export default function NewItemPage() {
   const router = useRouter();
-  const [form] = Form.useForm();
-  const [loading, setLoading] = useState(false);
-  const [fileList, setFileList] = useState<any[]>([]);
-  
-  // 브랜드와 태그 데이터
-  const [allBrands, setAllBrands] = useState<any[]>([]);
-  const [allTags, setAllTags] = useState<any[]>([]);
-  const [dataLoading, setDataLoading] = useState(true);
 
-  // 브랜드와 태그 목록 가져오기
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [mallUrl, setMallUrl] = useState('');
+  const [brandId, setBrandId] = useState('');
+  const [status, setStatus] = useState<ItemStatus>('available');
+  const [images, setImages] = useState<ImageData[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [brandsResponse, tagsResponse] = await Promise.all([
-          api.get<{items: any[]}>('/brands'),
-          api.get<{items: any[]}>('/tags?type=item') // 아이템 태그만 가져오기
-        ]);
-
-        if (brandsResponse.success && brandsResponse.data) {
-          setAllBrands(brandsResponse.data.items || brandsResponse.data || []);
-        }
-
-        if (tagsResponse.success && tagsResponse.data) {
-          setAllTags(tagsResponse.data.items || tagsResponse.data || []);
-        }
-      } catch (error) {
-        console.error('데이터 로드 오류:', error);
-        message.error('브랜드 및 태그 목록을 불러오는 데 실패했습니다.');
-      } finally {
-        setDataLoading(false);
+    api.brands.getList({ limit: 200 }).then((res) => {
+      if (res.success && res.data) {
+        const data = res.data as { items?: Brand[] } | Brand[];
+        setBrands(Array.isArray(data) ? data : data.items ?? []);
       }
-    };
-    fetchData();
+    });
   }, []);
 
-  // 이미지 업로드 설정
-  const uploadProps: UploadProps = {
-    name: 'file',
-    multiple: true,
-    listType: 'picture-card',
-    fileList,
-    maxCount: 5, // 최대 5장으로 제한
-    beforeUpload: (file) => {
-      // 5장 제한 확인
-      if (fileList.length >= 5) {
-        message.error('이미지는 최대 5장까지만 업로드 가능합니다!');
-        return false;
-      }
-      
-      const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png' || file.type === 'image/webp';
-      if (!isJpgOrPng) {
-        message.error('JPG, PNG, WebP 파일만 업로드 가능합니다!');
-        return false;
-      }
-      const isLt10M = file.size / 1024 / 1024 < 10;
-      if (!isLt10M) {
-        message.error('이미지는 10MB보다 작아야 합니다!');
-        return false;
-      }
-      // UploadFile 형식으로 변환하여 fileList에 추가
-      const uploadFile: UploadFile = {
-        uid: file.uid || `${Date.now()}-${Math.random()}`,
-        name: file.name,
-        status: 'done',
-        originFileObj: file,
-      };
-      setFileList(prev => [...prev, uploadFile]);
-      return false; // 자동 업로드 방지
-    },
-    onPreview: (file) => {
-      // 미리보기 기능 (실제 구현 시 모달로 처리)
-      console.log('Preview:', file);
-    },
-    onRemove: (file) => {
-      setFileList(prev => prev.filter(f => f.uid !== file.uid));
-      return true;
-    },
-  };
+  const brandOptions = brands.map((brand) => ({ label: brand.name, value: brand.id }));
 
-  const handleSubmit = async (values: ItemFormData) => {
-    setLoading(true);
-    
-    try {
-      // 이미지 업로드 처리
-      let uploadedImages: string[] = [];
-      
-      if (fileList.length > 0) {
-        for (const file of fileList) {
-          if (file.originFileObj) {
-            const uploadResponse = await api.upload(file.originFileObj, 'items');
-            if (uploadResponse.success && uploadResponse.data?.url) {
-              uploadedImages.push(uploadResponse.data.url);
-            }
-          }
-        }
-      }
-
-      // API 호출
-      const response = await api.post('/items', {
-        name: values.name,
-        description: values.description,
-        brandId: values.brandId,
-        tags: values.tags || [],
-        mallUrl: values.mallUrl || null,
-        status: values.status,
-        images: uploadedImages,
-      });
-
-      if (response.success) {
-        message.success('아이템이 성공적으로 추가되었습니다!');
-        router.push('/items');
-      } else {
-        throw new Error(response.error || '아이템 추가에 실패했습니다.');
-      }
-      
-    } catch (error) {
-      console.error('아이템 추가 중 예외 발생:', error);
-      message.error('아이템 추가 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
+  const handleSubmit = async () => {
+    setError(null);
+    if (name.trim().length < 2) {
+      setError('아이템명을 입력해주세요. (2-100자)');
+      return;
     }
-  };
+    if (description.trim().length < 10) {
+      setError('아이템 설명을 입력해주세요. (10-1000자)');
+      return;
+    }
+    if (mallUrl.trim()) {
+      try {
+        new URL(mallUrl.trim());
+      } catch {
+        setError('올바른 URL을 입력해주세요.');
+        return;
+      }
+    }
+    if (!brandId) {
+      setError('브랜드를 선택해주세요.');
+      return;
+    }
+    if (tags.length === 0) {
+      setError('최소 1개의 태그를 선택해주세요.');
+      return;
+    }
 
-  const handleCancel = () => {
-    router.back();
+    setSaving(true);
+    const res = await api.post('/items', {
+      name: name.trim(),
+      description: description.trim(),
+      mallUrl: mallUrl.trim() || null,
+      brandId,
+      status,
+      images,
+      tags,
+    });
+    setSaving(false);
+
+    if (res.success) {
+      router.push('/items');
+    } else {
+      setError(res.error || '아이템 추가에 실패했습니다.');
+    }
   };
 
   return (
     <MainLayout>
-      <div>
-        {/* 헤더 */}
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Space>
-            <Button 
-              icon={<ArrowLeftOutlined />} 
-              onClick={handleCancel}
-            >
-              돌아가기
-            </Button>
-            <Title level={2} style={{ margin: 0 }}>
-              새 아이템 추가
-            </Title>
-          </Space>
+      <PageHeader
+        title="새 아이템 추가"
+        action={
+          <Button variant="outline" colorPalette="secondary" onClick={() => router.back()}>
+            <ChevronLeftOutlineIcon size={16} />돌아가기
+          </Button>
+        }
+      />
+
+      {error ? (
+        <Callout.Root colorPalette="danger" className="mb-4">
+          {error}
+        </Callout.Root>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-6 lg:col-span-2">
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading5">기본 정보</Text>
+            </Card.Header>
+            <Card.Body className="space-y-4">
+              <Field.Root>
+                <Field.Label>아이템명</Field.Label>
+                <TextInput
+                  value={name}
+                  onValueChange={setName}
+                  placeholder="아이템명을 입력하세요"
+                  maxLength={100}
+                />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label>아이템 설명</Field.Label>
+                <Textarea
+                  value={description}
+                  onValueChange={setDescription}
+                  placeholder="아이템에 대한 자세한 설명을 입력하세요"
+                  rows={4}
+                  maxLength={1000}
+                />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label>나라장터 URL</Field.Label>
+                <TextInput
+                  type="url"
+                  value={mallUrl}
+                  onValueChange={setMallUrl}
+                  placeholder="https://mall.g2b.go.kr/..."
+                />
+              </Field.Root>
+            </Card.Body>
+          </Card.Root>
+
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading5">아이템 이미지</Text>
+            </Card.Header>
+            <Card.Body>
+              <ImageUploader value={images} onChange={setImages} folder="items" multiple max={5} />
+              <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
+                최대 5장까지 업로드 가능합니다. 첫 번째 이미지가 대표 이미지로 설정됩니다.
+              </Text>
+            </Card.Body>
+          </Card.Root>
         </div>
 
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-          initialValues={{
-            status: 'available'
-          }}
-        >
-          <Row gutter={[24, 0]}>
-            {/* 기본 정보 */}
-            <Col xs={24} lg={14}>
-              <Card title="기본 정보" style={{ marginBottom: '24px' }}>
-                <Form.Item
-                  label="아이템명"
-                  name="name"
-                  rules={[
-                    { required: true, message: '아이템명을 입력해주세요.' },
-                    { min: 2, max: 100, message: '아이템명은 2-100자 사이여야 합니다.' }
-                  ]}
+        <div className="space-y-6">
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading5">분류 및 상태</Text>
+            </Card.Header>
+            <Card.Body className="space-y-4">
+              <Field.Root>
+                <Field.Label>브랜드</Field.Label>
+                <Select.Root
+                  items={brandOptions}
+                  value={brandId || null}
+                  onValueChange={(v) => setBrandId(v ?? '')}
+                  placeholder={brands.length === 0 ? '로딩 중...' : '브랜드를 선택하세요'}
                 >
-                  <Input 
-                    placeholder="아이템명을 입력하세요"
-                    prefix={<AppstoreOutlined />}
-                    showCount
-                    maxLength={100}
-                  />
-                </Form.Item>
+                  <Select.Trigger className="w-full" />
+                  <Select.Popup>
+                    {brands.map((brand) => (
+                      <Select.Item key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </Select.Item>
+                    ))}
+                  </Select.Popup>
+                </Select.Root>
+              </Field.Root>
 
-                <Form.Item
-                  label="아이템 설명"
-                  name="description"
-                  rules={[
-                    { required: true, message: '아이템 설명을 입력해주세요.' },
-                    { min: 10, max: 1000, message: '설명은 10-1000자 사이여야 합니다.' }
-                  ]}
+              <Field.Root>
+                <Field.Label>태그</Field.Label>
+                <TagSelect type="item" value={tags} onChange={setTags} />
+              </Field.Root>
+
+              <Field.Root>
+                <Field.Label>상태</Field.Label>
+                <Select.Root
+                  items={STATUS_OPTIONS}
+                  value={status}
+                  onValueChange={(v) => setStatus(v ?? 'available')}
+                  placeholder="상태 선택"
                 >
-                  <TextArea
-                    rows={4}
-                    placeholder="아이템에 대한 자세한 설명을 입력하세요"
-                    showCount
-                    maxLength={1000}
-                  />
-                </Form.Item>
+                  <Select.Trigger className="w-full" />
+                  <Select.Popup>
+                    {STATUS_OPTIONS.map((option) => (
+                      <Select.Item key={option.value} value={option.value}>
+                        {option.label}
+                      </Select.Item>
+                    ))}
+                  </Select.Popup>
+                </Select.Root>
+              </Field.Root>
+            </Card.Body>
+          </Card.Root>
 
-                <Form.Item
-                  label="나라장터 URL"
-                  name="mallUrl"
-                  rules={[
-                    { type: 'url', message: '올바른 URL을 입력해주세요.' }
-                  ]}
-                >
-                  <Input 
-                    placeholder="https://mall.g2b.go.kr/..."
-                    prefix={<LinkOutlined />}
-                  />
-                </Form.Item>
-              </Card>
-
-              {/* 이미지 업로드 */}
-              <Card title="아이템 이미지">
-                <Form.Item
-                  label="이미지 업로드"
-                  extra={`최대 5장까지 업로드 가능합니다. 첫 번째 이미지가 대표 이미지로 설정됩니다. (현재: ${fileList.length}/5)`}
-                >
-                  <Upload {...uploadProps}>
-                    {fileList.length >= 5 ? null : (
-                      <div>
-                        <PlusOutlined />
-                        <div style={{ marginTop: 8 }}>이미지 업로드</div>
-                      </div>
-                    )}
-                  </Upload>
-                </Form.Item>
-              </Card>
-            </Col>
-
-            {/* 분류 및 상태 */}
-            <Col xs={24} lg={10}>
-              <Card title="분류 및 상태" style={{ marginBottom: '24px' }}>
-                <Form.Item
-                  label="브랜드"
-                  name="brandId"
-                  rules={[
-                    { required: true, message: '브랜드를 선택해주세요.' }
-                  ]}
-                >
-                  <Select
-                    placeholder={dataLoading ? "로딩 중..." : "브랜드를 검색하고 선택하세요"}
-                    showSearch
-                    optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                    }
-                    loading={dataLoading}
-                    disabled={dataLoading}
-                    suffixIcon={<ShopOutlined />}
-                    options={allBrands.map(brand => ({
-                      value: brand.id,
-                      label: brand.name
-                    }))}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label="태그"
-                  name="tags"
-                  rules={[
-                    { required: true, message: '최소 1개의 태그를 선택해주세요.' }
-                  ]}
-                >
-                  <Select
-                    mode="multiple"
-                    placeholder={dataLoading ? "로딩 중..." : "태그를 검색하고 선택하세요"}
-                    showSearch
-                    optionFilterProp="label"
-                    filterOption={(input, option) =>
-                      ((option as any)?.label ?? '').toLowerCase().includes(input.toLowerCase())
-                    }
-                    loading={dataLoading}
-                    disabled={dataLoading}
-                    suffixIcon={<TagsOutlined />}
-                    maxTagCount="responsive"
-                    options={allTags.map(tag => ({
-                      value: tag.id,
-                      label: tag.name
-                    }))}
-                  />
-                </Form.Item>
-
-                <Divider />
-
-                <Form.Item
-                  label="상태"
-                  name="status"
-                  rules={[
-                    { required: true, message: '상태를 선택해주세요.' }
-                  ]}
-                >
-                  <Select
-                    options={[
-                      { value: 'available', label: '구매가능' },
-                      { value: 'discontinued', label: '단종' },
-                    ]}
-                  />
-                </Form.Item>
-              </Card>
-
-              {/* 저장 버튼 */}
-              <Card>
-                <Space direction="vertical" style={{ width: '100%' }}>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    icon={<SaveOutlined />}
-                    style={{ width: '100%' }}
-                    size="large"
-                  >
-                    {loading ? '저장 중...' : '아이템 저장'}
-                  </Button>
-                  
-                  <Button
-                    onClick={handleCancel}
-                    style={{ width: '100%' }}
-                  >
-                    취소
-                  </Button>
-                </Space>
-              </Card>
-            </Col>
-          </Row>
-        </Form>
+          <Card.Root>
+            <Card.Body className="space-y-2">
+              <Button
+                variant="fill"
+                colorPalette="primary"
+                size="lg"
+                className="w-full"
+                onClick={handleSubmit}
+                disabled={saving}
+              >
+                {saving ? <Spinner size="md" /> : <SaveOutlineIcon size={16} />}
+                {saving ? '저장 중...' : '아이템 저장'}
+              </Button>
+              <Button
+                variant="outline"
+                colorPalette="secondary"
+                className="w-full"
+                onClick={() => router.back()}
+                disabled={saving}
+              >
+                취소
+              </Button>
+            </Card.Body>
+          </Card.Root>
+        </div>
       </div>
     </MainLayout>
   );

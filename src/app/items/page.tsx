@@ -2,328 +2,323 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Tag, 
-  Space, 
-  Typography, 
-  Input,
-  Select,
-  Badge,
-  Image,
-  Tooltip,
-  Modal,
-  message
-} from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  EyeOutlined, 
-  SearchOutlined,
-  ShopOutlined,
-  LinkOutlined,
-  DeleteOutlined
-} from '@ant-design/icons';
+import { Badge, Button, Callout, Card, IconButton, Select } from '@vapor-ui/core';
+import {
+  PlusOutlineIcon,
+  ViewOnOutlineIcon,
+  EditOutlineIcon,
+  TrashOutlineIcon,
+  DashboardOutlineIcon,
+} from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import {
+  PageHeader,
+  SearchInput,
+  StatusBadge,
+  DataTable,
+  Pagination,
+  ConfirmDialog,
+} from '@/components/ui';
+import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { Item, ItemStatus } from '@/types';
-import type { ColumnsType } from 'antd/es/table';
+import type { Item, ItemStatus, Brand } from '@/types';
 
-const { Title } = Typography;
-const { Search } = Input;
+const PAGE_SIZE = 10;
+
+const STATUS_OPTIONS = [
+  { label: '모든 상태', value: 'all' },
+  { label: '구입가능', value: 'available' },
+  { label: '단종', value: 'discontinued' },
+  { label: '숨김', value: 'hidden' },
+] as const;
 
 export default function ItemsPage() {
   const router = useRouter();
+
+  const [items, setItems] = useState<Item[]>([]);
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
-  const [items, setItems] = useState<Item[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [brandFilter, setBrandFilter] = useState<string>('all');
+  const [page, setPage] = useState(1);
 
-  // 아이템 목록 가져오기
-  useEffect(() => {
-    fetchItems();
-  }, []);
+  const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchItems = async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const response = await api.get<{items: Item[]}>('/items');
-      if (response.success) {
-        setItems(response.data?.items || []);
+      const res = await api.get<{ items: Item[] }>('/items', { limit: 200 });
+      if (res.success && res.data) {
+        setItems(res.data.items || []);
       } else {
-        message.error('아이템 목록을 불러오는데 실패했습니다.');
+        setError(res.error || '아이템 목록을 불러오는데 실패했습니다.');
       }
-    } catch (error) {
-      console.error('아이템 목록 로딩 오류:', error);
-      message.error('아이템 목록을 불러오는 중 오류가 발생했습니다.');
+    } catch (e) {
+      console.error('아이템 목록 로딩 오류:', e);
+      setError('아이템 목록을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 아이템 삭제
-  const handleDelete = (item: Item) => {
-    Modal.confirm({
-      title: '아이템 삭제',
-      content: `"${item.name}" 아이템을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
-      okText: '삭제',
-      okType: 'danger',
-      cancelText: '취소',
-      onOk: async () => {
-        try {
-          const response = await api.delete(`/items/${item.id}`);
-          if (response.success) {
-            message.success('아이템이 삭제되었습니다.');
-            fetchItems(); // 목록 새로고침
-          } else {
-            message.error(response.error || '아이템 삭제에 실패했습니다.');
-          }
-        } catch (error) {
-          console.error('아이템 삭제 오류:', error);
-          message.error('아이템 삭제 중 오류가 발생했습니다.');
-        }
-      },
+  useEffect(() => {
+    fetchItems();
+    api.brands.getList({ limit: 200 }).then((res) => {
+      if (res.success && res.data) {
+        const data = res.data as { items?: Brand[] } | Brand[];
+        setBrands(Array.isArray(data) ? data : data.items ?? []);
+      }
     });
-  };
+  }, []);
 
-  // 필터링된 아이템 목록
-  const filteredItems = items.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (item.description && item.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
+  // 필터 변경 시 첫 페이지로 이동
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter, brandFilter]);
 
-  // 상태별 색상 매핑
-  const getStatusColor = (status: ItemStatus) => {
-    switch (status) {
-      case 'available':
-        return 'success';
-      case 'discontinued':
-        return 'error';
-      case 'hidden':
-        return 'default';
-      default:
-        return 'default';
+  const filteredItems = useMemo(() => {
+    const q = searchTerm.toLowerCase();
+    return items.filter((item) => {
+      const matchesSearch =
+        item.name.toLowerCase().includes(q) ||
+        (item.description?.toLowerCase().includes(q) ?? false);
+      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
+      const matchesBrand = brandFilter === 'all' || item.brand?.id === brandFilter;
+      return matchesSearch && matchesStatus && matchesBrand;
+    });
+  }, [items, searchTerm, statusFilter, brandFilter]);
+
+  const total = filteredItems.length;
+  const pagedItems = filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const brandOptions = useMemo(
+    () => [
+      { label: '모든 브랜드', value: 'all' },
+      ...brands.map((brand) => ({ label: brand.name, value: brand.id })),
+    ],
+    [brands],
+  );
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await api.delete(`/items/${deleteTarget.id}`);
+    setDeleting(false);
+    setDeleteTarget(null);
+    if (res.success) {
+      fetchItems();
+    } else {
+      setError(res.error || '아이템 삭제에 실패했습니다.');
     }
   };
 
-  // 상태별 텍스트 매핑
-  const getStatusText = (status: ItemStatus) => {
-    switch (status) {
-      case 'available':
-        return '구입가능';
-      case 'discontinued':
-        return '단종';
-      case 'hidden':
-        return '숨김';
-      default:
-        return status;
-    }
-  };
-
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<Item> = [
+  const columns: DataTableColumn<Item>[] = [
     {
-      title: '이미지',
-      dataIndex: 'images',
       key: 'image',
-      width: 100,
-      render: (images: Item['images']) => {
-        const mainImage = Array.isArray(images) && images.length > 0 
-          ? (images.find(img => img.isMain) || images[0]) 
-          : null;
-        
+      header: '대표이미지',
+      render: (item) => {
+        const images = item.images;
+        const mainImage =
+          Array.isArray(images) && images.length > 0
+            ? images.find((img) => img.isMain) || images[0]
+            : null;
         return mainImage ? (
-          <Image
-            width={60}
-            height={60}
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={mainImage.url}
             alt={mainImage.alt || '아이템 이미지'}
-            style={{ objectFit: 'cover', borderRadius: '8px' }}
-            preview={{
-              mask: <div style={{ fontSize: '12px' }}>미리보기</div>
-            }}
-            fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN..."
+            className="h-14 w-14 rounded-md object-cover"
           />
         ) : (
-          <div style={{ 
-            width: 60, 
-            height: 60, 
-            backgroundColor: '#f5f5f5', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            borderRadius: '8px',
-            border: '1px dashed #d9d9d9'
-          }}>
-            <ShopOutlined style={{ fontSize: '20px', color: '#bfbfbf' }} />
+          <div className="flex h-14 w-14 items-center justify-center rounded-md border border-dashed border-gray-200 bg-gray-50">
+            <DashboardOutlineIcon size={20} className="text-gray-300" />
           </div>
         );
       },
     },
     {
-      title: '아이템명',
-      dataIndex: 'name',
       key: 'name',
-      render: (text: string, record: Item) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{text}</div>
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-            {record.description.substring(0, 50)}...
-          </div>
+      header: '아이템명',
+      render: (item) => (
+        <div className="min-w-0">
+          <div className="font-medium text-gray-900">{item.name}</div>
+          {item.description ? (
+            <div className="mt-0.5 line-clamp-1 text-xs text-gray-500">{item.description}</div>
+          ) : null}
         </div>
       ),
     },
     {
-      title: '브랜드',
-      dataIndex: 'brand',
       key: 'brand',
-      render: (brand: Item['brand']) => (
-        brand ? <Tag color="blue">{brand.name}</Tag> : <span style={{ color: '#bfbfbf' }}>-</span>
-      ),
-    },
-    {
-      title: '태그',
-      dataIndex: 'tags',
-      key: 'tags',
-      render: (tags: Item['tags']) => (
-        <Space wrap>
-          {tags.slice(0, 2).map(tag => (
-            <Tag key={tag.id}>{tag.name}</Tag>
-          ))}
-          {tags.length > 2 && (
-            <Tag color="default">+{tags.length - 2}</Tag>
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: '상태',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: ItemStatus) => (
-        <Badge
-          status={getStatusColor(status) as any}
-          text={getStatusText(status)}
-        />
-      ),
-    },
-    {
-      title: '나라장터',
-      dataIndex: 'mallUrl',
-      key: 'mallUrl',
-      render: (url: string) => (
-        url ? (
-          <Tooltip title="나라장터에서 보기">
-            <Button 
-              type="text" 
-              icon={<LinkOutlined />} 
-              size="small"
-              onClick={() => window.open(url, '_blank')}
-            />
-          </Tooltip>
+      header: '브랜드',
+      render: (item) =>
+        item.brand ? (
+          <Badge colorPalette="hint" size="sm">
+            {item.brand.name}
+          </Badge>
         ) : (
-          <span style={{ color: '#bfbfbf' }}>-</span>
-        )
+          <span className="text-gray-300">-</span>
+        ),
+    },
+    {
+      key: 'status',
+      header: '상태',
+      render: (item) => <StatusBadge kind="item" value={item.status} />,
+    },
+    {
+      key: 'tags',
+      header: '태그',
+      render: (item) => (
+        <div className="flex flex-wrap gap-1">
+          {item.tags?.slice(0, 2).map((tag) => (
+            <Badge key={tag.id} colorPalette="contrast" size="sm">
+              {tag.name}
+            </Badge>
+          ))}
+          {item.tags && item.tags.length > 2 ? (
+            <Badge colorPalette="hint" size="sm">
+              +{item.tags.length - 2}
+            </Badge>
+          ) : null}
+        </div>
       ),
     },
     {
-      title: '작업',
       key: 'actions',
-      width: 150,
-      render: (_, record: Item) => (
-        <Space>
-          <Tooltip title="상세보기">
-            <Button 
-              type="text" 
-              icon={<EyeOutlined />} 
-              size="small"
-              onClick={() => router.push(`/items/${record.id}`)}
-            />
-          </Tooltip>
-          <Tooltip title="편집">
-            <Button 
-              type="text" 
-              icon={<EditOutlined />} 
-              size="small"
-              onClick={() => router.push(`/items/${record.id}/edit`)}
-            />
-          </Tooltip>
-          <Tooltip title="삭제">
-            <Button 
-              type="text" 
-              icon={<DeleteOutlined />} 
-              size="small"
-              danger
-              onClick={() => handleDelete(record)}
-            />
-          </Tooltip>
-        </Space>
+      header: '작업',
+      align: 'right',
+      render: (item) => (
+        <div className="flex justify-end gap-1">
+          <IconButton
+            size="sm"
+            variant="ghost"
+            colorPalette="secondary"
+            aria-label="상세보기"
+            onClick={() => router.push(`/items/${item.id}`)}
+          >
+            <ViewOnOutlineIcon size={16} />
+          </IconButton>
+          <IconButton
+            size="sm"
+            variant="ghost"
+            colorPalette="secondary"
+            aria-label="편집"
+            onClick={() => router.push(`/items/${item.id}/edit`)}
+          >
+            <EditOutlineIcon size={16} />
+          </IconButton>
+          <IconButton
+            size="sm"
+            variant="ghost"
+            colorPalette="danger"
+            aria-label="삭제"
+            onClick={() => setDeleteTarget(item)}
+          >
+            <TrashOutlineIcon size={16} />
+          </IconButton>
+        </div>
       ),
     },
   ];
 
   return (
     <MainLayout>
-      <div>
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={2} style={{ margin: 0 }}>
-            아이템 관리
-          </Title>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/items/new')}
-          >
-            새 아이템 추가
+      <PageHeader
+        title="아이템 관리"
+        action={
+          <Button variant="fill" colorPalette="primary" onClick={() => router.push('/items/new')}>
+            <PlusOutlineIcon size={16} />새 아이템
           </Button>
-        </div>
+        }
+      />
 
-        <Card>
-          {/* 검색 및 필터 */}
-          <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <Search
-              placeholder="아이템명 또는 설명 검색"
-              allowClear
-              style={{ width: 300 }}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              prefix={<SearchOutlined />}
-            />
-            <Select
-              style={{ width: 150 }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { label: '모든 상태', value: 'all' },
-                { label: '구입가능', value: 'available' },
-                { label: '단종', value: 'discontinued' },
-                { label: '숨김', value: 'hidden' },
-              ]}
-            />
+      {error ? (
+        <Callout.Root colorPalette="danger" className="mb-4">
+          {error}
+        </Callout.Root>
+      ) : null}
+
+      <Card.Root>
+        <Card.Body className="space-y-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="w-72">
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="아이템명 또는 설명 검색"
+              />
+            </div>
+            <div className="w-40">
+              <Select.Root
+                items={STATUS_OPTIONS}
+                value={statusFilter}
+                onValueChange={(v) => setStatusFilter(v ?? 'all')}
+                placeholder="모든 상태"
+              >
+                <Select.Trigger className="w-full" />
+                <Select.Popup>
+                  {STATUS_OPTIONS.map((option) => (
+                    <Select.Item key={option.value} value={option.value}>
+                      {option.label}
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Root>
+            </div>
+            <div className="w-48">
+              <Select.Root
+                items={brandOptions}
+                value={brandFilter}
+                onValueChange={(v) => setBrandFilter(v ?? 'all')}
+                placeholder="모든 브랜드"
+              >
+                <Select.Trigger className="w-full" />
+                <Select.Popup>
+                  {brandOptions.map((option) => (
+                    <Select.Item key={option.value} value={option.value}>
+                      {option.label}
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Root>
+            </div>
           </div>
 
-          {/* 아이템 테이블 */}
-          <Table
+          <DataTable<Item>
             columns={columns}
-            dataSource={filteredItems}
-            rowKey="id"
+            rows={pagedItems}
+            rowKey={(item) => item.id}
             loading={loading}
-            pagination={{
-              total: filteredItems.length,
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}개`,
-            }}
-            scroll={{ x: 800 }}
+            empty="아이템이 없습니다."
           />
-        </Card>
-      </div>
+
+          {total > PAGE_SIZE ? (
+            <Pagination page={page} total={total} limit={PAGE_SIZE} onPageChange={setPage} />
+          ) : null}
+        </Card.Body>
+      </Card.Root>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        title="아이템 삭제"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.name}" 아이템을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+            : undefined
+        }
+        confirmText="삭제"
+        danger
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </MainLayout>
   );
 }

@@ -1,128 +1,89 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
+import { mapTag } from '@/lib/dto'
+import type { TagType } from '@/lib/database.types'
 
-const TAG_TYPES = ['project', 'item', 'photo', 'brand'] as const
+const TAG_TYPES: readonly TagType[] = ['project', 'item', 'photo', 'brand']
 
-function isTagType(type: string | null | undefined) {
-  return TAG_TYPES.includes(type as typeof TAG_TYPES[number])
+function isTagType(type: string | null | undefined): type is TagType {
+  return TAG_TYPES.includes(type as TagType)
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    await requireUser()
+    const { data, error } = await supabaseAdmin
+      .from('tags')
+      .select('*')
+      .eq('id', params.id)
+      .single()
+    if (error || !data) {
+      return NextResponse.json({ success: false, error: '태그를 찾을 수 없습니다.' }, { status: 404 })
+    }
+    return NextResponse.json({ success: true, data: mapTag(data) })
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
+    console.error('Tag GET error:', error)
+    return NextResponse.json({ success: false, error: '서버 오류가 발생했습니다.' }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    await requireRole('content_manager')
     const body = await request.json()
     const { name, type } = body
 
-    if (!name || name.trim().length === 0) {
-      return NextResponse.json(
-        { success: false, error: '태그명을 입력해주세요.' },
-        { status: 400 }
-      )
+    const update: Record<string, unknown> = {}
+    if (name !== undefined) {
+      if (!name || name.trim().length === 0) {
+        return NextResponse.json({ success: false, error: '태그명을 입력해주세요.' }, { status: 400 })
+      }
+      update.name = name.trim()
     }
-
-    const updateData: any = {
-      name: name.trim()
-    }
-
-    // type이 제공된 경우 검증 후 업데이트
-    if (type) {
+    if (type !== undefined) {
       if (!isTagType(type)) {
         return NextResponse.json(
           { success: false, error: '태그 타입을 올바르게 선택해주세요.' },
-          { status: 400 }
+          { status: 400 },
         )
       }
-      updateData.type = type
+      update.type = type
     }
 
     const { data: tag, error } = await supabaseAdmin
       .from('tags')
-      .update(updateData)
-      .eq('id', id)
-      .select()
+      .update(update)
+      .eq('id', params.id)
+      .select('*')
       .single()
-
-    if (error) {
-      console.error('Tag update error:', error)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: '태그 업데이트에 실패했습니다.',
-          ...(process.env.NODE_ENV === 'development' && { details: error.message })
-        },
-        { status: 500 }
-      )
+    if (error || !tag) {
+      return NextResponse.json({ success: false, error: '태그를 찾을 수 없습니다.' }, { status: 404 })
     }
-
-    // 데이터 변환 (snake_case -> camelCase)
-    const transformedTag = {
-      id: tag.id,
-      name: tag.name,
-      type: tag.type,
-      createdAt: tag.created_at,
-      updatedAt: tag.created_at // updated_at 컬럼이 없으므로 created_at 사용
-    };
 
     return NextResponse.json({
       success: true,
-      data: transformedTag,
-      message: '태그가 성공적으로 업데이트되었습니다.'
+      data: mapTag(tag),
+      message: '태그가 수정되었습니다.',
     })
-
   } catch (error) {
-    console.error('Tag update error:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: '서버 오류가 발생했습니다.',
-        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
-      },
-      { status: 500 }
-    )
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
+    console.error('Tag PUT error:', error)
+    return NextResponse.json({ success: false, error: '태그 수정에 실패했습니다.' }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
-
-    const { error } = await supabaseAdmin
-      .from('tags')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Tag deletion error:', error)
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: '태그 삭제에 실패했습니다.',
-          ...(process.env.NODE_ENV === 'development' && { details: error.message })
-        },
-        { status: 500 }
-      )
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: '태그가 성공적으로 삭제되었습니다.'
-    })
-
+    await requireRole('content_manager')
+    // project_tags / item_tags / photo_tags / brand_tags links cascade on tag delete (FK ON DELETE CASCADE).
+    const { error } = await supabaseAdmin.from('tags').delete().eq('id', params.id)
+    if (error) throw error
+    return NextResponse.json({ success: true, message: '태그가 삭제되었습니다.' })
   } catch (error) {
-    console.error('Tag deletion error:', error)
-    return NextResponse.json(
-      { 
-        success: false, 
-        error: '서버 오류가 발생했습니다.',
-        ...(process.env.NODE_ENV === 'development' && { details: (error as Error).message })
-      },
-      { status: 500 }
-    )
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
+    console.error('Tag DELETE error:', error)
+    return NextResponse.json({ success: false, error: '태그 삭제에 실패했습니다.' }, { status: 500 })
   }
 }

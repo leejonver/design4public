@@ -8,8 +8,9 @@
 ## 📋 소개
 
 **Design4Public CMS**는 다음 데이터를 체계적으로 관리합니다.
-- 프로젝트, 아이템(가구/제품), 브랜드, 태그, 관리자
+- 프로젝트, 사진, 아이템(가구/제품), 브랜드, 태그, 관리자
 - 이미지 업로드 및 대표 이미지 설정
+- 사진-아이템 연결 관리
 - 권한 기반 접근 제어(마스터/관리자/콘텐츠매니저)
 
 ## 🔧 기술 스택
@@ -43,7 +44,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 src/
 ├─ app/                # App Router 페이지 & API Routes
 │  ├─ api/             # Next.js Route Handlers (REST)
-│  ├─ projects/ items/ brands/ tags/ managers/
+│  ├─ projects/ items/ photos/ brands/ tags/ managers/
 │  └─ login/ signup/
 ├─ components/         # 공통 컴포넌트 (MainLayout, Sidebar 등)
 ├─ contexts/           # AuthContext 등
@@ -52,8 +53,9 @@ src/
 ```
 
 ## 🧩 주요 기능
-- 프로젝트/아이템/브랜드 CRUD
-- 태그 타입 분리 및 관리
+- 프로젝트/사진/아이템/브랜드 CRUD
+- 사진-아이템 연결 관리
+- 태그 타입 분리 및 관리 (project, photo, item, brand)
 - 관리자 관리(권한/승인/인라인 편집)
 - 이미지 업로드(Supabase Storage)
 

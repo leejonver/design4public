@@ -2,54 +2,51 @@
 
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Descriptions, 
-  Button, 
-  Tag, 
-  Space, 
-  Typography, 
-  Image,
-  Badge,
-  Row,
-  Col,
-  Empty,
-  List,
-  Avatar,
-  Popconfirm,
-  message,
-  Spin
-} from 'antd';
-import { 
-  EditOutlined, 
-  ArrowLeftOutlined,
-  DeleteOutlined,
-  LinkOutlined,
-  ProjectOutlined,
-  AppstoreOutlined
-} from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import type { ReactNode } from 'react';
+import Link from 'next/link';
+import { useParams, useRouter } from 'next/navigation';
+import { Badge, Button, Card, Spinner, Text } from '@vapor-ui/core';
+import {
+  ChevronLeftOutlineIcon,
+  EditOutlineIcon,
+  ImageOutlineIcon,
+  OpenInNewOutlineIcon,
+  TrashOutlineIcon,
+} from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import { ConfirmDialog, DataTable, StatusBadge } from '@/components/ui';
+import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { ProjectStatus } from '@/types';
+import type { Item, Project } from '@/types';
 
-const { Title, Paragraph, Text } = Typography;
+function InfoRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-1 gap-1 border-b border-gray-100 py-3 last:border-b-0 sm:grid-cols-[140px_1fr] sm:gap-4">
+      <Text typography="body2" className="text-gray-500">
+        {label}
+      </Text>
+      <div className="text-gray-900">{children}</div>
+    </div>
+  );
+}
 
 export default function ProjectDetailPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.project_id as string;
-  const [project, setProject] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
 
-  // 프로젝트 데이터 조회
+  const [project, setProject] = useState<Project | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
   useEffect(() => {
     const fetchProject = async () => {
       try {
-        const response = await api.get(`/projects/${projectId}`);
+        const response = await api.get<Project>(`/projects/${projectId}`);
         if (response.success) {
-          setProject(response.data);
+          setProject(response.data ?? null);
         }
       } catch (error) {
         console.error('프로젝트 조회 오류:', error);
@@ -63,11 +60,26 @@ export default function ProjectDetailPage() {
     }
   }, [projectId]);
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/projects/${projectId}`);
+      if (response.success) {
+        router.push('/projects');
+      }
+    } catch (error) {
+      console.error('프로젝트 삭제 오류:', error);
+    } finally {
+      setDeleting(false);
+      setConfirmOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <MainLayout>
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <Spin size="large" />
+        <div className="flex min-h-[400px] items-center justify-center">
+          <Spinner size="lg" />
         </div>
       </MainLayout>
     );
@@ -76,248 +88,214 @@ export default function ProjectDetailPage() {
   if (!project) {
     return (
       <MainLayout>
-        <Empty description="프로젝트를 찾을 수 없습니다." />
+        <div className="py-20 text-center">
+          <Text typography="body1" className="text-gray-400">
+            프로젝트를 찾을 수 없습니다.
+          </Text>
+        </div>
       </MainLayout>
     );
   }
 
-  // 상태별 색상 매핑
-  const getStatusColor = (status: ProjectStatus) => {
-    switch (status) {
-      case 'published':
-        return 'success';
-      case 'draft':
-        return 'default';
-      case 'hidden':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
+  const connectedItems = project.connectedItems ?? [];
 
-  // 상태별 텍스트 매핑
-  const getStatusText = (status: ProjectStatus) => {
-    switch (status) {
-      case 'published':
-        return '게시';
-      case 'draft':
-        return '초안';
-      case 'hidden':
-        return '숨김';
-      default:
-        return status;
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const response = await api.delete(`/projects/${projectId}`);
-      if (response.success) {
-        message.success('프로젝트가 삭제되었습니다.');
-        router.push('/projects');
-      } else {
-        message.error(response.error || '프로젝트 삭제에 실패했습니다.');
-      }
-    } catch (error) {
-      console.error('프로젝트 삭제 오류:', error);
-      message.error('프로젝트 삭제 중 오류가 발생했습니다.');
-    }
-  };
-
-  const mainImage = project.images?.find((img: any) => img.isMain) || project.images?.[0];
+  const itemColumns: DataTableColumn<Item>[] = [
+    {
+      key: 'image',
+      header: '이미지',
+      render: (item) => {
+        const main = item.images?.find((img) => img.isMain) || item.images?.[0];
+        return main ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={main.url} alt={main.alt} className="h-10 w-10 rounded object-cover" />
+        ) : (
+          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100">
+            <ImageOutlineIcon size={16} className="text-gray-400" />
+          </div>
+        );
+      },
+    },
+    {
+      key: 'name',
+      header: '아이템명',
+      render: (item) => (
+        <Link href={`/items/${item.id}`} className="font-medium text-blue-600 hover:underline">
+          {item.name}
+        </Link>
+      ),
+    },
+    {
+      key: 'brand',
+      header: '브랜드',
+      render: (item) => <span className="text-gray-700">{item.brand?.name}</span>,
+    },
+  ];
 
   return (
     <MainLayout>
-      <div>
-        {/* 헤더 */}
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Space>
-            <Button 
-              icon={<ArrowLeftOutlined />} 
-              onClick={() => router.back()}
-            >
-              돌아가기
-            </Button>
-            <Title level={2} style={{ margin: 0 }}>
-              {project.name}
-            </Title>
-          </Space>
-          <Space>
-            <Button 
-              type="primary" 
-              icon={<EditOutlined />}
-              onClick={() => router.push(`/projects/${project.id}/edit`)}
-            >
-              편집
-            </Button>
-            <Popconfirm
-              title="프로젝트 삭제"
-              description="정말로 이 프로젝트를 삭제하시겠습니까?"
-              okText="삭제"
-              cancelText="취소"
-              onConfirm={handleDelete}
-            >
-              <Button danger icon={<DeleteOutlined />}>
-                삭제
-              </Button>
-            </Popconfirm>
-          </Space>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            colorPalette="secondary"
+            size="sm"
+            onClick={() => router.back()}
+          >
+            <ChevronLeftOutlineIcon size={16} />
+            돌아가기
+          </Button>
+          <Text typography="heading3" render={<h3 />} className="text-gray-900">
+            {project.name}
+          </Text>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            render={<Link href={`/projects/${project.id}/edit`} />}
+            colorPalette="primary"
+            variant="fill"
+            size="md"
+          >
+            <EditOutlineIcon size={16} />
+            편집
+          </Button>
+          <Button
+            type="button"
+            colorPalette="danger"
+            variant="outline"
+            size="md"
+            onClick={() => setConfirmOpen(true)}
+          >
+            <TrashOutlineIcon size={16} />
+            삭제
+          </Button>
+        </div>
+      </div>
+
+      {project.images?.length > 0 ? (
+        <Card.Root className="mb-6">
+          <Card.Header>
+            <Text typography="heading5" render={<h4 />} className="text-gray-900">
+              프로젝트 이미지
+            </Text>
+          </Card.Header>
+          <Card.Body>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {project.images.map((image) => (
+                <div key={image.id} className="space-y-2">
+                  <div className="overflow-hidden rounded-lg border border-gray-200">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={image.url} alt={image.alt} className="h-44 w-full object-cover" />
+                  </div>
+                  {image.isMain ? (
+                    <div className="text-center">
+                      <Badge colorPalette="warning" size="sm">
+                        대표 이미지
+                      </Badge>
+                    </div>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </Card.Body>
+        </Card.Root>
+      ) : null}
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading5" render={<h4 />} className="text-gray-900">
+                프로젝트 정보
+              </Text>
+            </Card.Header>
+            <Card.Body>
+              <InfoRow label="프로젝트명">
+                <span className="font-medium">{project.name}</span>
+              </InfoRow>
+              <InfoRow label="설명">
+                <p className="whitespace-pre-wrap">{project.description}</p>
+              </InfoRow>
+              <InfoRow label="프로젝트 지역">{project.location}</InfoRow>
+              <InfoRow label="완공연도">{project.completionYear}년</InfoRow>
+              <InfoRow label="면적">
+                {project.area ? `${project.area.toLocaleString()}m²` : '-'}
+              </InfoRow>
+              <InfoRow label="상태">
+                <StatusBadge kind="project" value={project.status} />
+              </InfoRow>
+              <InfoRow label="문의 URL">
+                {project.inquiryUrl ? (
+                  <a
+                    href={project.inquiryUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                  >
+                    <OpenInNewOutlineIcon size={14} />
+                    문의하기
+                  </a>
+                ) : (
+                  <span className="text-gray-400">등록되지 않음</span>
+                )}
+              </InfoRow>
+              <InfoRow label="태그">
+                {project.tags?.length ? (
+                  <div className="flex flex-wrap gap-1">
+                    {project.tags.map((tag) => (
+                      <Badge key={tag.id} colorPalette="hint" size="sm">
+                        {tag.name}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">-</span>
+                )}
+              </InfoRow>
+              <InfoRow label="등록일">
+                {new Date(project.createdAt).toLocaleDateString('ko-KR')}
+              </InfoRow>
+              <InfoRow label="수정일">
+                {new Date(project.updatedAt).toLocaleDateString('ko-KR')}
+              </InfoRow>
+            </Card.Body>
+          </Card.Root>
         </div>
 
-        {/* 프로젝트 이미지들 */}
-        {(project.images?.length || 0) > 0 && (
-          <Card title="프로젝트 이미지" style={{ marginBottom: '24px' }}>
-            <Row gutter={[16, 16]}>
-              {project.images?.map((image: any) => (
-                <Col key={image.id} xs={24} sm={12} md={8} lg={6}>
-                  <Image
-                    width="100%"
-                    height={200}
-                    src={image.url}
-                    alt={image.alt}
-                    style={{ objectFit: 'cover', borderRadius: '8px' }}
-                  />
-                  {image.isMain && (
-                    <div style={{ textAlign: 'center', marginTop: '8px' }}>
-                      <Tag color="gold">대표 이미지</Tag>
-                    </div>
-                  )}
-                </Col>
-              ))}
-            </Row>
-          </Card>
-        )}
-
-        <Row gutter={[24, 24]}>
-          {/* 기본 정보 */}
-          <Col xs={24} lg={16}>
-            <Card title="프로젝트 정보">
-              <Descriptions column={1} bordered>
-                <Descriptions.Item label="프로젝트명">
-                  <Text strong>{project.name}</Text>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="설명">
-                  <Paragraph>{project.description}</Paragraph>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="프로젝트 지역">
-                  {project.location}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="완공연도">
-                  {project.completionYear}년
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="면적">
-                  {project.area ? `${project.area.toLocaleString()}m²` : '-'}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="상태">
-                  <Badge
-                    status={getStatusColor(project.status) as any}
-                    text={getStatusText(project.status)}
-                  />
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="문의 URL">
-                  {project.inquiryUrl ? (
-                    <Button 
-                      type="link" 
-                      icon={<LinkOutlined />}
-                      onClick={() => window.open(project.inquiryUrl, '_blank')}
-                      style={{ padding: 0 }}
-                    >
-                      문의하기
-                    </Button>
-                  ) : (
-                    <Text type="secondary">등록되지 않음</Text>
-                  )}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="태그">
-                  <Space wrap>
-                    {project.tags?.map((tag: any) => (
-                      <Tag key={tag.id}>{tag.name}</Tag>
-                    ))}
-                  </Space>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="등록일">
-                  {new Date(project.createdAt).toLocaleDateString('ko-KR')}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="수정일">
-                  {new Date(project.updatedAt).toLocaleDateString('ko-KR')}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-          </Col>
-
-          {/* 연결된 아이템 */}
-          <Col xs={24} lg={8}>
-            <Card 
-              title={`연결된 아이템 (${project.connectedItems.length}개)`}
-              extra={
-                project.connectedItems.length > 0 && (
-                  <Button 
-                    type="link" 
-                    onClick={() => router.push('/items')}
-                  >
-                    전체보기
-                  </Button>
-                )
-              }
-            >
-              {(project.connectedItems?.length || 0) > 0 ? (
-                <List
-                  dataSource={project.connectedItems || []}
-                  renderItem={(item: any) => (
-                    <List.Item>
-                      <List.Item.Meta
-                        avatar={
-                          item.images?.[0] ? (
-                            <Avatar 
-                              size={40}
-                              src={item.images?.[0]?.url}
-                              shape="square"
-                            />
-                          ) : (
-                            <Avatar 
-                              size={40}
-                              icon={<AppstoreOutlined />}
-                              shape="square"
-                            />
-                          )
-                        }
-                        title={
-                          <Button 
-                            type="link" 
-                            style={{ padding: 0, height: 'auto' }}
-                            onClick={() => router.push(`/items/${item.id}`)}
-                          >
-                            {item.name}
-                          </Button>
-                        }
-                        description={item.brand.name}
-                      />
-                    </List.Item>
-                  )}
-                />
-              ) : (
-                <div style={{ 
-                  textAlign: 'center', 
-                  padding: '40px 0',
-                  color: '#999'
-                }}>
-                  <AppstoreOutlined style={{ fontSize: '32px', marginBottom: '8px' }} />
-                  <div>연결된 아이템이 없습니다</div>
-                </div>
-              )}
-            </Card>
-          </Col>
-        </Row>
+        <div className="lg:col-span-4">
+          <Card.Root>
+            <Card.Header className="flex items-center justify-between">
+              <Text typography="heading5" render={<h4 />} className="text-gray-900">
+                연결된 아이템 ({connectedItems.length}개)
+              </Text>
+              {connectedItems.length > 0 ? (
+                <Link href="/items" className="text-sm text-blue-600 hover:underline">
+                  전체보기
+                </Link>
+              ) : null}
+            </Card.Header>
+            <Card.Body>
+              <DataTable
+                columns={itemColumns}
+                rows={connectedItems}
+                rowKey={(item) => item.id}
+                empty="연결된 아이템이 없습니다."
+              />
+            </Card.Body>
+          </Card.Root>
+        </div>
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="프로젝트 삭제"
+        description="정말로 이 프로젝트를 삭제하시겠습니까?"
+        confirmText="삭제"
+        danger
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </MainLayout>
   );
 }

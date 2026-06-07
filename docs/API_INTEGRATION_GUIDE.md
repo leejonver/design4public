@@ -160,7 +160,48 @@ const handleSubmit = async (values: ProjectFormData) => {
 // 파일 업로드: multipart/form-data 처리 필요
 ```
 
-### 4. 브랜드 관련 API
+### 4. 사진 관련 API (신규)
+
+#### 사진 목록 (`/src/app/photos/page.tsx`)
+```typescript
+// API 엔드포인트: GET /api/photos
+// 필터링: ?search={searchTerm}&page={page}&limit={limit}
+// 응답: { success: true, data: { items: Photo[], total: number, page: number, limit: number } }
+```
+
+#### 사진 상세 (`/src/app/photos/[photo_id]/page.tsx`)
+```typescript
+// API 엔드포인트: GET /api/photos/{photo_id}
+// 응답: { success: true, data: Photo }
+// Photo 타입에는 connectedItems (연결된 아이템), tags (태그) 포함
+```
+
+#### 사진 생성 (`/src/app/photos/new/page.tsx`)
+```typescript
+// API 엔드포인트: POST /api/photos
+// 요청 데이터:
+// {
+//   imageUrl: string,       // 이미지 URL (업로드 후)
+//   altText?: string,       // 대체 텍스트
+//   title?: string,         // 제목
+//   description?: string,   // 설명
+//   connectedItems?: string[], // 연결 아이템 ID 목록
+//   tags?: string[]         // 태그 ID 목록
+// }
+```
+
+#### 사진 수정 (`/src/app/photos/[photo_id]/edit/page.tsx`)
+```typescript
+// API 엔드포인트: PUT /api/photos/{photo_id}
+// 요청 데이터: 생성과 동일 (imageUrl 제외)
+```
+
+#### 사진 삭제
+```typescript
+// API 엔드포인트: DELETE /api/photos/{photo_id}
+```
+
+### 5. 브랜드 관련 API
 
 #### 브랜드 목록 (`/src/app/brands/page.tsx`)
 ```typescript
@@ -173,7 +214,7 @@ const handleSubmit = async (values: ProjectFormData) => {
 // 로고/커버 이미지 업로드 처리 필요
 ```
 
-### 5. 관리자 관리 API
+### 6. 관리자 관리 API
 
 #### 관리자 목록 및 관리 (`/src/app/managers/page.tsx`)
 ```typescript
@@ -219,7 +260,7 @@ const handleSaveName = async (managerId: string) => {
 };
 ```
 
-### 6. 태그 관리 API
+### 7. 태그 관리 API
 
 #### 태그 CRUD (`/src/app/tags/page.tsx`)
 ```typescript

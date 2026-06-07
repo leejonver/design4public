@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { createServerSupabase } from '@/lib/supabase-server'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 export async function POST(request: NextRequest) {
   try {
@@ -8,94 +9,64 @@ export async function POST(request: NextRequest) {
     if (!email || !password) {
       return NextResponse.json(
         { success: false, error: '이메일과 비밀번호를 입력해주세요.' },
-        { status: 400 }
+        { status: 400 },
       )
     }
 
-    // 마스터 계정 체크 (개발 환경에서만)
-    if (process.env.NODE_ENV === 'development') {
-      if (email === 'design4public@gmail.com' && password === 'dfourp7!@#') {
-        return NextResponse.json({
-          success: true,
-          data: {
-            user: {
-              id: 'master-account-id',
-              email: 'design4public@gmail.com',
-              name: 'Design4Public',
-              role: 'master',
-              status: 'approved',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              lastLoginAt: new Date().toISOString()
-            },
-            session: {
-              access_token: 'test-token',
-              refresh_token: 'test-refresh-token'
-            }
-          },
-          message: '로그인에 성공했습니다.'
-        })
-      }
-    }
+    const supabase = createServerSupabase()
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-    // Supabase Auth를 통한 로그인
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
-
-    if (error) {
+    if (error || !data.user) {
       return NextResponse.json(
         { success: false, error: '로그인에 실패했습니다.' },
-        { status: 401 }
+        { status: 401 },
       )
     }
 
-    // 사용자 프로필 정보 가져오기
-    const { data: profile, error: profileError } = await supabase
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
-      .select('*')
+      .select('id, email, name, role, status')
       .eq('id', data.user.id)
       .single()
 
-    if (profileError) {
+    if (profileError || !profile) {
+      await supabase.auth.signOut()
       return NextResponse.json(
         { success: false, error: '사용자 정보를 가져올 수 없습니다.' },
-        { status: 500 }
+        { status: 500 },
       )
     }
 
-    // 승인되지 않은 사용자 체크
     if (profile.status !== 'approved') {
+      await supabase.auth.signOut()
       return NextResponse.json(
-        { success: false, error: '승인되지 않은 계정입니다.' },
-        { status: 403 }
+        { success: false, error: '승인 대기 중입니다.' },
+        { status: 403 },
       )
     }
+
+    await supabaseAdmin
+      .from('profiles')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', profile.id)
 
     return NextResponse.json({
       success: true,
       data: {
         user: {
-          id: data.user.id,
-          email: data.user.email,
-          name: profile.name || '',
+          id: profile.id,
+          email: profile.email,
+          name: profile.name,
           role: profile.role,
-          status: profile.status,
-          createdAt: profile.created_at,
-          updatedAt: profile.updated_at,
-          lastLoginAt: profile.last_login_at
         },
-        session: data.session
       },
-      message: '로그인에 성공했습니다.'
+      message: '로그인에 성공했습니다.',
     })
-
   } catch (error) {
     console.error('Login error:', error)
     return NextResponse.json(
       { success: false, error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
+      { status: 500 },
     )
   }
 }

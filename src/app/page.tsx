@@ -4,24 +4,18 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Spin } from 'antd';
+import { Spinner } from '@vapor-ui/core';
 
 export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // 프로젝트 리스트 페이지로 리다이렉트
     router.replace('/projects');
   }, [router]);
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      height: '100vh'
-    }}>
-      <Spin size="large" tip="로딩 중..." />
+    <div className="flex h-screen items-center justify-center">
+      <Spinner size="lg" />
     </div>
   );
 }

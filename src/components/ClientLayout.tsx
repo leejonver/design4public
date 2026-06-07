@@ -1,6 +1,7 @@
 'use client';
 
 import { ReactNode } from 'react';
+import { ThemeProvider } from '@vapor-ui/core';
 import { AuthProvider } from '@/contexts/AuthContext';
 
 interface ClientLayoutProps {
@@ -9,8 +10,8 @@ interface ClientLayoutProps {
 
 export default function ClientLayout({ children }: ClientLayoutProps) {
   return (
-    <AuthProvider>
-      {children}
-    </AuthProvider>
+    <ThemeProvider defaultTheme="light">
+      <AuthProvider>{children}</AuthProvider>
+    </ThemeProvider>
   );
 }

@@ -11,6 +11,7 @@
 ## 2) 핵심 경로
 - 앱 페이지: `src/app/**`
 - API Routes: `src/app/api/**` (Next.js Route Handlers)
+  - `/api/projects`, `/api/photos`, `/api/items`, `/api/brands`, `/api/tags`, `/api/managers`
 - 공통 컴포넌트: `src/components/**`
 - 인증/컨텍스트: `src/contexts/AuthContext.tsx`
 - 유틸/클라이언트: `src/lib/api.ts`, `src/lib/supabase.ts`
@@ -55,7 +56,7 @@
 ## 9) 자주 수정하는 포인트와 유의사항
 - API 유틸(`src/lib/api.ts`): 응답 제네릭 명시, 오류 메시지 일관화
 - Supabase 클라이언트(`src/lib/supabase.ts`): 서버 권한 작업은 `supabaseAdmin` 사용, 클라이언트 키 노출 주의
-- 태그 타입 분리 로직: `tags`에 `type` 컬럼 존재 전제. UI 필터와 API 쿼리 일치 유지
+- 태그 타입 분리 로직: `tags`에 `type` 컨럼 존재 (project, photo, item, brand). UI 필터와 API 쿼리 일치 유지
 - 업로드: `/api/upload`와 Storage 버킷/정책 정합성 확인 후 배포
 
 ## 10) 보안/컴플라이언스

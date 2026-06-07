@@ -1,26 +1,19 @@
-@import "tailwindcss";
+/* Vapor UI + Tailwind CSS v4 (CSS-first) — renewal_requirements.md §4
+ * Layer order: Tailwind utilities override Vapor utilities override Vapor component defaults.
+ * Vapor ships its own reset; Tailwind preflight is intentionally NOT imported. */
+@layer tw-theme, vapor, tw-utilities;
+
+@import '@vapor-ui/core/styles.css';
+@import '@vapor-ui/core/tailwind.css';
+@import 'tailwindcss/theme.css' layer(tw-theme);
+@import 'tailwindcss/utilities.css' layer(tw-utilities);
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+html,
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-pretendard);
 }

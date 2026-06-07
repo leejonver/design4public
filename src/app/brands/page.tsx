@@ -2,266 +2,274 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Tag, 
-  Space, 
-  Typography, 
-  Input,
-  Select,
-  Badge,
-  Image,
-  Tooltip,
-  Avatar,
-  Modal,
-  message
-} from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  EyeOutlined, 
-  SearchOutlined,
-  ShopOutlined,
-  LinkOutlined,
-  GlobalOutlined,
-  DeleteOutlined
-} from '@ant-design/icons';
+import { Button, Callout, IconButton, Select } from '@vapor-ui/core';
+import {
+  PlusOutlineIcon,
+  ViewOnOutlineIcon,
+  EditOutlineIcon,
+  TrashOutlineIcon,
+  LinkOutlineIcon,
+  BookmarkOutlineIcon,
+} from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import {
+  PageHeader,
+  SearchInput,
+  StatusBadge,
+  ConfirmDialog,
+  DataTable,
+  Pagination,
+  type DataTableColumn,
+} from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Brand } from '@/types';
-import type { ColumnsType } from 'antd/es/table';
 
-const { Title } = Typography;
-const { Search } = Input;
+const LIMIT = 10;
+
+const STATUS_FILTER_LABELS: Record<string, string> = {
+  all: '전체',
+  visible: '노출',
+  hidden: '숨김',
+};
+
+// 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
+function addCacheBuster(url: string | null | undefined, updatedAt?: string): string | undefined {
+  if (!url) return undefined;
+  const timestamp = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${timestamp}`;
+}
 
 export default function BrandsPage() {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [search, setSearch] = useState('');
+  const [status, setStatus] = useState('all');
+  const [page, setPage] = useState(1);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-  // 브랜드 목록 가져오기
-  useEffect(() => {
-    fetchBrands();
-  }, []);
-
-  const fetchBrands = async () => {
+  const fetchBrands = useCallback(async () => {
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      // API 응답 타입에 맞게 수정
-      const response = await api.get<{items: Brand[]}>('/brands');
-      if (response.success) {
-        setBrands(response.data?.items || []);
+      const params: Record<string, string | number> = { page, limit: LIMIT };
+      if (search) params.search = search;
+      if (status !== 'all') params.status = status;
+      const response = await api.get<{ items: Brand[]; total: number }>('/brands', params);
+      if (response.success && response.data) {
+        setBrands(response.data.items);
+        setTotal(response.data.total);
       } else {
-        message.error('브랜드 목록을 불러오는데 실패했습니다.');
+        setError(response.error || '브랜드 목록을 불러오는데 실패했습니다.');
       }
-    } catch (error) {
-      console.error('브랜드 목록 로딩 오류:', error);
-      message.error('브랜드 목록을 불러오는 중 오류가 발생했습니다.');
+    } catch (err) {
+      console.error('브랜드 목록 로딩 오류:', err);
+      setError('브랜드 목록을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
+  }, [page, search, status]);
+
+  useEffect(() => {
+    fetchBrands();
+  }, [fetchBrands]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPage(1);
   };
 
-  // 브랜드 삭제
-  const handleDelete = (brand: Brand) => {
-    Modal.confirm({
-      title: '브랜드 삭제',
-      content: `"${brand.nameKo}" 브랜드를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
-      okText: '삭제',
-      okType: 'danger',
-      cancelText: '취소',
-      onOk: async () => {
-        try {
-          const response = await api.delete(`/brands/${brand.id}`);
-          if (response.success) {
-            message.success('브랜드가 삭제되었습니다.');
-            fetchBrands(); // 목록 새로고침
-          } else {
-            message.error(response.error || '브랜드 삭제에 실패했습니다.');
-          }
-        } catch (error) {
-          console.error('브랜드 삭제 오류:', error);
-          message.error('브랜드 삭제 중 오류가 발생했습니다.');
-        }
-      },
-    });
+  const handleStatusChange = (value: string) => {
+    setStatus(value);
+    setPage(1);
   };
 
-  // 필터링된 브랜드 목록
-  const filteredBrands = brands.filter(brand => {
-    const searchTermLower = searchTerm.toLowerCase();
-    const matchesSearch = 
-      brand.nameKo.toLowerCase().includes(searchTermLower) ||
-      (brand.nameEn && brand.nameEn.toLowerCase().includes(searchTermLower)) ||
-      (brand.description && brand.description.toLowerCase().includes(searchTermLower));
-    return matchesSearch;
-  });
-
-  // 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
-  const addCacheBuster = (url: string | null | undefined, updatedAt?: string): string | undefined => {
-    if (!url) return undefined;
-    const timestamp = updatedAt ? new Date(updatedAt).getTime() : Date.now();
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}v=${timestamp}`;
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/brands/${deleteTarget.id}`);
+      if (response.success) {
+        setDeleteTarget(null);
+        fetchBrands();
+      } else {
+        setError(response.error || '브랜드 삭제에 실패했습니다.');
+      }
+    } catch (err) {
+      console.error('브랜드 삭제 오류:', err);
+      setError('브랜드 삭제 중 오류가 발생했습니다.');
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<Brand> = [
+  const columns: DataTableColumn<Brand>[] = [
     {
-      title: '로고',
-      dataIndex: 'logoImageUrl',
       key: 'logo',
-      width: 80,
-      render: (logoUrl: string, record: Brand) => (
-        logoUrl ? (
-          <Avatar
-            size={50}
-            src={addCacheBuster(logoUrl, record.updatedAt)}
-            alt={`${record.nameKo} 로고`}
+      header: '로고',
+      render: (brand) =>
+        brand.logoImageUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={addCacheBuster(brand.logoImageUrl, brand.updatedAt)}
+            alt={`${brand.nameKo} 로고`}
+            className="h-12 w-12 rounded-full object-cover"
           />
         ) : (
-          <Avatar 
-            size={50}
-            style={{ backgroundColor: '#f5f5f5', color: '#bfbfbf' }}
-          >
-            <ShopOutlined />
-          </Avatar>
-        )
-      ),
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+            <BookmarkOutlineIcon size={20} />
+          </div>
+        ),
     },
     {
-      title: '브랜드명',
-      dataIndex: 'nameKo',
-      key: 'name',
-      render: (text: string, record: Brand) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{record.nameKo}</div>
-          {record.nameEn && <div style={{ fontSize: '12px', color: '#888' }}>{record.nameEn}</div>}
-        </div>
-      ),
+      key: 'nameKo',
+      header: '브랜드명',
+      render: (brand) => <span className="font-medium text-gray-900">{brand.nameKo}</span>,
     },
     {
-      title: '설명',
-      dataIndex: 'description',
-      key: 'description',
-      ellipsis: true,
-      render: (text: string) => (
-        <Tooltip title={text}>
-          {text}
-        </Tooltip>
-      )
-    },
-    {
-      title: '웹사이트',
-      dataIndex: 'websiteUrl',
-      key: 'websiteUrl',
-      render: (url: string) => (
-        url ? (
-          <Tooltip title="웹사이트 방문">
-            <Button 
-              type="text" 
-              icon={<GlobalOutlined />} 
-              size="small"
-              onClick={() => window.open(url, '_blank')}
-            />
-          </Tooltip>
+      key: 'nameEn',
+      header: '영문',
+      render: (brand) =>
+        brand.nameEn ? (
+          <span className="text-gray-600">{brand.nameEn}</span>
         ) : (
-          <span style={{ color: '#bfbfbf' }}>-</span>
-        )
-      ),
+          <span className="text-gray-300">-</span>
+        ),
     },
     {
-      title: '등록일',
-      dataIndex: 'createdAt',
-      key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString('ko-KR'),
+      key: 'status',
+      header: '상태',
+      render: (brand) => <StatusBadge kind="brand" value={brand.status ?? 'visible'} />,
     },
     {
-      title: '작업',
+      key: 'websiteUrl',
+      header: 'URL',
+      render: (brand) =>
+        brand.websiteUrl ? (
+          <a
+            href={brand.websiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <LinkOutlineIcon size={14} />
+            방문
+          </a>
+        ) : (
+          <span className="text-gray-300">-</span>
+        ),
+    },
+    {
       key: 'actions',
-      width: 150,
-      render: (_, record: Brand) => (
-        <Space>
-          <Tooltip title="상세보기">
-            <Button 
-              type="text" 
-              icon={<EyeOutlined />} 
-              size="small"
-              onClick={() => router.push(`/brands/${record.id}`)}
-            />
-          </Tooltip>
-          <Tooltip title="편집">
-            <Button 
-              type="text" 
-              icon={<EditOutlined />} 
-              size="small"
-              onClick={() => router.push(`/brands/${record.id}/edit`)}
-            />
-          </Tooltip>
-          <Tooltip title="삭제">
-            <Button 
-              type="text" 
-              icon={<DeleteOutlined />} 
-              size="small"
-              danger
-              onClick={() => handleDelete(record)}
-            />
-          </Tooltip>
-        </Space>
+      header: '작업',
+      align: 'right',
+      render: (brand) => (
+        <div className="flex items-center justify-end gap-1">
+          <IconButton
+            aria-label="상세보기"
+            size="sm"
+            variant="ghost"
+            colorPalette="secondary"
+            onClick={() => router.push(`/brands/${brand.id}`)}
+          >
+            <ViewOnOutlineIcon size={16} />
+          </IconButton>
+          <IconButton
+            aria-label="편집"
+            size="sm"
+            variant="ghost"
+            colorPalette="secondary"
+            onClick={() => router.push(`/brands/${brand.id}/edit`)}
+          >
+            <EditOutlineIcon size={16} />
+          </IconButton>
+          <IconButton
+            aria-label="삭제"
+            size="sm"
+            variant="ghost"
+            colorPalette="danger"
+            onClick={() => setDeleteTarget(brand)}
+          >
+            <TrashOutlineIcon size={16} />
+          </IconButton>
+        </div>
       ),
     },
   ];
 
   return (
     <MainLayout>
-      <div>
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={2} style={{ margin: 0 }}>
-            브랜드 관리
-          </Title>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/brands/new')}
-          >
+      <PageHeader
+        title="브랜드 관리"
+        action={
+          <Button colorPalette="primary" variant="fill" onClick={() => router.push('/brands/new')}>
+            <PlusOutlineIcon size={16} />
             새 브랜드 추가
           </Button>
-        </div>
+        }
+      />
 
-        <Card>
-          {/* 검색 및 필터 */}
-          <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <Search
-              placeholder="한글/영문 브랜드명 검색"
-              allowClear
-              style={{ width: 300 }}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              prefix={<SearchOutlined />}
-            />
-          </div>
+      {error ? (
+        <Callout.Root colorPalette="danger" className="mb-4">
+          {error}
+        </Callout.Root>
+      ) : null}
 
-          {/* 브랜드 테이블 */}
-          <Table
-            columns={columns}
-            dataSource={filteredBrands}
-            rowKey="id"
-            loading={loading}
-            pagination={{
-              total: filteredBrands.length,
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}개`,
-            }}
-            scroll={{ x: 800 }}
+      <div className="mb-4 flex flex-wrap items-center gap-3">
+        <div className="w-72">
+          <SearchInput
+            value={search}
+            onChange={handleSearchChange}
+            placeholder="한글/영문 브랜드명 검색"
           />
-        </Card>
+        </div>
+        <Select.Root value={status} onValueChange={(v) => handleStatusChange(v ?? 'all')}>
+          <Select.Trigger className="w-40">
+            <Select.ValuePrimitive>
+              {(value: unknown) => STATUS_FILTER_LABELS[String(value)] ?? '전체'}
+            </Select.ValuePrimitive>
+          </Select.Trigger>
+          <Select.Popup>
+            <Select.Item value="all">전체</Select.Item>
+            <Select.Item value="visible">노출</Select.Item>
+            <Select.Item value="hidden">숨김</Select.Item>
+          </Select.Popup>
+        </Select.Root>
       </div>
+
+      <DataTable
+        columns={columns}
+        rows={brands}
+        rowKey={(brand) => brand.id}
+        loading={loading}
+        empty="등록된 브랜드가 없습니다."
+      />
+
+      <div className="mt-6">
+        <Pagination page={page} total={total} limit={LIMIT} onPageChange={setPage} />
+      </div>
+
+      <ConfirmDialog
+        open={Boolean(deleteTarget)}
+        title="브랜드 삭제"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.nameKo}" 브랜드를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+            : undefined
+        }
+        confirmText="삭제"
+        danger
+        loading={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </MainLayout>
   );
 }

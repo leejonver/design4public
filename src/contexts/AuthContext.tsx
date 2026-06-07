@@ -1,11 +1,18 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { authApi } from '@/lib/api'
-import { CurrentUser } from '@/types'
+import { supabase } from '@/lib/supabase'
+import type { UserRole } from '@/lib/database.types'
+
+export interface AuthUser {
+  id: string
+  email: string
+  name: string | null
+  role: UserRole
+}
 
 interface AuthContextType {
-  user: CurrentUser | null
+  user: AuthUser | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   signup: (name: string, email: string, password: string) => Promise<void>
@@ -17,96 +24,70 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+async function fetchApprovedProfile(userId: string): Promise<AuthUser | null> {
+  const { data } = await supabase
+    .from('profiles')
+    .select('id, email, name, role, status')
+    .eq('id', userId)
+    .single()
+  if (!data || data.status !== 'approved') return null
+  return { id: data.id, email: data.email, name: data.name, role: data.role }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<CurrentUser | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // 권한 체크 헬퍼 함수들
   const isMaster = user?.role === 'master'
   const isAdmin = user?.role === 'admin' || isMaster
   const isContentManager = user?.role === 'content_manager' || isAdmin
 
-  // 로그인 함수
-  const login = async (email: string, password: string) => {
-    try {
-      const response = await authApi.login(email, password) as any
-      
-      if (response.success) {
-        setUser(response.data.user)
-        
-        // 토큰 및 사용자 정보 저장
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('authToken', response.data.session.access_token)
-          localStorage.setItem('user', JSON.stringify(response.data.user))
-        }
-      } else {
-        throw new Error(response.error || '로그인에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('Login error:', error)
-      throw error
-    }
+  const refresh = async () => {
+    const {
+      data: { user: authUser },
+    } = await supabase.auth.getUser()
+    setUser(authUser ? await fetchApprovedProfile(authUser.id) : null)
   }
 
-  // 회원가입 함수
-  const signup = async (name: string, email: string, password: string) => {
-    try {
-      const response = await authApi.signup(name, email, password) as any
-      
-      if (!response.success) {
-        throw new Error(response.error || '회원가입에 실패했습니다.')
-      }
-    } catch (error) {
-      console.error('Signup error:', error)
-      throw error
-    }
-  }
-
-  // 로그아웃 함수
-  const logout = async () => {
-    try {
-      await authApi.logout()
-    } catch (error) {
-      console.error('Logout error:', error)
-    } finally {
-      setUser(null)
-      
-      // 토큰 및 사용자 정보 제거
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('user')
-      }
-    }
-  }
-
-  // 초기 로딩 시 토큰 및 사용자 정보 확인
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem('authToken')
-        const userStr = localStorage.getItem('user')
-        
-        if (token && userStr) {
-          // localStorage에서 사용자 정보 복원
-          const storedUser = JSON.parse(userStr)
-          setUser(storedUser)
-        } else {
-          // 토큰이나 사용자 정보가 없으면 초기화
-          localStorage.removeItem('authToken')
-          localStorage.removeItem('user')
-        }
-      } catch (error) {
-        console.error('Auth check error:', error)
-        localStorage.removeItem('authToken')
-        localStorage.removeItem('user')
-        setUser(null)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkAuth()
+    refresh().finally(() => setLoading(false))
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      refresh()
+    })
+    return () => subscription.unsubscribe()
   }, [])
+
+  const login = async (email: string, password: string) => {
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    if (error || !data.user) {
+      throw new Error('이메일 또는 비밀번호가 올바르지 않습니다.')
+    }
+    const profile = await fetchApprovedProfile(data.user.id)
+    if (!profile) {
+      await supabase.auth.signOut()
+      throw new Error('이메일 인증 후 관리자 승인이 필요합니다. 승인 대기 중입니다.')
+    }
+    setUser(profile)
+  }
+
+  const signup = async (name: string, email: string, password: string) => {
+    const res = await fetch('/api/auth/signup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password }),
+    })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok || !body.success) {
+      throw new Error(body.error || '회원가입에 실패했습니다.')
+    }
+  }
+
+  const logout = async () => {
+    await supabase.auth.signOut()
+    setUser(null)
+  }
 
   const value: AuthContextType = {
     user,
@@ -119,11 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isContentManager,
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  )
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

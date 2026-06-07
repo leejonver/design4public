@@ -3,66 +3,46 @@
 'use client';
 
 import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Descriptions, 
-  Button, 
-  Tag, 
-  Space, 
-  Typography, 
-  Image,
-  Badge,
-  Divider,
-  Row,
-  Col,
-  Empty,
-  Spin
-} from 'antd';
-import { 
-  EditOutlined, 
-  ArrowLeftOutlined,
-  LinkOutlined,
-  ShopOutlined
-} from '@ant-design/icons';
+import { useState, useEffect, type ReactNode } from 'react';
+import { Badge, Button, Card, Spinner, Text } from '@vapor-ui/core';
+import { ChevronLeftOutlineIcon, EditOutlineIcon, LinkOutlineIcon, DashboardOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import { PageHeader, StatusBadge } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { ItemStatus } from '@/types';
+import type { Item } from '@/types';
 
-const { Title, Paragraph, Text } = Typography;
+function InfoRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="grid grid-cols-[120px_1fr] gap-4 py-3">
+      <dt className="text-sm font-medium text-gray-500">{label}</dt>
+      <dd className="text-sm text-gray-800">{children}</dd>
+    </div>
+  );
+}
 
 export default function ItemDetailPage() {
   const router = useRouter();
   const params = useParams();
   const itemId = params.item_id as string;
-  const [item, setItem] = useState<any>(null);
+  const [item, setItem] = useState<Item | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 아이템 데이터 조회
   useEffect(() => {
-    const fetchItem = async () => {
-      try {
-        const response = await api.get(`/items/${itemId}`);
-        if (response.success) {
-          setItem(response.data);
-        }
-      } catch (error) {
-        console.error('아이템 조회 오류:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (itemId) {
-      fetchItem();
-    }
+    if (!itemId) return;
+    api
+      .get<Item>(`/items/${itemId}`)
+      .then((res) => {
+        if (res.success && res.data) setItem(res.data);
+      })
+      .catch((e) => console.error('아이템 조회 오류:', e))
+      .finally(() => setLoading(false));
   }, [itemId]);
 
   if (loading) {
     return (
       <MainLayout>
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <Spin size="large" />
+        <div className="flex justify-center py-20">
+          <Spinner size="lg" />
         </div>
       </MainLayout>
     );
@@ -71,233 +51,191 @@ export default function ItemDetailPage() {
   if (!item) {
     return (
       <MainLayout>
-        <Empty description="아이템을 찾을 수 없습니다." />
+        <div className="py-20 text-center">
+          <Text typography="body1" className="text-gray-400">
+            아이템을 찾을 수 없습니다.
+          </Text>
+        </div>
       </MainLayout>
     );
   }
 
-  // 상태별 색상 매핑
-  const getStatusColor = (status: ItemStatus) => {
-    switch (status) {
-      case 'available':
-        return 'success';
-      case 'discontinued':
-        return 'error';
-      case 'hidden':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
-
-  // 상태별 텍스트 매핑
-  const getStatusText = (status: ItemStatus) => {
-    switch (status) {
-      case 'available':
-        return '구입가능';
-      case 'discontinued':
-        return '단종';
-      case 'hidden':
-        return '숨김';
-      default:
-        return status;
-    }
-  };
-
-  const mainImage = item.images?.find((img: any) => img.isMain) || item.images?.[0];
+  const mainImage = item.images?.find((img) => img.isMain) ?? item.images?.[0];
+  const otherImages = (item.images ?? []).filter((img) => img !== mainImage);
+  const brand = item.brand;
 
   return (
     <MainLayout>
-      <div>
-        {/* 헤더 */}
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Space>
-            <Button 
-              icon={<ArrowLeftOutlined />} 
-              onClick={() => router.back()}
-            >
-              돌아가기
+      <PageHeader
+        title={item.name}
+        action={
+          <div className="flex gap-2">
+            <Button variant="outline" colorPalette="secondary" onClick={() => router.back()}>
+              <ChevronLeftOutlineIcon size={16} />돌아가기
             </Button>
-            <Title level={2} style={{ margin: 0 }}>
-              {item.name}
-            </Title>
-          </Space>
-          <Button 
-            type="primary" 
-            icon={<EditOutlined />}
-            onClick={() => router.push(`/items/${item.id}/edit`)}
-          >
-            편집
-          </Button>
-        </div>
+            <Button
+              variant="fill"
+              colorPalette="primary"
+              onClick={() => router.push(`/items/${item.id}/edit`)}
+            >
+              <EditOutlineIcon size={16} />편집
+            </Button>
+          </div>
+        }
+      />
 
-        <Row gutter={[24, 24]}>
-          {/* 이미지 영역 */}
-          <Col xs={24} lg={10}>
-            <Card title="아이템 이미지">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-2">
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading5">아이템 이미지</Text>
+            </Card.Header>
+            <Card.Body>
               {mainImage ? (
-                <div>
-                  <Image
-                    width="100%"
-                    height={300}
+                <div className="space-y-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
                     src={mainImage.url}
                     alt={mainImage.alt}
-                    style={{ objectFit: 'cover', borderRadius: '8px' }}
+                    className="h-72 w-full rounded-md object-cover"
                   />
-                  
-                  {(item.images?.length || 0) > 1 && (
-                    <div style={{ marginTop: '16px' }}>
-                      <Text strong>추가 이미지</Text>
-                      <div style={{ display: 'flex', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
-                        {item.images?.filter((img: any) => !img.isMain).map((img: any) => (
-                          <Image
+                  {otherImages.length > 0 ? (
+                    <div>
+                      <Text typography="body2" render={<p />} className="font-medium text-gray-700">
+                        추가 이미지
+                      </Text>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {otherImages.map((img) => (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
                             key={img.id}
-                            width={80}
-                            height={80}
                             src={img.url}
                             alt={img.alt}
-                            style={{ objectFit: 'cover', borderRadius: '4px' }}
+                            className="h-20 w-20 rounded object-cover"
                           />
                         ))}
                       </div>
                     </div>
-                  )}
+                  ) : null}
                 </div>
               ) : (
-                <div style={{
-                  height: 300,
-                  backgroundColor: '#f5f5f5',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexDirection: 'column',
-                  borderRadius: '8px'
-                }}>
-                  <ShopOutlined style={{ fontSize: '48px', color: '#bfbfbf' }} />
-                  <Text type="secondary" style={{ marginTop: '8px' }}>이미지 없음</Text>
+                <div className="flex h-72 flex-col items-center justify-center gap-2 rounded-md bg-gray-50">
+                  <DashboardOutlineIcon size={48} className="text-gray-300" />
+                  <Text typography="body2" className="text-gray-400">
+                    이미지 없음
+                  </Text>
                 </div>
               )}
-            </Card>
-          </Col>
+            </Card.Body>
+          </Card.Root>
+        </div>
 
-          {/* 정보 영역 */}
-          <Col xs={24} lg={14}>
-            <Card title="아이템 정보">
-              <Descriptions column={1} bordered>
-                <Descriptions.Item label="아이템명">
-                  <Text strong>{item.name}</Text>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="설명">
-                  <Paragraph>{item.description}</Paragraph>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="브랜드">
-                  {item.brand ? (
-                    <Tag 
-                      color="blue" 
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => router.push(`/brands/${item.brand.id}`)}
-                    >
-                      {item.brand.name}
-                    </Tag>
+        <div className="lg:col-span-3">
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading5">아이템 정보</Text>
+            </Card.Header>
+            <Card.Body>
+              <dl className="divide-y divide-gray-100">
+                <InfoRow label="아이템명">
+                  <span className="font-medium text-gray-900">{item.name}</span>
+                </InfoRow>
+                <InfoRow label="설명">
+                  <p className="whitespace-pre-wrap text-gray-700">{item.description}</p>
+                </InfoRow>
+                <InfoRow label="브랜드">
+                  {brand ? (
+                    <button type="button" onClick={() => router.push(`/brands/${brand.id}`)}>
+                      <Badge colorPalette="hint" size="md">
+                        {brand.name}
+                      </Badge>
+                    </button>
                   ) : (
-                    <Text type="secondary">등록되지 않음</Text>
+                    <span className="text-gray-400">등록되지 않음</span>
                   )}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="상태">
-                  <Badge
-                    status={getStatusColor(item.status) as any}
-                    text={getStatusText(item.status)}
-                  />
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="나라장터 URL">
+                </InfoRow>
+                <InfoRow label="상태">
+                  <StatusBadge kind="item" value={item.status} />
+                </InfoRow>
+                <InfoRow label="나라장터 URL">
                   {item.mallUrl ? (
-                    <Button 
-                      type="link" 
-                      icon={<LinkOutlined />}
-                      onClick={() => window.open(item.mallUrl, '_blank')}
-                      style={{ padding: 0 }}
+                    <a
+                      href={item.mallUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-blue-600 hover:underline"
                     >
+                      <LinkOutlineIcon size={16} />
                       나라장터에서 보기
-                    </Button>
+                    </a>
                   ) : (
-                    <Text type="secondary">등록되지 않음</Text>
+                    <span className="text-gray-400">등록되지 않음</span>
                   )}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="태그">
-                  <Space wrap>
-                    {item.tags?.map((tag: any) => (
-                      <Tag key={tag.id}>{tag.name}</Tag>
-                    ))}
-                  </Space>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="등록일">
-                  {new Date(item.createdAt).toLocaleDateString('ko-KR')}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="수정일">
-                  {new Date(item.updatedAt).toLocaleDateString('ko-KR')}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* 브랜드 정보 */}
-        {item.brand && (
-          <Card 
-            title="브랜드 정보" 
-            style={{ marginTop: '24px' }}
-            extra={
-              <Button 
-                type="link" 
-                onClick={() => router.push(`/brands/${item.brand.id}`)}
-              >
-                브랜드 상세보기
-              </Button>
-            }
-          >
-            <Row gutter={[16, 16]} align="middle">
-              <Col>
-                {item.brand.logoImageUrl ? (
-                  <Image
-                    width={60}
-                    height={60}
-                    src={item.brand.logoImageUrl}
-                    alt={`${item.brand.name} 로고`}
-                    style={{ objectFit: 'cover', borderRadius: '50%' }}
-                  />
-                ) : (
-                  <div style={{
-                    width: 60,
-                    height: 60,
-                    backgroundColor: '#f5f5f5',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}>
-                    <ShopOutlined style={{ color: '#bfbfbf' }} />
+                </InfoRow>
+                <InfoRow label="태그">
+                  <div className="flex flex-wrap gap-1">
+                    {item.tags?.length ? (
+                      item.tags.map((tag) => (
+                        <Badge key={tag.id} colorPalette="hint" size="sm">
+                          {tag.name}
+                        </Badge>
+                      ))
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
                   </div>
-                )}
-              </Col>
-              <Col flex="1">
-                <div>
-                  <Text strong style={{ fontSize: '16px' }}>{item.brand.name}</Text>
-                  <Paragraph type="secondary" style={{ margin: '4px 0 0 0' }}>
-                    {item.brand.description}
-                  </Paragraph>
-                </div>
-              </Col>
-            </Row>
-          </Card>
-        )}
+                </InfoRow>
+                <InfoRow label="등록일">
+                  {new Date(item.createdAt).toLocaleDateString('ko-KR')}
+                </InfoRow>
+                <InfoRow label="수정일">
+                  {new Date(item.updatedAt).toLocaleDateString('ko-KR')}
+                </InfoRow>
+              </dl>
+            </Card.Body>
+          </Card.Root>
+        </div>
       </div>
+
+      {brand ? (
+        <Card.Root className="mt-6">
+          <Card.Header className="flex items-center justify-between">
+            <Text typography="heading5">브랜드 정보</Text>
+            <Button
+              variant="ghost"
+              colorPalette="primary"
+              size="sm"
+              onClick={() => router.push(`/brands/${brand.id}`)}
+            >
+              브랜드 상세보기
+            </Button>
+          </Card.Header>
+          <Card.Body>
+            <div className="flex items-center gap-4">
+              {brand.logoImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={brand.logoImageUrl}
+                  alt={`${brand.name} 로고`}
+                  className="h-14 w-14 rounded-full object-cover"
+                />
+              ) : (
+                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
+                  <DashboardOutlineIcon size={20} className="text-gray-300" />
+                </div>
+              )}
+              <div className="min-w-0">
+                <Text typography="body1" render={<p />} className="font-medium text-gray-900">
+                  {brand.name}
+                </Text>
+                <Text typography="body2" render={<p />} className="mt-0.5 text-gray-500">
+                  {brand.description}
+                </Text>
+              </div>
+            </div>
+          </Card.Body>
+        </Card.Root>
+      ) : null}
     </MainLayout>
   );
 }

@@ -12,8 +12,11 @@ const localStorageMock = {
 global.localStorage = localStorageMock
 
 // fetch 모킹 (기본값)
-// 환경 변수 설정
+// 환경 변수 설정 (Supabase 클라이언트 모듈 로드를 위한 더미 값)
 process.env.NEXT_PUBLIC_API_BASE_URL = '/api'
+process.env.NEXT_PUBLIC_SUPABASE_URL = 'https://test.supabase.co'
+process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = 'test-anon-key'
+process.env.SUPABASE_SERVICE_ROLE_KEY = 'test-service-role-key'
 
 // matchMedia 모킹 (Ant Design 등에서 사용)
 if (typeof window !== 'undefined' && !window.matchMedia) {

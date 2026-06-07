@@ -4,146 +4,148 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import {
-  Card,
-  Form,
-  Input,
-  Button,
-  Typography,
-  Alert,
-  Space,
-  Divider,
-  message
-} from 'antd';
-import { UserOutlined, LockOutlined, LoginOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import { LoginFormData } from '@/types';
+import { Button, Callout, Card, Field, Spinner, Text, TextInput } from '@vapor-ui/core';
+import { LockOutlineIcon, MailOutlineIcon } from '@vapor-ui/icons';
 import { useAuth } from '@/contexts/AuthContext';
 
-const { Title, Text } = Typography;
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [form] = Form.useForm();
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleSubmit = async (values: LoginFormData) => {
-    setLoading(true);
+  const validate = () => {
+    const next: { email?: string; password?: string } = {};
+    if (!email) next.email = '이메일을 입력해주세요.';
+    else if (!EMAIL_RE.test(email)) next.email = '올바른 이메일 형식을 입력해주세요.';
+    if (!password) next.password = '비밀번호를 입력해주세요.';
+    else if (password.length < 6) next.password = '비밀번호는 6자 이상이어야 합니다.';
+    setFieldErrors(next);
+    return Object.keys(next).length === 0;
+  };
+
+  const handleSubmit = async () => {
     setError(null);
+    if (!validate()) return;
 
+    setLoading(true);
     try {
-      await login(values.email, values.password);
-      message.success('로그인에 성공했습니다!');
+      await login(email, password);
       router.push('/projects');
-    } catch (err: any) {
-      setError(err.message || '로그인에 실패했습니다.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      backgroundColor: '#f0f2f5',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '20px',
-      backgroundImage: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-    }}>
-      <Card 
-        style={{ 
-          width: '100%', 
-          maxWidth: '400px',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
-          borderRadius: '12px'
-        }}
-        bodyStyle={{ padding: '40px' }}
-      >
-        {/* 로고 및 타이틀 */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-          <Title level={2} style={{ color: '#1890ff', marginBottom: '8px' }} aria-label="Design4Public">
-            Design4Public
-          </Title>
-          <Text type="secondary" style={{ fontSize: '16px' }}>
-            콘텐츠관리자 로그인
-          </Text>
-        </div>
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#667eea] to-[#764ba2] p-5">
+      <Card.Root className="w-full max-w-[400px] rounded-xl shadow-2xl">
+        <Card.Body className="p-10">
+          {/* 로고 및 타이틀 */}
+          <div className="mb-8 text-center">
+            <Text typography="heading2" render={<h1 />} className="text-blue-600">
+              Design4Public
+            </Text>
+            <Text typography="body1" render={<p />} className="mt-2 text-gray-500">
+              콘텐츠관리자 로그인
+            </Text>
+          </div>
 
-        {/* 에러 메시지 */}
-        {error && (
-          <Alert
-            message={error}
-            type="error"
-            style={{ marginBottom: '24px' }}
-            showIcon
-          />
-        )}
+          {/* 에러 메시지 */}
+          {error ? (
+            <Callout.Root colorPalette="danger" className="mb-6">
+              {error}
+            </Callout.Root>
+          ) : null}
 
-        {/* 로그인 폼 */}
-        <Form
-          form={form}
-          name="login"
-          onFinish={handleSubmit}
-          size="large"
-          autoComplete="off"
-        >
-          <Form.Item
-            name="email"
-            rules={[
-              { required: true, message: '이메일을 입력해주세요.' },
-              { type: 'email', message: '올바른 이메일 형식을 입력해주세요.' }
-            ]}
+          {/* 로그인 폼 */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+            className="space-y-4"
+            noValidate
           >
-            <Input 
-              prefix={<UserOutlined />}
-              placeholder="이메일 주소"
-              autoComplete="email"
-            />
-          </Form.Item>
+            <Field.Root>
+              <Field.Label>이메일</Field.Label>
+              <div className="relative">
+                <MailOutlineIcon
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
+                />
+                <TextInput
+                  type="email"
+                  value={email}
+                  onValueChange={setEmail}
+                  placeholder="이메일 주소"
+                  autoComplete="email"
+                  size="lg"
+                  className="pl-9"
+                />
+              </div>
+              {fieldErrors.email ? (
+                <Text typography="body3" render={<p />} className="mt-1 text-red-600">
+                  {fieldErrors.email}
+                </Text>
+              ) : null}
+            </Field.Root>
 
-          <Form.Item
-            name="password"
-            rules={[
-              { required: true, message: '비밀번호를 입력해주세요.' },
-              { min: 6, message: '비밀번호는 6자 이상이어야 합니다.' }
-            ]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="비밀번호"
-              autoComplete="current-password"
-            />
-          </Form.Item>
+            <Field.Root>
+              <Field.Label>비밀번호</Field.Label>
+              <div className="relative">
+                <LockOutlineIcon
+                  size={16}
+                  className="pointer-events-none absolute left-3 top-1/2 z-10 -translate-y-1/2 text-gray-400"
+                />
+                <TextInput
+                  type="password"
+                  value={password}
+                  onValueChange={setPassword}
+                  placeholder="비밀번호"
+                  autoComplete="current-password"
+                  size="lg"
+                  className="pl-9"
+                />
+              </div>
+              {fieldErrors.password ? (
+                <Text typography="body3" render={<p />} className="mt-1 text-red-600">
+                  {fieldErrors.password}
+                </Text>
+              ) : null}
+            </Field.Root>
 
-          <Form.Item style={{ marginBottom: '16px' }}>
             <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              style={{ width: '100%', height: '48px' }}
-              icon={<LoginOutlined />}
+              type="submit"
+              colorPalette="primary"
+              size="lg"
+              disabled={loading}
+              className="w-full"
             >
+              {loading ? <Spinner size="md" /> : null}
               {loading ? '로그인 중...' : '로그인'}
             </Button>
-          </Form.Item>
-        </Form>
+          </form>
 
-        <Divider plain>또는</Divider>
-
-        {/* 회원가입 링크 */}
-        <div style={{ textAlign: 'center' }}>
-          <Text type="secondary">
-            계정이 없으신가요?{' '}
-          </Text>
-          <Link href="/signup" style={{ color: '#1890ff', textDecoration: 'none' }}>
-            회원가입
-          </Link>
-        </div>
-      </Card>
+          {/* 회원가입 링크 */}
+          <div className="mt-6 text-center">
+            <Text typography="body2" render={<span />} className="text-gray-500">
+              계정이 없으신가요?{' '}
+            </Text>
+            <Link href="/signup" className="text-blue-600 hover:underline">
+              회원가입
+            </Link>
+          </div>
+        </Card.Body>
+      </Card.Root>
     </div>
   );
 }

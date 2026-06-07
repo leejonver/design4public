@@ -1,130 +1,142 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { requireRole, authErrorResponse } from '@/lib/auth'
+import { mapManager } from '@/lib/dto'
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+// Returns true if removing `target` from the master pool would leave zero approved masters.
+async function isLastMaster(targetRole: string, targetStatus: string): Promise<boolean> {
+  if (targetRole !== 'master' || targetStatus !== 'approved') return false
+  const { count } = await supabaseAdmin
+    .from('profiles')
+    .select('id', { count: 'exact', head: true })
+    .eq('role', 'master')
+    .eq('status', 'approved')
+  return (count ?? 0) <= 1
+}
+
+export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
-
-    const { data: manager, error } = await supabase
+    await requireRole('master')
+    const { data, error } = await supabaseAdmin
       .from('profiles')
       .select('*')
-      .eq('id', id)
+      .eq('id', params.id)
       .single()
-
-    if (error) {
-      console.error('Manager fetch error:', error)
-      return NextResponse.json(
-        { success: false, error: '관리자를 찾을 수 없습니다.' },
-        { status: 404 }
-      )
+    if (error || !data) {
+      return NextResponse.json({ success: false, error: '관리자를 찾을 수 없습니다.' }, { status: 404 })
     }
-
-    // 데이터 변환
-    const transformedManager = {
-      id: manager.id,
-      name: manager.name || '',
-      email: manager.email,
-      role: manager.role,
-      approvalStatus: manager.status,
-      createdAt: manager.created_at,
-      updatedAt: manager.updated_at,
-      lastLoginAt: manager.last_login_at
-    }
-
-    return NextResponse.json({
-      success: true,
-      data: transformedManager
-    })
-
+    return NextResponse.json({ success: true, data: mapManager(data) })
   } catch (error) {
-    console.error('Manager API error:', error)
-    return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
-    )
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
+    console.error('Manager GET error:', error)
+    return NextResponse.json({ success: false, error: '서버 오류가 발생했습니다.' }, { status: 500 })
   }
 }
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const caller = await requireRole('master')
     const body = await request.json()
     const { name, role, approvalStatus } = body
 
-    const updateData: any = {
-      updated_at: new Date().toISOString()
-    }
-
-    if (name !== undefined) updateData.name = name
-    if (role !== undefined) updateData.role = role
-    if (approvalStatus !== undefined) updateData.status = approvalStatus
-
-    const { data: manager, error } = await supabase
-      .from('profiles')
-      .update(updateData)
-      .eq('id', id)
-      .select()
-      .single()
-
-    if (error) {
-      console.error('Manager update error:', error)
+    // Self guard: a master cannot demote their own role away from 'master'. (§8)
+    if (params.id === caller.id && role !== undefined && role !== 'master') {
       return NextResponse.json(
-        { success: false, error: '관리자 업데이트에 실패했습니다.' },
-        { status: 500 }
+        { success: false, error: '본인 권한은 변경할 수 없습니다.' },
+        { status: 403 },
       )
     }
 
+    const { data: target, error: fetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('role, status')
+      .eq('id', params.id)
+      .single()
+    if (fetchError || !target) {
+      return NextResponse.json({ success: false, error: '관리자를 찾을 수 없습니다.' }, { status: 404 })
+    }
+
+    // Last-master guard: demoting from master OR rejecting an approved master. (§8)
+    const demotesMaster = role !== undefined && role !== 'master'
+    const rejectsUser = approvalStatus !== undefined && approvalStatus !== 'approved'
+    if ((demotesMaster || rejectsUser) && (await isLastMaster(target.role, target.status))) {
+      return NextResponse.json(
+        { success: false, error: '마지막 master는 제거할 수 없습니다.' },
+        { status: 409 },
+      )
+    }
+
+    const update: Record<string, unknown> = {}
+    if (name !== undefined) update.name = name
+    if (role !== undefined) update.role = role
+    if (approvalStatus !== undefined) update.status = approvalStatus
+
+    if (Object.keys(update).length > 0) {
+      const { error } = await supabaseAdmin.from('profiles').update(update).eq('id', params.id)
+      if (error) throw error
+    }
+
+    const { data: full } = await supabaseAdmin
+      .from('profiles')
+      .select('*')
+      .eq('id', params.id)
+      .single()
+
     return NextResponse.json({
       success: true,
-      data: manager,
-      message: '관리자 정보가 성공적으로 업데이트되었습니다.'
+      data: full ? mapManager(full) : null,
+      message: '관리자 정보가 수정되었습니다.',
     })
-
   } catch (error) {
-    console.error('Manager update error:', error)
-    return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
-    )
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
+    console.error('Manager PUT error:', error)
+    return NextResponse.json({ success: false, error: '관리자 수정에 실패했습니다.' }, { status: 500 })
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const { id } = params
+    const caller = await requireRole('master')
 
-    const { error } = await supabase
-      .from('profiles')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('Manager deletion error:', error)
+    // Self guard: a master cannot delete their own account. (§8)
+    if (params.id === caller.id) {
       return NextResponse.json(
-        { success: false, error: '관리자 삭제에 실패했습니다.' },
-        { status: 500 }
+        { success: false, error: '본인 계정은 삭제할 수 없습니다.' },
+        { status: 403 },
       )
     }
 
-    return NextResponse.json({
-      success: true,
-      message: '관리자가 성공적으로 삭제되었습니다.'
-    })
+    const { data: target, error: fetchError } = await supabaseAdmin
+      .from('profiles')
+      .select('role, status')
+      .eq('id', params.id)
+      .single()
+    if (fetchError || !target) {
+      return NextResponse.json({ success: false, error: '관리자를 찾을 수 없습니다.' }, { status: 404 })
+    }
 
+    // Last-master guard: cannot delete the final approved master. (§8)
+    if (await isLastMaster(target.role, target.status)) {
+      return NextResponse.json(
+        { success: false, error: '마지막 master는 제거할 수 없습니다.' },
+        { status: 409 },
+      )
+    }
+
+    const { error } = await supabaseAdmin.from('profiles').delete().eq('id', params.id)
+    if (error) throw error
+
+    // Optional auth user cleanup — never fail the request on its error.
+    try {
+      await supabaseAdmin.auth.admin.deleteUser(params.id)
+    } catch (e) {
+      console.error('Auth user deletion failed (non-fatal):', e)
+    }
+
+    return NextResponse.json({ success: true, message: '관리자가 삭제되었습니다.' })
   } catch (error) {
-    console.error('Manager deletion error:', error)
-    return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
-    )
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
+    console.error('Manager DELETE error:', error)
+    return NextResponse.json({ success: false, error: '관리자 삭제에 실패했습니다.' }, { status: 500 })
   }
 }

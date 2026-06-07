@@ -16,19 +16,6 @@ jest.mock('next/navigation', () => ({
   })),
 }))
 
-// Ant Design 아이콘 모킹
-jest.mock('@ant-design/icons', () => {
-  const React = require('react')
-  return {
-    ProjectOutlined: (props: any) => React.createElement('div', { 'data-testid': 'project-icon', ...props }, 'ProjectIcon'),
-    AppstoreOutlined: (props: any) => React.createElement('div', { 'data-testid': 'appstore-icon', ...props }, 'AppstoreIcon'),
-    ShopOutlined: (props: any) => React.createElement('div', { 'data-testid': 'shop-icon', ...props }, 'ShopIcon'),
-    TagsOutlined: (props: any) => React.createElement('div', { 'data-testid': 'tags-icon', ...props }, 'TagsIcon'),
-    UserOutlined: (props: any) => React.createElement('div', { 'data-testid': 'user-icon', ...props }, 'UserIcon'),
-    LogoutOutlined: (props: any) => React.createElement('div', { 'data-testid': 'logout-icon', ...props }, 'LogoutIcon'),
-  }
-})
-
 // AuthContext 모킹
 jest.mock('@/contexts/AuthContext', () => ({
   useAuth: jest.fn(() => ({
@@ -51,7 +38,7 @@ describe('Sidebar Component', () => {
 
   it('모든 메뉴 항목이 표시되어야 합니다', () => {
     render(<Sidebar />)
-    
+
     expect(screen.getByText('프로젝트')).toBeInTheDocument()
     expect(screen.getByText('아이템')).toBeInTheDocument()
     expect(screen.getByText('브랜드')).toBeInTheDocument()
@@ -61,14 +48,14 @@ describe('Sidebar Component', () => {
 
   it('사용자 정보가 표시되어야 합니다', () => {
     render(<Sidebar />)
-    
+
     expect(screen.getByText('Test User')).toBeInTheDocument()
     expect(screen.queryByText('test@test.com')).not.toBeInTheDocument()
   })
 
   it('로그아웃 버튼이 표시되어야 합니다', () => {
     render(<Sidebar />)
-    
+
     expect(screen.getByText('로그아웃')).toBeInTheDocument()
   })
 })

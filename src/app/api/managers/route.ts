@@ -1,60 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase-admin'
+import { requireRole, authErrorResponse } from '@/lib/auth'
+import { mapManager } from '@/lib/dto'
+
+const SORT_COLUMNS = ['created_at', 'updated_at', 'last_login_at', 'name', 'email', 'role']
 
 export async function GET(request: NextRequest) {
   try {
+    await requireRole('master')
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const role = searchParams.get('role')
     const search = searchParams.get('search')
+    const sortParam = searchParams.get('sort')
+    const sort = SORT_COLUMNS.includes(sortParam ?? '') ? sortParam! : 'created_at'
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
     const offset = (page - 1) * limit
 
-    // 마스터 계정만 조회
     let query = supabaseAdmin
       .from('profiles')
-      .select('*')
-      .eq('email', 'design4public@gmail.com')
-      .order('created_at', { ascending: false })
+      .select('*', { count: 'exact' })
+      .order(sort, { ascending: false })
 
-    const { data: managers, error, count } = await query
+    if (status && status !== 'all')
+      query = query.eq('status', status as 'pending' | 'approved' | 'rejected')
+    if (role && role !== 'all')
+      query = query.eq('role', role as 'master' | 'admin' | 'content_manager')
+    if (search) query = query.or(`email.ilike.%${search}%,name.ilike.%${search}%`)
+    query = query.range(offset, offset + limit - 1)
 
-    if (error) {
-      console.error('Managers fetch error:', error)
-      return NextResponse.json(
-        { success: false, error: '관리자 목록을 가져오는데 실패했습니다.' },
-        { status: 500 }
-      )
-    }
-
-    // 데이터 변환
-    const transformedManagers = managers?.map(manager => ({
-      id: manager.id,
-      name: manager.email.split('@')[0] || '관리자', // 이메일에서 이름 추출
-      email: manager.email,
-      role: manager.role,
-      approvalStatus: manager.status,
-      createdAt: manager.created_at,
-      updatedAt: manager.updated_at,
-      lastLoginAt: null // profiles 테이블에 last_login_at 컬럼이 없음
-    })) || []
+    const { data, error, count } = await query
+    if (error) throw error
 
     return NextResponse.json({
       success: true,
-      data: {
-        items: transformedManagers,
-        total: count || 0,
-        page,
-        limit
-      }
+      data: { items: (data ?? []).map(mapManager), total: count || 0, page, limit },
     })
-
   } catch (error) {
-    console.error('Managers API error:', error)
+    if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
+    console.error('Managers GET error:', error)
     return NextResponse.json(
-      { success: false, error: '서버 오류가 발생했습니다.' },
-      { status: 500 }
+      { success: false, error: '관리자 목록을 가져오는데 실패했습니다.' },
+      { status: 500 },
     )
   }
 }

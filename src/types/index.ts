@@ -37,8 +37,10 @@ export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
  * 태그 타입 열거형
  * - project: 프로젝트 태그
  * - item: 아이템 태그
+ * - photo: 사진 태그
+ * - brand: 브랜드 태그
  */
-export type TagType = 'project' | 'item';
+export type TagType = 'project' | 'item' | 'photo' | 'brand';
 
 /**
  * 이미지 데이터 인터페이스
@@ -58,7 +60,23 @@ export interface ImageData {
 export interface Tag {
   id: string;
   name: string; // 태그명 (1-20자, 한글/영문/숫자)
-  type: TagType; // 태그 타입 (project 또는 item)
+  type: TagType; // 태그 타입 (project, item, photo, brand)
+  createdAt: string; // ISO 8601 형식
+  updatedAt: string; // ISO 8601 형식
+}
+
+/**
+ * 사진 인터페이스
+ * 독립적인 사진 콘텐츠 정보
+ */
+export interface Photo {
+  id: string;
+  imageUrl: string; // 이미지 URL (Supabase Storage)
+  altText?: string; // 대체 텍스트 (접근성)
+  title?: string; // 사진 제목 (선택)
+  description?: string; // 사진 설명 (선택)
+  connectedItems: Item[]; // 연결된 아이템 배열
+  tags: Tag[]; // 연결된 태그 배열
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식
 }
@@ -114,6 +132,8 @@ export interface Brand {
   logoImageUrl?: string; // 브랜드 로고 이미지 URL (옵션)
   coverImageUrl?: string; // 커버 이미지 URL (옵션)
   websiteUrl?: string; // 브랜드 웹사이트 URL (옵션)
+  status?: 'visible' | 'hidden'; // 노출 상태 (기본: visible)
+  tags?: Tag[]; // 연결된 브랜드 태그 (다중)
   slug: string; // URL 친화적인 식별자
   createdAt: string; // ISO 8601 형식
   updatedAt: string; // ISO 8601 형식
@@ -217,7 +237,19 @@ export interface BrandFormData {
  */
 export interface TagFormData {
   name: string; // 1-20자, 한글/영문/숫자만
-  type: TagType; // 태그 타입 (project 또는 item)
+  type: TagType; // 태그 타입 (project, item, photo, brand)
+}
+
+/**
+ * 사진 생성/수정 폼 데이터
+ */
+export interface PhotoFormData {
+  imageUrl?: string; // 이미지 URL (업로드 후 설정)
+  altText?: string; // 대체 텍스트
+  title?: string; // 사진 제목 (선택)
+  description?: string; // 사진 설명 (선택)
+  connectedItems: string[]; // 아이템 ID 배열
+  tags: string[]; // 태그 ID 배열
 }
 
 /**

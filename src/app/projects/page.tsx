@@ -2,317 +2,305 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
-  Card, 
-  Table, 
-  Button, 
-  Tag, 
-  Space, 
-  Typography, 
-  Input,
-  Select,
-  Badge,
-  Image,
-  Tooltip,
-  Modal,
-  message
-} from 'antd';
-import { 
-  PlusOutlined, 
-  EditOutlined, 
-  EyeOutlined, 
-  SearchOutlined,
-  ProjectOutlined,
-  DeleteOutlined
-} from '@ant-design/icons';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Badge, Button, Callout, Card, IconButton, Select } from '@vapor-ui/core';
+import {
+  EditOutlineIcon,
+  ImageOutlineIcon,
+  PlusOutlineIcon,
+  TrashOutlineIcon,
+  ViewOnOutlineIcon,
+} from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import {
+  ConfirmDialog,
+  DataTable,
+  PageHeader,
+  Pagination,
+  SearchInput,
+  StatusBadge,
+} from '@/components/ui';
+import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Project, ProjectStatus } from '@/types';
-import type { ColumnsType } from 'antd/es/table';
 
-const { Title } = Typography;
-const { Search } = Input;
+const STATUS_OPTIONS = [
+  { value: 'all', label: '모든 상태' },
+  { value: 'published', label: '게시' },
+  { value: 'draft', label: '초안' },
+  { value: 'hidden', label: '숨김' },
+];
+
+const PAGE_SIZE = 10;
 
 export default function ProjectsPage() {
-  const router = useRouter();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<ProjectStatus | 'all'>('all');
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
 
-  // 프로젝트 목록 가져오기
-  useEffect(() => {
-    fetchProjects();
-  }, []);
+  const [deleteTarget, setDeleteTarget] = useState<Project | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const fetchProjects = async () => {
     try {
       setLoading(true);
-      const response = await api.get<{items: Project[]}>('/projects');
+      const response = await api.get<{ items: Project[] }>('/projects');
       if (response.success) {
         setProjects(response.data?.items || []);
       } else {
-        message.error('프로젝트 목록을 불러오는데 실패했습니다.');
+        setError('프로젝트 목록을 불러오는데 실패했습니다.');
       }
-    } catch (error) {
-      console.error('프로젝트 목록 로딩 오류:', error);
-      message.error('프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
+    } catch (err) {
+      console.error('프로젝트 목록 로딩 오류:', err);
+      setError('프로젝트 목록을 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
   };
 
-  // 프로젝트 삭제
-  const handleDelete = (project: Project) => {
-    Modal.confirm({
-      title: '프로젝트 삭제',
-      content: `"${project.name}" 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`,
-      okText: '삭제',
-      okType: 'danger',
-      cancelText: '취소',
-      onOk: async () => {
-        try {
-          const response = await api.delete(`/projects/${project.id}`);
-          if (response.success) {
-            message.success('프로젝트가 삭제되었습니다.');
-            fetchProjects(); // 목록 새로고침
-          } else {
-            message.error(response.error || '프로젝트 삭제에 실패했습니다.');
-          }
-        } catch (error) {
-          console.error('프로젝트 삭제 오류:', error);
-          message.error('프로젝트 삭제 중 오류가 발생했습니다.');
-        }
-      },
-    });
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  // 검색/필터가 바뀌면 첫 페이지로 이동
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, statusFilter]);
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    try {
+      const response = await api.delete(`/projects/${deleteTarget.id}`);
+      if (response.success) {
+        setDeleteTarget(null);
+        fetchProjects();
+      } else {
+        setError(response.error || '프로젝트 삭제에 실패했습니다.');
+        setDeleteTarget(null);
+      }
+    } catch (err) {
+      console.error('프로젝트 삭제 오류:', err);
+      setError('프로젝트 삭제 중 오류가 발생했습니다.');
+      setDeleteTarget(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  // 필터링된 프로젝트 목록
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = project.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (project.location && project.location.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                         (project.description && project.description.toLowerCase().includes(searchTerm.toLowerCase()));
+  const filteredProjects = projects.filter((project) => {
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      project.name.toLowerCase().includes(term) ||
+      (project.location && project.location.toLowerCase().includes(term)) ||
+      (project.description && project.description.toLowerCase().includes(term));
     const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
-  // 상태별 색상 매핑
-  const getStatusColor = (status: ProjectStatus) => {
-    switch (status) {
-      case 'published':
-        return 'success';
-      case 'draft':
-        return 'default';
-      case 'hidden':
-        return 'warning';
-      default:
-        return 'default';
-    }
-  };
+  const pagedProjects = filteredProjects.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  // 상태별 텍스트 매핑
-  const getStatusText = (status: ProjectStatus) => {
-    switch (status) {
-      case 'published':
-        return '게시';
-      case 'draft':
-        return '초안';
-      case 'hidden':
-        return '숨김';
-      default:
-        return status;
-    }
-  };
-
-  // 테이블 컬럼 정의
-  const columns: ColumnsType<Project> = [
+  const columns: DataTableColumn<Project>[] = [
     {
-      title: '이미지',
-      dataIndex: 'images',
       key: 'image',
-      width: 80,
-      render: (images: Project['images']) => {
-        const mainImage = images.find(img => img.isMain) || images[0];
+      header: '대표이미지',
+      render: (project) => {
+        const mainImage = project.images?.find((img) => img.isMain) || project.images?.[0];
         return mainImage ? (
-          <Image
-            width={50}
-            height={50}
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={mainImage.url}
             alt={mainImage.alt}
-            style={{ objectFit: 'cover', borderRadius: '4px' }}
-            fallback="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAMIAAADDCAYAAADQvc6UAAABRWlDQ1BJQ0MgUHJvZmlsZQAAKJFjYGASSSwoyGFhYGDIzSspCnJ3UoiIjFJgf8LAwSDCIMogwMCcmFxc4BgQ4ANUwgCjUcG3awyMIPqyLsis7PPOq3QdDFcvjV3jOD1boQVTPQrgSkktTgbSf4A4LbmgqISBgTEFyFYuLykAsTuAbJEioKOA7DkgdjqEvQHEToKwj4DVhAQ5A9k3gGyB5IxEoBmML4BsnSQk8XQkNtReEOBxcfXxUQg1Mjc0dyHgXNJBSWpFCYh2zi+oLMpMzyhRcASGUqqCZ16yno6CkYGRAQMDKMwhqj/fAIcloxgHQqxAjIHBEugw5sUIsSQpBobtQPdLciLEVJYzMPBHMDBsayhILEqEO4DxG0txmrERhM29nYGBddr//5/DGRjYNRkY/l7////39v///y4Dmn+LgeHANwDrkl1AuO+pmgAAADhlWElmTU0AKgAAAAgAAYdpAAQAAAABAAAAGgAAAAAAAqACAAQAAAABAAAAwqADAAQAAAABAAAAwwAAAAD9b/HnAAAHlklEQVR4Ae3dP3Ik1RnG4W+FgYxN..."
+            className="h-12 w-12 rounded object-cover"
           />
         ) : (
-          <div style={{ 
-            width: 50, 
-            height: 50, 
-            backgroundColor: '#f5f5f5', 
-            display: 'flex', 
-            alignItems: 'center', 
-            justifyContent: 'center',
-            borderRadius: '4px'
-          }}>
-            <ProjectOutlined style={{ color: '#bfbfbf' }} />
+          <div className="flex h-12 w-12 items-center justify-center rounded bg-gray-100">
+            <ImageOutlineIcon size={18} className="text-gray-400" />
           </div>
         );
       },
     },
     {
-      title: '프로젝트명',
-      dataIndex: 'name',
       key: 'name',
-      render: (text: string, record: Project) => (
-        <div>
-          <div style={{ fontWeight: 500 }}>{text}</div>
-          <div style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>
-            {record.description.substring(0, 50)}...
+      header: '프로젝트명',
+      render: (project) => (
+        <div className="min-w-0">
+          <div className="font-medium text-gray-900">{project.name}</div>
+          <div className="mt-0.5 truncate text-xs text-gray-500">
+            {project.description?.substring(0, 50)}
           </div>
         </div>
       ),
     },
     {
-      title: '지역 · 연도',
       key: 'location',
-      render: (_, record: Project) => (
-        <div>
-          <div>{record.location}</div>
-          <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.completionYear}년
-            {record.area && ` · ${record.area.toLocaleString()}m²`}
-          </div>
+      header: '지역',
+      render: (project) => <span className="text-gray-700">{project.location}</span>,
+    },
+    {
+      key: 'completionYear',
+      header: '연도',
+      render: (project) => (
+        <div className="text-gray-700">
+          <div>{project.completionYear}년</div>
+          {project.area ? (
+            <div className="text-xs text-gray-500">{project.area.toLocaleString()}m²</div>
+          ) : null}
         </div>
       ),
     },
     {
-      title: '태그',
-      dataIndex: 'tags',
-      key: 'tags',
-      render: (tags: Project['tags']) => (
-        <Space wrap>
-          {tags.slice(0, 2).map(tag => (
-            <Tag key={tag.id}>{tag.name}</Tag>
-          ))}
-          {tags.length > 2 && (
-            <Tag color="default">+{tags.length - 2}</Tag>
-          )}
-        </Space>
-      ),
-    },
-    {
-      title: '상태',
-      dataIndex: 'status',
       key: 'status',
-      render: (status: ProjectStatus) => (
-        <Badge
-          status={getStatusColor(status) as any}
-          text={getStatusText(status)}
-        />
+      header: '상태',
+      render: (project) => <StatusBadge kind="project" value={project.status} />,
+    },
+    {
+      key: 'tags',
+      header: '태그',
+      render: (project) => (
+        <div className="flex flex-wrap gap-1">
+          {project.tags.slice(0, 2).map((tag) => (
+            <Badge key={tag.id} colorPalette="hint" size="sm">
+              {tag.name}
+            </Badge>
+          ))}
+          {project.tags.length > 2 ? (
+            <Badge colorPalette="hint" size="sm">
+              +{project.tags.length - 2}
+            </Badge>
+          ) : null}
+        </div>
       ),
     },
     {
-      title: '연결 아이템',
-      dataIndex: 'connectedItems',
-      key: 'connectedItems',
-      render: (items: Project['connectedItems']) => (
-        <span style={{ color: '#666' }}>
-          {items.length}개
-        </span>
-      ),
-    },
-    {
-      title: '작업',
       key: 'actions',
-      width: 150,
-      render: (_, record: Project) => (
-        <Space>
-          <Tooltip title="상세보기">
-            <Button 
-              type="text" 
-              icon={<EyeOutlined />} 
-              size="small"
-              onClick={() => router.push(`/projects/${record.id}`)}
-            />
-          </Tooltip>
-          <Tooltip title="편집">
-            <Button 
-              type="text" 
-              icon={<EditOutlined />} 
-              size="small"
-              onClick={() => router.push(`/projects/${record.id}/edit`)}
-            />
-          </Tooltip>
-          <Tooltip title="삭제">
-            <Button 
-              type="text" 
-              icon={<DeleteOutlined />} 
-              size="small"
-              danger
-              onClick={() => handleDelete(record)}
-            />
-          </Tooltip>
-        </Space>
+      header: '작업',
+      align: 'right',
+      render: (project) => (
+        <div className="flex items-center justify-end gap-1">
+          <IconButton
+            render={<Link href={`/projects/${project.id}`} />}
+            aria-label="상세보기"
+            size="sm"
+            variant="ghost"
+            colorPalette="secondary"
+          >
+            <ViewOnOutlineIcon size={16} />
+          </IconButton>
+          <IconButton
+            render={<Link href={`/projects/${project.id}/edit`} />}
+            aria-label="편집"
+            size="sm"
+            variant="ghost"
+            colorPalette="secondary"
+          >
+            <EditOutlineIcon size={16} />
+          </IconButton>
+          <IconButton
+            type="button"
+            aria-label="삭제"
+            size="sm"
+            variant="ghost"
+            colorPalette="danger"
+            onClick={() => setDeleteTarget(project)}
+          >
+            <TrashOutlineIcon size={16} />
+          </IconButton>
+        </div>
       ),
     },
   ];
 
   return (
     <MainLayout>
-      <div>
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Title level={2} style={{ margin: 0 }}>
-            프로젝트 관리
-          </Title>
-          <Button 
-            type="primary" 
-            icon={<PlusOutlined />}
-            onClick={() => router.push('/projects/new')}
+      <PageHeader
+        title="프로젝트 관리"
+        action={
+          <Button
+            render={<Link href="/projects/new" />}
+            colorPalette="primary"
+            variant="fill"
+            size="md"
           >
-            새 프로젝트 추가
+            <PlusOutlineIcon size={16} />
+            새 프로젝트
           </Button>
-        </div>
+        }
+      />
 
-        <Card>
-          {/* 검색 및 필터 */}
-          <div style={{ marginBottom: '16px', display: 'flex', gap: '16px', alignItems: 'center' }}>
-            <Search
-              placeholder="프로젝트명, 지역 또는 설명 검색"
-              allowClear
-              style={{ width: 300 }}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              prefix={<SearchOutlined />}
-            />
-            <Select
-              style={{ width: 150 }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-              options={[
-                { label: '모든 상태', value: 'all' },
-                { label: '게시', value: 'published' },
-                { label: '초안', value: 'draft' },
-                { label: '숨김', value: 'hidden' },
-              ]}
-            />
+      {error ? (
+        <Callout.Root colorPalette="danger" className="mb-4">
+          {error}
+        </Callout.Root>
+      ) : null}
+
+      <Card.Root>
+        <Card.Body>
+          <div className="mb-4 flex flex-wrap items-center gap-3">
+            <div className="w-72 max-w-full">
+              <SearchInput
+                value={searchTerm}
+                onChange={setSearchTerm}
+                placeholder="프로젝트명, 지역 또는 설명 검색"
+              />
+            </div>
+            <div className="w-40">
+              <Select.Root
+                items={STATUS_OPTIONS}
+                value={statusFilter}
+                onValueChange={(value) => setStatusFilter(value as ProjectStatus | 'all')}
+              >
+                <Select.Trigger className="w-full" />
+                <Select.Popup>
+                  {STATUS_OPTIONS.map((option) => (
+                    <Select.Item key={option.value} value={option.value}>
+                      {option.label}
+                    </Select.Item>
+                  ))}
+                </Select.Popup>
+              </Select.Root>
+            </div>
           </div>
 
-          {/* 프로젝트 테이블 */}
-          <Table
+          <DataTable
             columns={columns}
-            dataSource={filteredProjects}
-            rowKey="id"
+            rows={pagedProjects}
+            rowKey={(project) => project.id}
             loading={loading}
-            pagination={{
-              total: filteredProjects.length,
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} / 총 ${total}개`,
-            }}
-            scroll={{ x: 800 }}
+            empty="프로젝트가 없습니다."
           />
-        </Card>
-      </div>
+
+          {filteredProjects.length > 0 ? (
+            <div className="mt-4">
+              <Pagination
+                page={page}
+                total={filteredProjects.length}
+                limit={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            </div>
+          ) : null}
+        </Card.Body>
+      </Card.Root>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="프로젝트 삭제"
+        description={
+          deleteTarget
+            ? `"${deleteTarget.name}" 프로젝트를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+            : undefined
+        }
+        confirmText="삭제"
+        danger
+        loading={deleting}
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </MainLayout>
   );
 }

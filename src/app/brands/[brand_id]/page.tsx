@@ -2,73 +2,59 @@
 
 'use client';
 
-import { useRouter, useParams } from 'next/navigation';
-import { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Descriptions, 
-  Button, 
-  Space, 
-  Typography, 
-  Image,
-  Row,
-  Col,
-  Empty,
-  Avatar,
-  Divider,
-  Spin
-} from 'antd';
-import { 
-  EditOutlined, 
-  ArrowLeftOutlined,
-  GlobalOutlined,
-  ShopOutlined
-} from '@ant-design/icons';
+import { ReactNode, useEffect, useState } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Badge, Button, Card, Spinner, Text } from '@vapor-ui/core';
+import { ChevronLeftOutlineIcon, EditOutlineIcon, LinkOutlineIcon, BookmarkOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
 import { api } from '@/lib/api';
+import type { Brand } from '@/types';
 
-const { Title, Paragraph, Text } = Typography;
+// 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
+function addCacheBuster(url: string | null | undefined, updatedAt?: string): string | undefined {
+  if (!url) return undefined;
+  const timestamp = updatedAt ? new Date(updatedAt).getTime() : Date.now();
+  const separator = url.includes('?') ? '&' : '?';
+  return `${url}${separator}v=${timestamp}`;
+}
+
+function InfoRow({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:gap-4">
+      <div className="w-32 shrink-0 text-sm font-medium text-gray-500">{label}</div>
+      <div className="flex-1 text-sm text-gray-900">{children}</div>
+    </div>
+  );
+}
 
 export default function BrandDetailPage() {
   const router = useRouter();
   const params = useParams();
   const brandId = params.brand_id as string;
-  const [brand, setBrand] = useState<any>(null);
+  const [brand, setBrand] = useState<Brand | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
-  const addCacheBuster = (url: string | null | undefined, updatedAt?: string): string | undefined => {
-    if (!url) return undefined;
-    const timestamp = updatedAt ? new Date(updatedAt).getTime() : Date.now();
-    const separator = url.includes('?') ? '&' : '?';
-    return `${url}${separator}v=${timestamp}`;
-  };
-
-  // 브랜드 데이터 조회
   useEffect(() => {
     const fetchBrand = async () => {
       try {
-        const response = await api.get(`/brands/${brandId}`);
-        if (response.success) {
+        const response = await api.get<Brand>(`/brands/${brandId}`);
+        if (response.success && response.data) {
           setBrand(response.data);
         }
-      } catch (error) {
-        console.error('브랜드 조회 오류:', error);
+      } catch (err) {
+        console.error('브랜드 조회 오류:', err);
       } finally {
         setLoading(false);
       }
     };
-
-    if (brandId) {
-      fetchBrand();
-    }
+    if (brandId) fetchBrand();
   }, [brandId]);
 
   if (loading) {
     return (
       <MainLayout>
-        <div style={{ textAlign: 'center', padding: '50px' }}>
-          <Spin size="large" />
+        <div className="flex justify-center py-20">
+          <Spinner size="lg" />
         </div>
       </MainLayout>
     );
@@ -77,134 +63,162 @@ export default function BrandDetailPage() {
   if (!brand) {
     return (
       <MainLayout>
-        <Empty description="브랜드를 찾을 수 없습니다." />
+        <div className="py-20 text-center">
+          <Text typography="body1" className="text-gray-400">
+            브랜드를 찾을 수 없습니다.
+          </Text>
+        </div>
       </MainLayout>
     );
   }
 
   return (
     <MainLayout>
-      <div>
-        {/* 헤더 */}
-        <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <Space>
-            <Button 
-              icon={<ArrowLeftOutlined />} 
-              onClick={() => router.back()}
-            >
-              돌아가기
-            </Button>
-            <Title level={2} style={{ margin: 0 }}>
-              {brand.name}
-            </Title>
-          </Space>
-          <Button 
-            type="primary" 
-            icon={<EditOutlined />}
-            onClick={() => router.push(`/brands/${brand.id}/edit`)}
-          >
-            편집
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <Button variant="outline" colorPalette="secondary" onClick={() => router.back()}>
+            <ChevronLeftOutlineIcon size={16} />
+            돌아가기
           </Button>
+          <Text typography="heading3" render={<h3 />} className="text-gray-900">
+            {brand.nameKo}
+          </Text>
         </div>
+        <Button
+          colorPalette="primary"
+          variant="fill"
+          onClick={() => router.push(`/brands/${brand.id}/edit`)}
+        >
+          <EditOutlineIcon size={16} />
+          편집
+        </Button>
+      </div>
 
-        {/* 브랜드 커버 이미지 */}
-        {brand.coverImageUrl && (
-          <Card style={{ marginBottom: '24px' }}>
-            <Image
-              width="100%"
-              height={300}
-              src={addCacheBuster(brand.coverImageUrl, brand.updatedAt)}
-              alt={`${brand.nameKo} 커버 이미지`}
-              style={{ objectFit: 'cover', borderRadius: '8px' }}
-            />
-          </Card>
-        )}
+      {brand.coverImageUrl ? (
+        <Card.Root className="mb-6 overflow-hidden">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={addCacheBuster(brand.coverImageUrl, brand.updatedAt)}
+            alt={`${brand.nameKo} 커버 이미지`}
+            className="h-72 w-full object-cover"
+          />
+        </Card.Root>
+      ) : null}
 
-        <Row gutter={[24, 24]}>
-          {/* 브랜드 로고 및 기본 정보 */}
-          <Col xs={24} lg={8}>
-            <Card title="브랜드 로고">
-              <div style={{ textAlign: 'center', padding: '20px 0' }}>
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-4">
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading6" className="text-gray-900">
+                브랜드 로고
+              </Text>
+            </Card.Header>
+            <Card.Body>
+              <div className="flex flex-col items-center py-4">
                 {brand.logoImageUrl ? (
-                  <Avatar
-                    size={120}
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
                     src={addCacheBuster(brand.logoImageUrl, brand.updatedAt)}
                     alt={`${brand.nameKo} 로고`}
+                    className="h-32 w-32 rounded-full object-cover"
                   />
                 ) : (
-                  <Avatar 
-                    size={120}
-                    style={{ backgroundColor: '#f5f5f5', color: '#bfbfbf' }}
-                  >
-                    <ShopOutlined style={{ fontSize: '48px' }} />
-                  </Avatar>
+                  <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gray-100 text-gray-400">
+                    <BookmarkOutlineIcon size={48} />
+                  </div>
                 )}
-                <Title level={3} style={{ marginTop: '16px', marginBottom: '8px' }}>
+                <Text typography="heading4" render={<h4 />} className="mt-4 text-gray-900">
                   {brand.nameKo}
-                  {brand.nameEn && <div style={{ fontSize: '14px', fontWeight: 'normal', color: '#8c8c8c' }}>{brand.nameEn}</div>}
-                </Title>
+                </Text>
+                {brand.nameEn ? (
+                  <Text typography="body2" className="text-gray-500">
+                    {brand.nameEn}
+                  </Text>
+                ) : null}
               </div>
-            </Card>
-          </Col>
+            </Card.Body>
+          </Card.Root>
+        </div>
 
-          {/* 상세 정보 */}
-          <Col xs={24} lg={16}>
-            <Card title="브랜드 정보">
-              <Descriptions column={1} bordered>
-                <Descriptions.Item label="브랜드명">
-                  <Text strong>{brand.nameKo}</Text>
-                  {brand.nameEn && <div style={{ color: '#8c8c8c', marginTop: '4px' }}>{brand.nameEn}</div>}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="브랜드 설명">
-                  <Paragraph>{brand.description}</Paragraph>
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="웹사이트">
+        <div className="lg:col-span-8">
+          <Card.Root>
+            <Card.Header>
+              <Text typography="heading6" className="text-gray-900">
+                브랜드 정보
+              </Text>
+            </Card.Header>
+            <Card.Body>
+              <div className="divide-y divide-gray-200 rounded-md border border-gray-200">
+                <InfoRow label="브랜드명">
+                  <span className="font-medium">{brand.nameKo}</span>
+                  {brand.nameEn ? <div className="mt-1 text-gray-500">{brand.nameEn}</div> : null}
+                </InfoRow>
+                <InfoRow label="브랜드 설명">{brand.description || '-'}</InfoRow>
+                <InfoRow label="웹사이트">
                   {brand.websiteUrl ? (
-                    <Button 
-                      type="link" 
-                      icon={<GlobalOutlined />}
-                      onClick={() => window.open(brand.websiteUrl, '_blank')}
-                      style={{ padding: 0 }}
+                    <a
+                      href={brand.websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-blue-600 hover:underline"
                     >
+                      <LinkOutlineIcon size={14} />
                       {brand.websiteUrl}
-                    </Button>
+                    </a>
                   ) : (
-                    <Text type="secondary">등록되지 않음</Text>
+                    <span className="text-gray-400">등록되지 않음</span>
                   )}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="등록일">
+                </InfoRow>
+                <InfoRow label="태그">
+                  {brand.tags && brand.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {brand.tags.map((tag) => (
+                        <Badge key={tag.id} colorPalette="primary" size="md">
+                          {tag.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="text-gray-400">없음</span>
+                  )}
+                </InfoRow>
+                <InfoRow label="등록일">
                   {new Date(brand.createdAt).toLocaleDateString('ko-KR')}
-                </Descriptions.Item>
-                
-                <Descriptions.Item label="수정일">
+                </InfoRow>
+                <InfoRow label="수정일">
                   {new Date(brand.updatedAt).toLocaleDateString('ko-KR')}
-                </Descriptions.Item>
-              </Descriptions>
-            </Card>
-          </Col>
-        </Row>
-
-        {/* 추가 정보 (필요시 확장 가능) */}
-        <Card title="추가 정보" style={{ marginTop: '24px' }}>
-          <Row gutter={[24, 16]}>
-            <Col span={12}>
-              <div>
-                <Text type="secondary">등록 ID</Text>
-                <div>{brand.id}</div>
+                </InfoRow>
               </div>
-            </Col>
-            <Col span={12}>
-              <div>
-                <Text type="secondary">최종 수정일시</Text>
-                <div>{new Date(brand.updatedAt).toLocaleString('ko-KR')}</div>
-              </div>
-            </Col>
-          </Row>
-        </Card>
+            </Card.Body>
+          </Card.Root>
+        </div>
       </div>
+
+      <Card.Root className="mt-6">
+        <Card.Header>
+          <Text typography="heading6" className="text-gray-900">
+            추가 정보
+          </Text>
+        </Card.Header>
+        <Card.Body>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <Text typography="body3" render={<p />} className="text-gray-500">
+                등록 ID
+              </Text>
+              <div className="text-sm text-gray-900">{brand.id}</div>
+            </div>
+            <div>
+              <Text typography="body3" render={<p />} className="text-gray-500">
+                최종 수정일시
+              </Text>
+              <div className="text-sm text-gray-900">
+                {new Date(brand.updatedAt).toLocaleString('ko-KR')}
+              </div>
+            </div>
+          </div>
+        </Card.Body>
+      </Card.Root>
     </MainLayout>
   );
 }
