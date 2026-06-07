@@ -101,13 +101,13 @@ export default function FreeTagSelect({ value, onChange }: FreeTagSelectProps) {
         />
         <Button
           type="button"
-          size="sm"
+          size="md"
           variant="fill"
           colorPalette="primary"
           onClick={() => addName(draft)}
           disabled={!draft.trim()}
         >
-          <PlusOutlineIcon size={14} />
+          <PlusOutlineIcon size={16} />
           추가
         </Button>
       </div>

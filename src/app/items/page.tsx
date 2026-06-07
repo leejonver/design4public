@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Badge, Button, Callout, Card, IconButton, Select } from '@vapor-ui/core';
+import { Badge, Button, Callout, IconButton } from '@vapor-ui/core';
 import {
   PlusOutlineIcon,
   ViewOnOutlineIcon,
@@ -15,65 +15,68 @@ import {
 import MainLayout from '@/components/MainLayout';
 import {
   PageHeader,
-  SearchInput,
+  ListToolbar,
+  FilterSelect,
   StatusBadge,
   DataTable,
   Pagination,
   ConfirmDialog,
   EmptyState,
-  ImagePlaceholder,
+  Thumbnail,
   SuccessCallout,
 } from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
+import type { DataTableColumn, FilterSelectOption } from '@/components/ui';
+import { useListController } from '@/lib/use-list-controller';
 import { api } from '@/lib/api';
-import type { Item, ItemStatus, Brand } from '@/types';
+import type { Item, Brand } from '@/types';
 
 const PAGE_SIZE = 10;
 
-const STATUS_OPTIONS = [
-  { label: '모든 상태', value: 'all' },
+const STATUS_OPTIONS: FilterSelectOption[] = [
+  { label: '전체', value: 'all' },
   { label: '구입가능', value: 'available' },
   { label: '단종', value: 'discontinued' },
   { label: '숨김', value: 'hidden' },
-] as const;
+];
+
+const SORT_OPTIONS: FilterSelectOption[] = [
+  { label: '최신순', value: 'created_at' },
+  { label: '이름순', value: 'name' },
+];
 
 export default function ItemsPage() {
   const router = useRouter();
 
-  const [items, setItems] = useState<Item[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<ItemStatus | 'all'>('all');
-  const [brandFilter, setBrandFilter] = useState<string>('all');
-  const [page, setPage] = useState(1);
-
   const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchItems = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.get<{ items: Item[] }>('/items', { limit: 200 });
+  const list = useListController<Item>({
+    limit: PAGE_SIZE,
+    initialFilters: { status: 'all', brandId: 'all' },
+    initialSort: { key: 'created_at', dir: 'desc' },
+    fetch: async (params) => {
+      const status = typeof params.status === 'string' ? params.status : 'all';
+      const brandId = typeof params.brandId === 'string' ? params.brandId : 'all';
+      const res = await api.items.getList({
+        search: params.search || undefined,
+        status: status !== 'all' ? status : undefined,
+        brandId: brandId !== 'all' ? brandId : undefined,
+        sort: params.sort,
+        dir: params.dir,
+        page: params.page,
+        limit: params.limit,
+      });
       if (res.success && res.data) {
-        setItems(res.data.items || []);
-      } else {
-        setError(res.error || '아이템 목록을 불러오는데 실패했습니다.');
+        const data = res.data as { items?: Item[]; total?: number };
+        return { items: data.items ?? [], total: data.total ?? 0 };
       }
-    } catch (e) {
-      console.error('아이템 목록 로딩 오류:', e);
-      setError('아이템 목록을 불러오는 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  };
+      throw new Error(res.error || '아이템 목록을 불러오지 못했습니다.');
+    },
+  });
 
   useEffect(() => {
-    fetchItems();
     api.brands.getList({ limit: 200 }).then((res) => {
       if (res.success && res.data) {
         const data = res.data as { items?: Brand[] } | Brand[];
@@ -82,29 +85,9 @@ export default function ItemsPage() {
     });
   }, []);
 
-  // 필터 변경 시 첫 페이지로 이동
-  useEffect(() => {
-    setPage(1);
-  }, [searchTerm, statusFilter, brandFilter]);
-
-  const filteredItems = useMemo(() => {
-    const q = searchTerm.toLowerCase();
-    return items.filter((item) => {
-      const matchesSearch =
-        item.name.toLowerCase().includes(q) ||
-        (item.description?.toLowerCase().includes(q) ?? false);
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter;
-      const matchesBrand = brandFilter === 'all' || item.brand?.id === brandFilter;
-      return matchesSearch && matchesStatus && matchesBrand;
-    });
-  }, [items, searchTerm, statusFilter, brandFilter]);
-
-  const total = filteredItems.length;
-  const pagedItems = filteredItems.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
-
-  const brandOptions = useMemo(
+  const brandOptions = useMemo<FilterSelectOption[]>(
     () => [
-      { label: '모든 브랜드', value: 'all' },
+      { label: '전체', value: 'all' },
       ...brands.map((brand) => ({ label: brand.name, value: brand.id })),
     ],
     [brands],
@@ -113,38 +96,33 @@ export default function ItemsPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await api.delete(`/items/${deleteTarget.id}`);
+    const res = await api.items.delete(deleteTarget.id);
     setDeleting(false);
     setDeleteTarget(null);
     if (res.success) {
       setSuccess('아이템이 삭제되었습니다.');
-      fetchItems();
-    } else {
-      setError(res.error || '아이템 삭제에 실패했습니다.');
+      list.refetch();
     }
   };
+
+  const sortValue = list.sort?.key ?? 'created_at';
 
   const columns: DataTableColumn<Item>[] = [
     {
       key: 'image',
       header: '대표이미지',
+      width: 'w-24',
       render: (item) => {
         const images = item.images;
         const mainImage =
           Array.isArray(images) && images.length > 0
-            ? images.find((img) => img.isMain) || images[0]
+            ? images.find((img) => img.isMain) ?? images[0]
             : null;
-        return mainImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={mainImage.url}
-            alt={mainImage.alt || '아이템 이미지'}
-            className="h-14 w-14 rounded-md object-cover"
-          />
-        ) : (
-          <ImagePlaceholder
+        return (
+          <Thumbnail
+            src={mainImage?.url}
+            alt={mainImage?.alt || item.name}
             className="h-14 w-14 rounded-md"
-            icon={<DashboardOutlineIcon size={20} />}
           />
         );
       },
@@ -152,6 +130,7 @@ export default function ItemsPage() {
     {
       key: 'name',
       header: '아이템명',
+      sortable: true,
       render: (item) => (
         <div className="min-w-0">
           <div className="font-medium text-gray-900">{item.name}</div>
@@ -164,11 +143,12 @@ export default function ItemsPage() {
     {
       key: 'brand',
       header: '브랜드',
+      width: 'w-40',
       render: (item) =>
-        item.brand ? (
-          <Badge colorPalette="hint" size="sm">
+        item.brand?.name ? (
+          <span className="block truncate text-gray-700" title={item.brand.name}>
             {item.brand.name}
-          </Badge>
+          </span>
         ) : (
           <span className="text-gray-300">-</span>
         ),
@@ -176,30 +156,41 @@ export default function ItemsPage() {
     {
       key: 'status',
       header: '상태',
+      width: 'w-28',
+      nowrap: true,
       render: (item) => <StatusBadge kind="item" value={item.status} />,
     },
     {
-      key: 'tags',
-      header: '태그',
-      render: (item) => (
-        <div className="flex flex-wrap gap-1">
-          {item.tags?.slice(0, 2).map((tag) => (
-            <Badge key={tag.id} colorPalette="contrast" size="sm">
-              {tag.name}
-            </Badge>
-          ))}
-          {item.tags && item.tags.length > 2 ? (
-            <Badge colorPalette="hint" size="sm">
-              +{item.tags.length - 2}
-            </Badge>
-          ) : null}
-        </div>
-      ),
+      key: 'categories',
+      header: '카테고리',
+      width: 'w-56',
+      render: (item) => {
+        const categories = item.categories ?? [];
+        if (categories.length === 0) {
+          return <span className="text-gray-300">-</span>;
+        }
+        return (
+          <div className="flex flex-wrap gap-1">
+            {categories.slice(0, 2).map((category) => (
+              <Badge key={category.id} colorPalette="contrast" size="sm">
+                {category.name}
+              </Badge>
+            ))}
+            {categories.length > 2 ? (
+              <Badge colorPalette="hint" size="sm">
+                +{categories.length - 2}
+              </Badge>
+            ) : null}
+          </div>
+        );
+      },
     },
     {
       key: 'actions',
       header: '작업',
       align: 'right',
+      width: 'w-32',
+      nowrap: true,
       render: (item) => (
         <div className="flex justify-end gap-1">
           <IconButton
@@ -245,79 +236,73 @@ export default function ItemsPage() {
         }
       />
 
-      {error ? (
+      {list.error ? (
         <Callout.Root colorPalette="danger" className="mb-4">
-          {error}
+          {list.error}
         </Callout.Root>
       ) : null}
 
       <SuccessCallout message={success} onClose={() => setSuccess(null)} />
 
-      <Card.Root>
-        <Card.Body className="space-y-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="w-72">
-              <SearchInput
-                value={searchTerm}
-                onChange={setSearchTerm}
-                placeholder="아이템명 또는 설명 검색"
-              />
-            </div>
-            <div className="w-40">
-              <Select.Root
-                items={STATUS_OPTIONS}
-                value={statusFilter}
-                onValueChange={(v) => setStatusFilter(v ?? 'all')}
-                placeholder="모든 상태"
-              >
-                <Select.Trigger className="w-full" />
-                <Select.Popup>
-                  {STATUS_OPTIONS.map((option) => (
-                    <Select.Item key={option.value} value={option.value}>
-                      {option.label}
-                    </Select.Item>
-                  ))}
-                </Select.Popup>
-              </Select.Root>
-            </div>
-            <div className="w-48">
-              <Select.Root
-                items={brandOptions}
-                value={brandFilter}
-                onValueChange={(v) => setBrandFilter(v ?? 'all')}
-                placeholder="모든 브랜드"
-              >
-                <Select.Trigger className="w-full" />
-                <Select.Popup>
-                  {brandOptions.map((option) => (
-                    <Select.Item key={option.value} value={option.value}>
-                      {option.label}
-                    </Select.Item>
-                  ))}
-                </Select.Popup>
-              </Select.Root>
-            </div>
-          </div>
-
-          <DataTable<Item>
-            columns={columns}
-            rows={pagedItems}
-            rowKey={(item) => item.id}
-            loading={loading}
-            empty={
-              <EmptyState
-                icon={<DashboardOutlineIcon size={40} />}
-                title="아이템이 없습니다."
-                description="검색 조건을 변경하거나 새 아이템을 추가해 보세요."
-              />
-            }
+      <ListToolbar
+        search={list.search}
+        onSearchChange={list.setSearch}
+        searchPlaceholder="아이템명 또는 설명 검색"
+        filters={
+          <>
+            <FilterSelect
+              value={list.filters.status ?? 'all'}
+              onValueChange={(v) => list.setFilter('status', v)}
+              options={STATUS_OPTIONS}
+              width="w-32"
+            />
+            <FilterSelect
+              value={list.filters.brandId ?? 'all'}
+              onValueChange={(v) => list.setFilter('brandId', v)}
+              options={brandOptions}
+              width="w-44"
+            />
+          </>
+        }
+        sort={
+          <FilterSelect
+            value={sortValue}
+            onValueChange={(v) => list.setSort({ key: v, dir: v === 'name' ? 'asc' : 'desc' })}
+            options={SORT_OPTIONS}
+            width="w-32"
           />
+        }
+      />
 
-          {total > PAGE_SIZE ? (
-            <Pagination page={page} total={total} limit={PAGE_SIZE} onPageChange={setPage} />
-          ) : null}
-        </Card.Body>
-      </Card.Root>
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+        <DataTable<Item>
+          columns={columns}
+          rows={list.items}
+          rowKey={(item) => item.id}
+          loading={list.loading}
+          sortKey={list.sort?.key}
+          sortDir={list.sort?.dir}
+          onSortChange={list.toggleSort}
+          empty={
+            <EmptyState
+              icon={<DashboardOutlineIcon size={40} />}
+              title="아이템이 없습니다."
+              description="검색 조건을 변경하거나 새 아이템을 추가해 보세요."
+            />
+          }
+        />
+      </div>
+
+      {list.total > PAGE_SIZE ? (
+        <div className="mt-4">
+          <Pagination
+            page={list.page}
+            total={list.total}
+            limit={PAGE_SIZE}
+            onPageChange={list.setPage}
+          />
+        </div>
+      ) : null}
 
       <ConfirmDialog
         open={!!deleteTarget}

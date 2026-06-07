@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Badge, Callout, IconButton } from '@vapor-ui/core';
+import { Callout, IconButton } from '@vapor-ui/core';
 import {
   ViewOnOutlineIcon,
   EditOutlineIcon,
@@ -14,95 +14,111 @@ import {
 import MainLayout from '@/components/MainLayout';
 import {
   PageHeader,
-  SearchInput,
+  ListToolbar,
+  FilterSelect,
   DataTable,
   Pagination,
   ConfirmDialog,
   EmptyState,
-  ImagePlaceholder,
   SuccessCallout,
+  Thumbnail,
 } from '@/components/ui';
 import type { DataTableColumn } from '@/components/ui';
+import { useListController } from '@/lib/use-list-controller';
+import type { ListFetchParams, ListResult } from '@/lib/use-list-controller';
 import { api } from '@/lib/api';
 import type { Photo } from '@/types';
 
 const LIMIT = 12;
 
+// 연결 상태 필터 (전체 / 미연결)
+const CONNECTION_OPTIONS = [
+  { value: 'all', label: '전체' },
+  { value: 'unconnected', label: '미연결' },
+];
+
+// 정렬 옵션 — 서버 화이트리스트(created_at, title)에 매핑
+const SORT_OPTIONS = [
+  { value: 'created_at:desc', label: '최신순' },
+  { value: 'title:asc', label: '제목순' },
+];
+
 export default function PhotosPage() {
   const router = useRouter();
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const [search, setSearch] = useState('');
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [reloadKey, setReloadKey] = useState(0);
 
+  const fetchPhotos = useCallback(
+    async (params: ListFetchParams): Promise<ListResult<Photo>> => {
+      const res = await api.photos.getList({
+        search: params.search || undefined,
+        unconnected: params.connection === 'unconnected',
+        sort: params.sort,
+        dir: params.dir,
+        page: params.page,
+        limit: params.limit,
+      });
+      if (!res.success || !res.data) {
+        throw new Error(res.error ?? '사진 목록을 불러오는데 실패했습니다.');
+      }
+      const data = res.data as { items: Photo[]; total: number };
+      return { items: data.items, total: data.total };
+    },
+    [],
+  );
+
+  const {
+    items: photos,
+    total,
+    loading,
+    error,
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    setSort,
+    toggleSort,
+    page,
+    setPage,
+    refetch,
+  } = useListController<Photo>({
+    fetch: fetchPhotos,
+    initialFilters: { connection: 'all' },
+    initialSort: { key: 'created_at', dir: 'desc' },
+    limit: LIMIT,
+  });
+
+  const [success, setSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Photo | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  useEffect(() => {
-    let active = true;
-    const fetchPhotos = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await api.get<{ items: Photo[]; total: number }>('/photos', {
-          page,
-          limit: LIMIT,
-          ...(search.trim() ? { search: search.trim() } : {}),
-        });
-        if (!active) return;
-        if (res.success && res.data) {
-          setPhotos(res.data.items);
-          setTotal(res.data.total);
-        } else {
-          setError(res.error ?? '사진 목록을 불러오는데 실패했습니다.');
-        }
-      } catch (err) {
-        if (active) {
-          console.error('사진 목록 로딩 오류:', err);
-          setError('사진 목록을 불러오는 중 오류가 발생했습니다.');
-        }
-      } finally {
-        if (active) setLoading(false);
-      }
-    };
-    fetchPhotos();
-    return () => {
-      active = false;
-    };
-  }, [page, search, reloadKey]);
-
-  const refetch = () => setReloadKey((k) => k + 1);
-
-  const handleSearch = (value: string) => {
-    setSearch(value);
-    setPage(1);
+  const sortValue = sort ? `${sort.key}:${sort.dir}` : '';
+  const handleSortChange = (value: string) => {
+    const [key, dir] = value.split(':');
+    setSort({ key, dir: dir === 'asc' ? 'asc' : 'desc' });
   };
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    setError(null);
+    setActionError(null);
     try {
-      const res = await api.delete(`/photos/${deleteTarget.id}`);
+      const res = await api.photos.delete(deleteTarget.id);
       if (res.success) {
         setDeleteTarget(null);
         setSuccess('사진이 삭제되었습니다.');
-        // If we deleted the last row on a page beyond the first, step back a page.
+        // 현재 페이지의 마지막 행을 지웠다면 이전 페이지로 이동
         if (photos.length === 1 && page > 1) {
-          setPage((p) => p - 1);
+          setPage(page - 1);
         } else {
           refetch();
         }
       } else {
-        setError(res.error ?? '사진 삭제에 실패했습니다.');
+        setActionError(res.error ?? '사진 삭제에 실패했습니다.');
       }
     } catch (err) {
       console.error('사진 삭제 오류:', err);
-      setError('사진 삭제 중 오류가 발생했습니다.');
+      setActionError('사진 삭제 중 오류가 발생했습니다.');
     } finally {
       setDeleting(false);
     }
@@ -112,53 +128,35 @@ export default function PhotosPage() {
     {
       key: 'image',
       header: '이미지',
-      render: (photo) =>
-        photo.imageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={photo.imageUrl}
-            alt={photo.altText || '사진'}
-            className="h-12 w-16 rounded object-cover"
-          />
-        ) : (
-          <ImagePlaceholder className="h-12 w-16 rounded" />
-        ),
+      width: 'w-24',
+      render: (photo) => (
+        <Thumbnail src={photo.imageUrl} alt={photo.altText || photo.title || '사진'} />
+      ),
     },
     {
       key: 'title',
       header: '제목',
+      sortable: true,
       render: (photo) => (
-        <span className="font-medium text-gray-900">{photo.title || '제목 없음'}</span>
+        <span className="font-medium text-gray-900">
+          {photo.title || photo.altText || '제목 없음'}
+        </span>
       ),
     },
     {
       key: 'connectedItems',
-      header: '연결 아이템 수',
+      header: '연결 아이템',
       align: 'center',
+      width: 'w-28',
+      nowrap: true,
       render: (photo) => `${photo.connectedItems?.length ?? 0}개`,
-    },
-    {
-      key: 'tags',
-      header: '태그',
-      render: (photo) => (
-        <div className="flex flex-wrap gap-1">
-          {photo.tags?.slice(0, 3).map((tag) => (
-            <Badge key={tag.id} colorPalette="hint" size="sm">
-              {tag.name}
-            </Badge>
-          ))}
-          {photo.tags && photo.tags.length > 3 ? (
-            <Badge colorPalette="hint" size="sm">
-              +{photo.tags.length - 3}
-            </Badge>
-          ) : null}
-        </div>
-      ),
     },
     {
       key: 'actions',
       header: '작업',
       align: 'right',
+      width: 'w-32',
+      nowrap: true,
       render: (photo) => (
         <div className="flex justify-end gap-1">
           <IconButton
@@ -197,13 +195,33 @@ export default function PhotosPage() {
     <MainLayout>
       <PageHeader title="사진 관리" />
 
-      <div className="mb-4 max-w-sm">
-        <SearchInput value={search} onChange={handleSearch} placeholder="사진 제목, 설명 검색" />
-      </div>
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="사진 제목, 설명 검색"
+        filters={
+          <FilterSelect
+            value={filters.connection ?? 'all'}
+            onValueChange={(v) => setFilter('connection', v)}
+            options={CONNECTION_OPTIONS}
+            placeholder="전체"
+            width="w-32"
+          />
+        }
+        sort={
+          <FilterSelect
+            value={sortValue}
+            onValueChange={handleSortChange}
+            options={SORT_OPTIONS}
+            placeholder="정렬"
+            width="w-32"
+          />
+        }
+      />
 
-      {error ? (
+      {actionError || error ? (
         <Callout.Root colorPalette="danger" className="mb-4">
-          {error}
+          {actionError ?? error}
         </Callout.Root>
       ) : null}
 
@@ -214,11 +232,14 @@ export default function PhotosPage() {
         rows={photos}
         rowKey={(photo) => photo.id}
         loading={loading}
+        sortKey={sort?.key}
+        sortDir={sort?.dir}
+        onSortChange={toggleSort}
         empty={
           <EmptyState
             icon={<ImageOutlineIcon size={40} />}
             title="등록된 사진이 없습니다."
-            description="프로젝트·아이템 이미지 업로드 시 자동으로 추가됩니다."
+            description="사진은 프로젝트·아이템 이미지 업로드 시 자동으로 추가됩니다."
           />
         }
       />

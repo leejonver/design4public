@@ -7,7 +7,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 import { Badge, Button, Card, Spinner, Text } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, EditOutlineIcon, LinkOutlineIcon, DashboardOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { PageHeader, StatusBadge } from '@/components/ui';
+import { PageHeader, StatusBadge, Thumbnail } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Item } from '@/types';
 
@@ -93,11 +93,10 @@ export default function ItemDetailPage() {
             <Card.Body>
               {mainImage ? (
                 <div className="space-y-4">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Thumbnail
                     src={mainImage.url}
                     alt={mainImage.alt}
-                    className="h-72 w-full rounded-md object-cover"
+                    className="h-72 w-full rounded-md"
                   />
                   {otherImages.length > 0 ? (
                     <div>
@@ -106,12 +105,11 @@ export default function ItemDetailPage() {
                       </Text>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {otherImages.map((img) => (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
+                          <Thumbnail
                             key={img.id}
                             src={img.url}
                             alt={img.alt}
-                            className="h-20 w-20 rounded object-cover"
+                            className="h-20 w-20 rounded"
                           />
                         ))}
                       </div>
@@ -163,7 +161,7 @@ export default function ItemDetailPage() {
                       href={item.mallUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-1 text-v-primary-100 hover:underline"
                     >
                       <LinkOutlineIcon size={16} />
                       나라장터에서 보기
@@ -225,18 +223,11 @@ export default function ItemDetailPage() {
           </Card.Header>
           <Card.Body>
             <div className="flex items-center gap-4">
-              {brand.logoImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={brand.logoImageUrl}
-                  alt={`${brand.name} 로고`}
-                  className="h-14 w-14 rounded-full object-cover"
-                />
-              ) : (
-                <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">
-                  <DashboardOutlineIcon size={20} className="text-gray-300" />
-                </div>
-              )}
+              <Thumbnail
+                src={brand.logoImageUrl}
+                alt={`${brand.name} 로고`}
+                className="h-14 w-14 rounded-full"
+              />
               <div className="min-w-0">
                 <Text typography="body1" render={<p />} className="font-medium text-gray-900">
                   {brand.name}

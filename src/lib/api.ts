@@ -135,7 +135,7 @@ export const authApi = {
 
 // 프로젝트 관련 API
 export const projectsApi = {
-  getList: (params?: { status?: string; search?: string; page?: number; limit?: number }) =>
+  getList: (params?: { status?: string; search?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
     apiGet('/projects', params),
   
   getById: (id: string) => apiGet(`/projects/${id}`),
@@ -149,7 +149,7 @@ export const projectsApi = {
 
 // 브랜드 관련 API
 export const brandsApi = {
-  getList: (params?: { status?: string; search?: string; page?: number; limit?: number }) =>
+  getList: (params?: { status?: string; search?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
     apiGet('/brands', params),
   
   getById: (id: string) => apiGet(`/brands/${id}`),
@@ -163,7 +163,7 @@ export const brandsApi = {
 
 // 아이템 관련 API
 export const itemsApi = {
-  getList: (params?: { status?: string; search?: string; brandId?: string; page?: number; limit?: number }) =>
+  getList: (params?: { status?: string; search?: string; brandId?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
     apiGet('/items', params),
   
   getById: (id: string) => apiGet(`/items/${id}`),
@@ -177,7 +177,7 @@ export const itemsApi = {
 
 // 카테고리 관련 API (typed classification: project | item)
 export const categoriesApi = {
-  getList: (params?: { type?: string; search?: string; page?: number; limit?: number }) =>
+  getList: (params?: { type?: string; search?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
     apiGet('/categories', params),
 
   getById: (id: string) => apiGet(`/categories/${id}`),
@@ -197,6 +197,23 @@ export const tagsApi = {
   create: (data: { name: string }) => apiPost('/tags', data),
 
   delete: (id: string) => apiDelete(`/tags/${id}`),
+}
+
+// 사진 관련 API (생성은 프로젝트·아이템 폼에서만 처리)
+export const photosApi = {
+  getList: (params?: { search?: string; unconnected?: boolean; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
+    apiGet('/photos', {
+      ...(params?.search ? { search: params.search } : {}),
+      ...(params?.unconnected ? { unconnected: 'true' } : {}),
+      ...(params?.sort ? { sort: params.sort } : {}),
+      ...(params?.dir ? { dir: params.dir } : {}),
+      ...(params?.page ? { page: params.page } : {}),
+      ...(params?.limit ? { limit: params.limit } : {}),
+    }),
+
+  getById: (id: string) => apiGet(`/photos/${id}`),
+
+  delete: (id: string) => apiDelete(`/photos/${id}`),
 }
 
 // 관리자 관련 API
@@ -224,5 +241,6 @@ export const api = {
   items: itemsApi,
   categories: categoriesApi,
   tags: tagsApi,
+  photos: photosApi,
   managers: managersApi,
 }

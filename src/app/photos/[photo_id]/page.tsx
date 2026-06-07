@@ -16,7 +16,7 @@ import {
   CalendarOutlineIcon,
 } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { ConfirmDialog } from '@/components/ui';
+import { ConfirmDialog, Thumbnail } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Photo } from '@/types';
 
@@ -148,11 +148,10 @@ export default function PhotoDetailPage() {
         {/* 사진 이미지 */}
         <Card.Root>
           <Card.Body>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Thumbnail
               src={photo.imageUrl}
               alt={photo.altText || '사진'}
-              className="w-full rounded-lg object-cover"
+              className="min-h-[240px] w-full rounded-lg"
             />
           </Card.Body>
         </Card.Root>
@@ -207,14 +206,7 @@ export default function PhotoDetailPage() {
                     const thumb = item.images?.find((img) => img.isMain) ?? item.images?.[0];
                     return (
                       <li key={item.id} className="flex items-center gap-3 py-2">
-                        {thumb?.url ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={thumb.url} alt="" className="h-9 w-9 rounded object-cover" />
-                        ) : (
-                          <div className="flex h-9 w-9 items-center justify-center rounded bg-gray-100">
-                            <ImageOutlineIcon size={16} className="text-gray-400" />
-                          </div>
-                        )}
+                        <Thumbnail src={thumb?.url} alt={item.name} className="h-9 w-9 rounded" />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-sm font-medium text-gray-900">{item.name}</div>
                           <div className="truncate text-xs text-gray-500">{item.brand?.name || '-'}</div>

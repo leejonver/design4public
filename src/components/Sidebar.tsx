@@ -14,7 +14,6 @@ import {
   ChevronRightOutlineIcon,
   OutOutlineIcon,
 } from '@vapor-ui/icons';
-import { GlobalSearch } from './ui';
 import { useAuth } from '@/contexts/AuthContext';
 
 export interface MenuCounts {
@@ -93,12 +92,6 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
         </IconButton>
       </div>
 
-      {!collapsed ? (
-        <div className="border-b border-gray-200 p-3">
-          <GlobalSearch />
-        </div>
-      ) : null}
-
       <nav className="flex-1 space-y-1 overflow-y-auto p-3">
         {items.map(({ key, href, label, Icon }) => {
           const active = isActive(href);
@@ -111,7 +104,7 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
               aria-label={collapsed ? label : undefined}
               className={`flex items-center rounded-md text-sm transition-colors ${
                 collapsed ? 'justify-center px-0 py-2.5' : 'gap-3 px-3 py-2.5'
-              } ${active ? 'bg-v-primary-100 font-semibold text-v-primary-100' : 'text-gray-700 hover:bg-gray-50'}`}
+              } ${active ? 'bg-v-primary-100 font-semibold text-v-primary-200' : 'text-gray-700 hover:bg-gray-50'}`}
             >
               <Icon size={18} />
               {!collapsed ? <span className="flex-1">{label}</span> : null}

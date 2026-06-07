@@ -2,9 +2,9 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Button, Callout, IconButton, Select } from '@vapor-ui/core';
+import { Button, Callout, IconButton } from '@vapor-ui/core';
 import {
   PlusOutlineIcon,
   ViewOnOutlineIcon,
@@ -16,25 +16,37 @@ import {
 import MainLayout from '@/components/MainLayout';
 import {
   PageHeader,
-  SearchInput,
+  ListToolbar,
+  FilterSelect,
   StatusBadge,
   ConfirmDialog,
   DataTable,
   Pagination,
   EmptyState,
-  ImagePlaceholder,
+  Thumbnail,
   SuccessCallout,
   type DataTableColumn,
 } from '@/components/ui';
 import { api } from '@/lib/api';
+import { useListController, type ListSort } from '@/lib/use-list-controller';
 import type { Brand } from '@/types';
 
 const LIMIT = 10;
 
-const STATUS_FILTER_LABELS: Record<string, string> = {
-  all: '전체',
-  visible: '노출',
-  hidden: '숨김',
+const STATUS_OPTIONS = [
+  { value: 'all', label: '전체' },
+  { value: 'visible', label: '노출' },
+  { value: 'hidden', label: '숨김' },
+];
+
+const SORT_OPTIONS = [
+  { value: 'latest', label: '최신순' },
+  { value: 'name', label: '이름순' },
+];
+
+const SORT_MAP: Record<string, ListSort> = {
+  latest: { key: 'created_at', dir: 'desc' },
+  name: { key: 'name_ko', dir: 'asc' },
 };
 
 // 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
@@ -47,68 +59,56 @@ function addCacheBuster(url: string | null | undefined, updatedAt?: string): str
 
 export default function BrandsPage() {
   const router = useRouter();
-  const [search, setSearch] = useState('');
-  const [status, setStatus] = useState('all');
-  const [page, setPage] = useState(1);
-  const [brands, setBrands] = useState<Brand[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Brand | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const fetchBrands = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params: Record<string, string | number> = { page, limit: LIMIT };
-      if (search) params.search = search;
-      if (status !== 'all') params.status = status;
-      const response = await api.get<{ items: Brand[]; total: number }>('/brands', params);
-      if (response.success && response.data) {
-        setBrands(response.data.items);
-        setTotal(response.data.total);
-      } else {
-        setError(response.error || '브랜드 목록을 불러오는데 실패했습니다.');
+  const controller = useListController<Brand>({
+    limit: LIMIT,
+    initialFilters: { status: 'all' },
+    initialSort: SORT_MAP.latest,
+    fetch: async (params) => {
+      const query: {
+        status?: string;
+        search?: string;
+        sort?: string;
+        dir?: 'asc' | 'desc';
+        page?: number;
+        limit?: number;
+      } = { page: params.page, limit: params.limit };
+      if (params.search) query.search = params.search;
+      if (typeof params.status === 'string' && params.status !== 'all') query.status = params.status;
+      if (params.sort) query.sort = params.sort;
+      if (params.dir) query.dir = params.dir;
+
+      const response = await api.brands.getList(query);
+      if (!response.success || !response.data) {
+        throw new Error(response.error || '브랜드 목록을 불러오는데 실패했습니다.');
       }
-    } catch (err) {
-      console.error('브랜드 목록 로딩 오류:', err);
-      setError('브랜드 목록을 불러오는 중 오류가 발생했습니다.');
-    } finally {
-      setLoading(false);
-    }
-  }, [page, search, status]);
+      const data = response.data as { items: Brand[]; total: number };
+      return { items: data.items, total: data.total };
+    },
+  });
 
-  useEffect(() => {
-    fetchBrands();
-  }, [fetchBrands]);
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
-    setPage(1);
-  };
-
-  const handleStatusChange = (value: string) => {
-    setStatus(value);
-    setPage(1);
-  };
+  const sortValue = controller.sort?.key === 'name_ko' ? 'name' : 'latest';
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
+    setActionError(null);
     try {
-      const response = await api.delete(`/brands/${deleteTarget.id}`);
+      const response = await api.brands.delete(deleteTarget.id);
       if (response.success) {
         setDeleteTarget(null);
         setSuccess('브랜드가 삭제되었습니다.');
-        fetchBrands();
+        controller.refetch();
       } else {
-        setError(response.error || '브랜드 삭제에 실패했습니다.');
+        setActionError(response.error || '브랜드 삭제에 실패했습니다.');
       }
     } catch (err) {
       console.error('브랜드 삭제 오류:', err);
-      setError('브랜드 삭제 중 오류가 발생했습니다.');
+      setActionError('브랜드 삭제 중 오류가 발생했습니다.');
     } finally {
       setDeleting(false);
     }
@@ -118,24 +118,21 @@ export default function BrandsPage() {
     {
       key: 'logo',
       header: '로고',
-      render: (brand) =>
-        brand.logoImageUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={addCacheBuster(brand.logoImageUrl, brand.updatedAt)}
-            alt={`${brand.nameKo} 로고`}
-            className="h-12 w-12 rounded-full object-cover"
-          />
-        ) : (
-          <ImagePlaceholder
-            className="h-12 w-12 rounded-full"
-            icon={<BookmarkOutlineIcon size={20} />}
-          />
-        ),
+      width: 'w-20',
+      render: (brand) => (
+        <Thumbnail
+          src={addCacheBuster(brand.logoImageUrl, brand.updatedAt)}
+          alt={`${brand.nameKo} 로고`}
+          className="h-12 w-12 rounded-full"
+          icon={<BookmarkOutlineIcon size={20} />}
+        />
+      ),
     },
     {
-      key: 'nameKo',
+      key: 'name_ko',
       header: '브랜드명',
+      width: 'w-56',
+      sortable: true,
       render: (brand) => <span className="font-medium text-gray-900">{brand.nameKo}</span>,
     },
     {
@@ -151,11 +148,14 @@ export default function BrandsPage() {
     {
       key: 'status',
       header: '상태',
+      width: 'w-28',
+      nowrap: true,
       render: (brand) => <StatusBadge kind="brand" value={brand.status ?? 'visible'} />,
     },
     {
       key: 'websiteUrl',
       header: 'URL',
+      width: 'w-28',
       render: (brand) =>
         brand.websiteUrl ? (
           <a
@@ -175,6 +175,7 @@ export default function BrandsPage() {
     {
       key: 'actions',
       header: '작업',
+      width: 'w-32',
       align: 'right',
       render: (brand) => (
         <div className="flex items-center justify-end gap-1">
@@ -210,6 +211,8 @@ export default function BrandsPage() {
     },
   ];
 
+  const errorMessage = actionError ?? controller.error;
+
   return (
     <MainLayout>
       <PageHeader
@@ -222,41 +225,42 @@ export default function BrandsPage() {
         }
       />
 
-      {error ? (
+      {errorMessage ? (
         <Callout.Root colorPalette="danger" className="mb-4">
-          {error}
+          {errorMessage}
         </Callout.Root>
       ) : null}
 
       <SuccessCallout message={success} onClose={() => setSuccess(null)} />
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="w-72">
-          <SearchInput
-            value={search}
-            onChange={handleSearchChange}
-            placeholder="한글/영문 브랜드명 검색"
+      <ListToolbar
+        search={controller.search}
+        onSearchChange={controller.setSearch}
+        searchPlaceholder="한글/영문 브랜드명 검색"
+        filters={
+          <FilterSelect
+            value={controller.filters.status ?? 'all'}
+            onValueChange={(value) => controller.setFilter('status', value)}
+            options={STATUS_OPTIONS}
           />
-        </div>
-        <Select.Root value={status} onValueChange={(v) => handleStatusChange(v ?? 'all')}>
-          <Select.Trigger className="w-40">
-            <Select.ValuePrimitive>
-              {(value: unknown) => STATUS_FILTER_LABELS[String(value)] ?? '전체'}
-            </Select.ValuePrimitive>
-          </Select.Trigger>
-          <Select.Popup>
-            <Select.Item value="all">전체</Select.Item>
-            <Select.Item value="visible">노출</Select.Item>
-            <Select.Item value="hidden">숨김</Select.Item>
-          </Select.Popup>
-        </Select.Root>
-      </div>
+        }
+        sort={
+          <FilterSelect
+            value={sortValue}
+            onValueChange={(value) => controller.setSort(SORT_MAP[value] ?? SORT_MAP.latest)}
+            options={SORT_OPTIONS}
+          />
+        }
+      />
 
       <DataTable
         columns={columns}
-        rows={brands}
+        rows={controller.items}
         rowKey={(brand) => brand.id}
-        loading={loading}
+        loading={controller.loading}
+        sortKey={controller.sort?.key}
+        sortDir={controller.sort?.dir}
+        onSortChange={controller.toggleSort}
         empty={
           <EmptyState
             icon={<BookmarkOutlineIcon size={40} />}
@@ -267,7 +271,12 @@ export default function BrandsPage() {
       />
 
       <div className="mt-6">
-        <Pagination page={page} total={total} limit={LIMIT} onPageChange={setPage} />
+        <Pagination
+          page={controller.page}
+          total={controller.total}
+          limit={LIMIT}
+          onPageChange={controller.setPage}
+        />
       </div>
 
       <ConfirmDialog

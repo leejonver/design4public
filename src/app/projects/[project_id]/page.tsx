@@ -10,12 +10,11 @@ import { Badge, Button, Card, Spinner, Text } from '@vapor-ui/core';
 import {
   ChevronLeftOutlineIcon,
   EditOutlineIcon,
-  ImageOutlineIcon,
   OpenInNewOutlineIcon,
   TrashOutlineIcon,
 } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { ConfirmDialog, DataTable, StatusBadge } from '@/components/ui';
+import { ConfirmDialog, DataTable, StatusBadge, Thumbnail } from '@/components/ui';
 import type { DataTableColumn } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Item, Project } from '@/types';
@@ -105,21 +104,14 @@ export default function ProjectDetailPage() {
       header: '이미지',
       render: (item) => {
         const main = item.images?.find((img) => img.isMain) || item.images?.[0];
-        return main ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={main.url} alt={main.alt} className="h-10 w-10 rounded object-cover" />
-        ) : (
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-gray-100">
-            <ImageOutlineIcon size={16} className="text-gray-400" />
-          </div>
-        );
+        return <Thumbnail src={main?.url} alt={main?.alt ?? item.name} className="h-10 w-10 rounded" />;
       },
     },
     {
       key: 'name',
       header: '아이템명',
       render: (item) => (
-        <Link href={`/items/${item.id}`} className="font-medium text-blue-600 hover:underline">
+        <Link href={`/items/${item.id}`} className="font-medium text-v-primary-100 hover:underline">
           {item.name}
         </Link>
       ),
@@ -139,7 +131,7 @@ export default function ProjectDetailPage() {
             type="button"
             variant="outline"
             colorPalette="secondary"
-            size="sm"
+            size="md"
             onClick={() => router.back()}
           >
             <ChevronLeftOutlineIcon size={16} />
@@ -184,8 +176,7 @@ export default function ProjectDetailPage() {
               {project.images.map((image) => (
                 <div key={image.id} className="space-y-2">
                   <div className="overflow-hidden rounded-lg border border-gray-200">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={image.url} alt={image.alt} className="h-44 w-full object-cover" />
+                    <Thumbnail src={image.url} alt={image.alt} className="h-44 w-full" />
                   </div>
                   {image.isMain ? (
                     <div className="text-center">
@@ -230,7 +221,7 @@ export default function ProjectDetailPage() {
                     href={project.inquiryUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                    className="inline-flex items-center gap-1 text-v-primary-100 hover:underline"
                   >
                     <OpenInNewOutlineIcon size={14} />
                     문의하기
@@ -282,7 +273,7 @@ export default function ProjectDetailPage() {
                 연결된 아이템 ({connectedItems.length}개)
               </Text>
               {connectedItems.length > 0 ? (
-                <Link href="/items" className="text-sm text-blue-600 hover:underline">
+                <Link href="/items" className="text-sm text-v-primary-100 hover:underline">
                   전체보기
                 </Link>
               ) : null}

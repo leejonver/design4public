@@ -7,6 +7,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Spinner, Text } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, EditOutlineIcon, LinkOutlineIcon, BookmarkOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
+import { Thumbnail } from '@/components/ui';
 import { api } from '@/lib/api';
 import type { Brand } from '@/types';
 
@@ -96,11 +97,10 @@ export default function BrandDetailPage() {
 
       {brand.coverImageUrl ? (
         <Card.Root className="mb-6 overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Thumbnail
             src={addCacheBuster(brand.coverImageUrl, brand.updatedAt)}
             alt={`${brand.nameKo} 커버 이미지`}
-            className="h-72 w-full object-cover"
+            className="h-72 w-full"
           />
         </Card.Root>
       ) : null}
@@ -109,24 +109,18 @@ export default function BrandDetailPage() {
         <div className="lg:col-span-4">
           <Card.Root>
             <Card.Header>
-              <Text typography="heading6" className="text-gray-900">
+              <Text typography="heading5" className="text-gray-900">
                 브랜드 로고
               </Text>
             </Card.Header>
             <Card.Body>
               <div className="flex flex-col items-center py-4">
-                {brand.logoImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={addCacheBuster(brand.logoImageUrl, brand.updatedAt)}
-                    alt={`${brand.nameKo} 로고`}
-                    className="h-32 w-32 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gray-100 text-gray-400">
-                    <BookmarkOutlineIcon size={48} />
-                  </div>
-                )}
+                <Thumbnail
+                  src={addCacheBuster(brand.logoImageUrl, brand.updatedAt)}
+                  alt={`${brand.nameKo} 로고`}
+                  className="h-32 w-32 rounded-full"
+                  icon={<BookmarkOutlineIcon size={48} />}
+                />
                 <Text typography="heading4" render={<h4 />} className="mt-4 text-gray-900">
                   {brand.nameKo}
                 </Text>
@@ -143,7 +137,7 @@ export default function BrandDetailPage() {
         <div className="lg:col-span-8">
           <Card.Root>
             <Card.Header>
-              <Text typography="heading6" className="text-gray-900">
+              <Text typography="heading5" className="text-gray-900">
                 브랜드 정보
               </Text>
             </Card.Header>
@@ -160,7 +154,7 @@ export default function BrandDetailPage() {
                       href={brand.websiteUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                      className="inline-flex items-center gap-1 text-v-primary-100 hover:underline"
                     >
                       <LinkOutlineIcon size={14} />
                       {brand.websiteUrl}
@@ -183,7 +177,7 @@ export default function BrandDetailPage() {
 
       <Card.Root className="mt-6">
         <Card.Header>
-          <Text typography="heading6" className="text-gray-900">
+          <Text typography="heading5" className="text-gray-900">
             추가 정보
           </Text>
         </Card.Header>

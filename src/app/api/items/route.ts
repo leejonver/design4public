@@ -16,10 +16,17 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10')
     const offset = (page - 1) * limit
 
+    const SORTABLE = ['created_at', 'name'] as const
+    const sortParam = searchParams.get('sort')
+    const sortCol = SORTABLE.includes(sortParam as (typeof SORTABLE)[number])
+      ? (sortParam as (typeof SORTABLE)[number])
+      : 'created_at'
+    const ascending = searchParams.get('dir') === 'asc'
+
     let query = supabaseAdmin
       .from('items')
       .select(ITEM_SELECT, { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .order(sortCol, { ascending })
 
     if (status && status !== 'all')
       query = query.eq('status', status as 'available' | 'discontinued' | 'hidden')

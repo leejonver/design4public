@@ -13,6 +13,12 @@ export type { ConfirmDialogProps } from './ConfirmDialog';
 export { default as DataTable } from './DataTable';
 export type { DataTableColumn, DataTableProps } from './DataTable';
 
+export { default as ListToolbar } from './ListToolbar';
+export type { ListToolbarProps } from './ListToolbar';
+
+export { default as FilterSelect } from './FilterSelect';
+export type { FilterSelectProps, FilterSelectOption } from './FilterSelect';
+
 export { default as Pagination } from './Pagination';
 export type { PaginationProps } from './Pagination';
 
@@ -31,11 +37,12 @@ export type { EmptyStateProps } from './EmptyState';
 export { default as ImagePlaceholder } from './ImagePlaceholder';
 export type { ImagePlaceholderProps } from './ImagePlaceholder';
 
+export { default as Thumbnail } from './Thumbnail';
+export type { ThumbnailProps } from './Thumbnail';
+
 export { default as SuccessCallout } from './SuccessCallout';
 export type { SuccessCalloutProps } from './SuccessCallout';
 
 export { default as EntityPicker } from './EntityPicker';
 export type { EntityPickerProps } from './EntityPicker';
 
-export { default as GlobalSearch } from './GlobalSearch';
-export type { GlobalSearchProps } from './GlobalSearch';

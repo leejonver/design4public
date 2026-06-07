@@ -13,7 +13,8 @@ import {
 import MainLayout from '@/components/MainLayout';
 import {
   PageHeader,
-  SearchInput,
+  ListToolbar,
+  FilterSelect,
   StatusBadge,
   ConfirmDialog,
   DataTable,
@@ -317,6 +318,8 @@ export default function ManagersPage() {
     {
       key: 'role',
       header: '역할',
+      width: 'w-44',
+      nowrap: true,
       render: (m) =>
         m.id === user?.id ? (
           <Badge colorPalette="primary" size="sm">
@@ -336,11 +339,15 @@ export default function ManagersPage() {
     {
       key: 'approvalStatus',
       header: '승인상태',
+      width: 'w-28',
+      nowrap: true,
       render: (m) => <StatusBadge kind="approval" value={m.approvalStatus} />,
     },
     {
       key: 'lastLoginAt',
       header: '최근 로그인',
+      width: 'w-40',
+      nowrap: true,
       render: (m) => (
         <span className="text-gray-600">
           {m.lastLoginAt ? formatDate(m.lastLoginAt) : '로그인 기록 없음'}
@@ -350,11 +357,15 @@ export default function ManagersPage() {
     {
       key: 'createdAt',
       header: '가입일',
+      width: 'w-32',
+      nowrap: true,
       render: (m) => <span className="text-gray-600">{formatDate(m.createdAt)}</span>,
     },
     {
       key: 'actions',
       header: '작업',
+      width: 'w-44',
+      nowrap: true,
       render: (m) => (
         <div className="flex flex-wrap items-center gap-2">
           {m.approvalStatus === 'pending' && (
@@ -448,32 +459,38 @@ export default function ManagersPage() {
         </Callout.Root>
       )}
 
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="w-full sm:w-72">
-          <SearchInput value={search} onChange={handleSearch} placeholder="이름 또는 이메일 검색" />
-        </div>
-        <SelectField
-          value={roleFilter}
-          onValueChange={handleRoleFilter}
-          options={ROLE_FILTER_OPTIONS}
-          ariaLabel="역할 필터"
-          className="w-40"
-        />
-        <SelectField
-          value={statusFilter}
-          onValueChange={handleStatusFilter}
-          options={STATUS_FILTER_OPTIONS}
-          ariaLabel="승인상태 필터"
-          className="w-40"
-        />
-        <SelectField
-          value={sort}
-          onValueChange={handleSort}
-          options={SORT_OPTIONS}
-          ariaLabel="정렬 기준"
-          className="w-44"
-        />
-      </div>
+      <ListToolbar
+        search={search}
+        onSearchChange={handleSearch}
+        searchPlaceholder="이름 또는 이메일 검색"
+        filters={
+          <>
+            <FilterSelect
+              value={roleFilter}
+              onValueChange={handleRoleFilter}
+              options={ROLE_FILTER_OPTIONS}
+              placeholder="모든 권한"
+              width="w-40"
+            />
+            <FilterSelect
+              value={statusFilter}
+              onValueChange={handleStatusFilter}
+              options={STATUS_FILTER_OPTIONS}
+              placeholder="모든 상태"
+              width="w-40"
+            />
+          </>
+        }
+        sort={
+          <FilterSelect
+            value={sort}
+            onValueChange={handleSort}
+            options={SORT_OPTIONS}
+            placeholder="가입일순"
+            width="w-44"
+          />
+        }
+      />
 
       <DataTable
         columns={columns}

@@ -20,10 +20,19 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50')
     const offset = (page - 1) * limit
 
+    const SORTABLE = ['name', 'created_at'] as const
+    const sortParam = searchParams.get('sort')
+    const sortCol = SORTABLE.includes(sortParam as (typeof SORTABLE)[number])
+      ? (sortParam as (typeof SORTABLE)[number])
+      : 'name'
+    const dir = searchParams.get('dir')
+    // categories default to name asc; honor explicit dir, otherwise asc
+    const ascending = dir ? dir === 'asc' : true
+
     let query = supabaseAdmin
       .from('categories')
       .select('*', { count: 'exact' })
-      .order('name', { ascending: true })
+      .order(sortCol, { ascending })
 
     if (type && type !== 'all') {
       if (!isCategoryType(type)) {

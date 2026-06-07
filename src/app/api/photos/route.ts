@@ -13,10 +13,17 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = (page - 1) * limit
 
+    const SORTABLE = ['created_at', 'title'] as const
+    const sortParam = searchParams.get('sort')
+    const sortCol = SORTABLE.includes(sortParam as (typeof SORTABLE)[number])
+      ? (sortParam as (typeof SORTABLE)[number])
+      : 'created_at'
+    const ascending = searchParams.get('dir') === 'asc'
+
     let query = supabaseAdmin
       .from('photos')
       .select(PHOTO_SELECT, { count: 'exact' })
-      .order('created_at', { ascending: false })
+      .order(sortCol, { ascending })
 
     if (search) {
       query = query.or(

@@ -2,27 +2,33 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Badge, Button, Dialog, Field, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
 import { EditOutlineIcon, PlusOutlineIcon, TrashOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/MainLayout';
-import { PageHeader, SearchInput, DataTable, ConfirmDialog } from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
+import { PageHeader, ListToolbar, FilterSelect, DataTable, Pagination, ConfirmDialog } from '@/components/ui';
+import type { DataTableColumn, FilterSelectOption } from '@/components/ui';
+import { useListController } from '@/lib/use-list-controller';
 import { api } from '@/lib/api';
 import type { Category, CategoryType } from '@/types';
 
-type TypeFilter = CategoryType | 'all';
-
 type BadgeColor = 'primary' | 'hint' | 'danger' | 'success' | 'warning' | 'contrast';
+
+const PAGE_SIZE = 20;
 
 const TYPE_OPTIONS: { value: CategoryType; label: string }[] = [
   { value: 'project', label: '프로젝트' },
   { value: 'item', label: '아이템' },
 ];
 
-const FILTER_OPTIONS: { value: TypeFilter; label: string }[] = [
+const TYPE_FILTER_OPTIONS: FilterSelectOption[] = [
   { value: 'all', label: '전체' },
   ...TYPE_OPTIONS,
+];
+
+const SORT_OPTIONS: FilterSelectOption[] = [
+  { value: 'name', label: '이름순' },
+  { value: 'created_at', label: '최신순' },
 ];
 
 const TYPE_BADGE: Record<CategoryType, { label: string; colorPalette: BadgeColor }> = {
@@ -40,10 +46,40 @@ function validateName(name: string): string | null {
 }
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const {
+    items: categories,
+    total,
+    loading,
+    page,
+    setPage,
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    setSort,
+    toggleSort,
+    refetch,
+  } = useListController<Category>({
+    initialFilters: { type: 'all' },
+    initialSort: { key: 'name', dir: 'asc' },
+    limit: PAGE_SIZE,
+    fetch: async (params) => {
+      const res = await api.categories.getList({
+        type: params.type && params.type !== 'all' ? String(params.type) : undefined,
+        search: params.search || undefined,
+        sort: params.sort,
+        dir: params.dir,
+        page: params.page,
+        limit: params.limit,
+      });
+      if (!res.success) {
+        throw new Error(res.error ?? '카테고리 목록을 불러오지 못했습니다.');
+      }
+      const data = res.data as { items?: Category[]; total?: number } | undefined;
+      return { items: data?.items ?? [], total: data?.total ?? 0 };
+    },
+  });
 
   // 생성/수정 다이얼로그 상태
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -57,40 +93,18 @@ export default function CategoriesPage() {
   const [deletingCategory, setDeletingCategory] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  // 카테고리 목록 가져오기
-  const fetchCategories = useCallback(async () => {
-    try {
-      setLoading(true);
-      const res = await api.categories.getList({ limit: 1000 });
-      if (res.success) {
-        setCategories((res.data as { items?: Category[] } | undefined)?.items ?? []);
-      }
-    } catch (error) {
-      console.error('카테고리 목록 로딩 오류:', error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const typeFilter = filters.type ?? 'all';
 
-  useEffect(() => {
-    fetchCategories();
-  }, [fetchCategories]);
-
-  // 타입 + 검색어로 필터링
-  const filteredCategories = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
-    return categories.filter((category) => {
-      const matchesType = typeFilter === 'all' || category.type === typeFilter;
-      const matchesTerm = category.name.toLowerCase().includes(term);
-      return matchesType && matchesTerm;
-    });
-  }, [categories, searchTerm, typeFilter]);
+  // 정렬 셀렉트: 이름순(name asc) / 최신순(created_at desc)
+  const handleSortSelect = (value: string) => {
+    setSort(value === 'created_at' ? { key: 'created_at', dir: 'desc' } : { key: 'name', dir: 'asc' });
+  };
 
   // 다이얼로그 열기 (생성)
   const openCreate = () => {
     setEditingCategory(null);
     setFormName('');
-    setFormType(typeFilter === 'all' ? 'project' : typeFilter);
+    setFormType(typeFilter === 'all' ? 'project' : (typeFilter as CategoryType));
     setFormError(null);
     setDialogOpen(true);
   };
@@ -128,7 +142,7 @@ export default function CategoriesPage() {
       if (editingCategory) {
         const res = await api.categories.update(editingCategory.id, { name, type: formType });
         if (res.success) {
-          await fetchCategories();
+          refetch();
           closeDialog();
         } else {
           setFormError(res.error ?? '카테고리 수정에 실패했습니다.');
@@ -136,7 +150,7 @@ export default function CategoriesPage() {
       } else {
         const res = await api.categories.create({ name, type: formType });
         if (res.success) {
-          await fetchCategories();
+          refetch();
           closeDialog();
         } else {
           setFormError(res.error ?? '카테고리 추가에 실패했습니다.');
@@ -156,7 +170,7 @@ export default function CategoriesPage() {
     try {
       const res = await api.categories.delete(deletingCategory.id);
       if (res.success) {
-        await fetchCategories();
+        refetch();
         setDeletingCategory(null);
       }
     } catch (error) {
@@ -170,11 +184,14 @@ export default function CategoriesPage() {
     {
       key: 'name',
       header: '카테고리명',
+      sortable: true,
       render: (category) => <span className="font-medium text-gray-900">{category.name}</span>,
     },
     {
       key: 'type',
       header: '타입',
+      width: 'w-40',
+      nowrap: true,
       render: (category) => {
         const info = TYPE_BADGE[category.type];
         return (
@@ -188,6 +205,8 @@ export default function CategoriesPage() {
       key: 'actions',
       header: '작업',
       align: 'right',
+      width: 'w-32',
+      nowrap: true,
       render: (category) => (
         <div className="flex justify-end gap-1">
           <IconButton
@@ -225,35 +244,47 @@ export default function CategoriesPage() {
         }
       />
 
-      {/* 검색 + 타입 필터 */}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="w-72">
-          <SearchInput value={searchTerm} onChange={setSearchTerm} placeholder="카테고리명 검색" />
-        </div>
-        <Select.Root
-          value={typeFilter}
-          onValueChange={(value) => setTypeFilter((value ?? 'all') as TypeFilter)}
-          items={FILTER_OPTIONS}
-        >
-          <Select.Trigger className="w-40" aria-label="타입 필터" />
-          <Select.Popup>
-            {FILTER_OPTIONS.map((option) => (
-              <Select.Item key={option.value} value={option.value}>
-                {option.label}
-              </Select.Item>
-            ))}
-          </Select.Popup>
-        </Select.Root>
-      </div>
+      <ListToolbar
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="카테고리명 검색"
+        filters={
+          <FilterSelect
+            value={typeFilter}
+            onValueChange={(value) => setFilter('type', value)}
+            options={TYPE_FILTER_OPTIONS}
+            placeholder="전체"
+            width="w-40"
+          />
+        }
+        sort={
+          <FilterSelect
+            value={sort?.key ?? 'name'}
+            onValueChange={handleSortSelect}
+            options={SORT_OPTIONS}
+            placeholder="이름순"
+            width="w-36"
+          />
+        }
+      />
 
-      {/* 카테고리 테이블 */}
       <DataTable
         columns={columns}
-        rows={filteredCategories}
+        rows={categories}
         rowKey={(category) => category.id}
         loading={loading}
         empty="카테고리가 없습니다."
+        sortKey={sort?.key}
+        sortDir={sort?.dir}
+        onSortChange={toggleSort}
       />
+
+      <div className="mt-4 flex items-center justify-between gap-4">
+        <Text typography="body3" className="text-gray-500">
+          총 {total}개
+        </Text>
+        <Pagination page={page} total={total} limit={PAGE_SIZE} onPageChange={setPage} />
+      </div>
 
       {/* 카테고리 추가/수정 다이얼로그 */}
       <Dialog.Root

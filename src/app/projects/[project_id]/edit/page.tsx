@@ -174,7 +174,7 @@ export default function EditProjectPage() {
           type="button"
           variant="outline"
           colorPalette="secondary"
-          size="sm"
+          size="md"
           onClick={() => router.back()}
         >
           <ChevronLeftOutlineIcon size={16} />
