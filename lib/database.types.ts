@@ -14,116 +14,83 @@ export type Database = {
     Tables: {
       brands: {
         Row: {
-          cover_image_url: string | null;
-          created_at: string;
-          description: string | null;
           id: string;
-          logo_image_url: string | null;
-          name_en: string | null;
-          name_ko: string;
           slug: string;
-          updated_at: string;
+          name_ko: string;
+          name_en: string | null;
+          description: string | null;
+          cover_image_url: string | null;
+          logo_image_url: string | null;
           website_url: string | null;
+          status: string;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
-          cover_image_url?: string | null;
-          created_at?: string;
-          description?: string | null;
           id?: string;
-          logo_image_url?: string | null;
-          name_en?: string | null;
-          name_ko: string;
           slug: string;
-          updated_at?: string;
+          name_ko: string;
+          name_en?: string | null;
+          description?: string | null;
+          cover_image_url?: string | null;
+          logo_image_url?: string | null;
           website_url?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
         };
         Update: {
-          cover_image_url?: string | null;
-          created_at?: string;
-          description?: string | null;
           id?: string;
-          logo_image_url?: string | null;
-          name_en?: string | null;
-          name_ko?: string;
           slug?: string;
-          updated_at?: string;
+          name_ko?: string;
+          name_en?: string | null;
+          description?: string | null;
+          cover_image_url?: string | null;
+          logo_image_url?: string | null;
           website_url?: string | null;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
-      image_tags: {
-        Row: {
-          created_at: string;
-          image_id: string;
-          tag_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          image_id: string;
-          tag_id: string;
-        };
-        Update: {
-          created_at?: string;
-          image_id?: string;
-          tag_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "image_tags_image_id_fkey";
-            columns: ["image_id"];
-            isOneToOne: false;
-            referencedRelation: "project_images";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "image_tags_tag_id_fkey";
-            columns: ["tag_id"];
-            isOneToOne: false;
-            referencedRelation: "tags";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
       items: {
         Row: {
-          brand_id: string | null;
-          created_at: string;
-          description: string | null;
           id: string;
-          image_url: string | null;
-          name: string;
-          nara_url: string | null;
           slug: string;
+          name: string;
+          description: string | null;
+          brand_id: string | null;
+          nara_url: string | null;
           status: string;
+          created_at: string;
           updated_at: string;
         };
         Insert: {
-          brand_id?: string | null;
-          created_at?: string;
-          description?: string | null;
           id?: string;
-          image_url?: string | null;
-          name: string;
-          nara_url?: string | null;
           slug: string;
+          name: string;
+          description?: string | null;
+          brand_id?: string | null;
+          nara_url?: string | null;
           status?: string;
+          created_at?: string;
           updated_at?: string;
         };
         Update: {
-          brand_id?: string | null;
-          created_at?: string;
-          description?: string | null;
           id?: string;
-          image_url?: string | null;
-          name?: string;
-          nara_url?: string | null;
           slug?: string;
+          name?: string;
+          description?: string | null;
+          brand_id?: string | null;
+          nara_url?: string | null;
           status?: string;
+          created_at?: string;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "fk_items_brand_id";
+            foreignKeyName: "items_brand_id_fkey";
             columns: ["brand_id"];
             isOneToOne: false;
             referencedRelation: "brands";
@@ -131,325 +98,388 @@ export type Database = {
           }
         ];
       };
-      item_tags: {
+      projects: {
         Row: {
-          created_at: string;
-          item_id: string;
-          tag_id: string;
-        };
-        Insert: {
-          created_at?: string;
-          item_id: string;
-          tag_id: string;
-        };
-        Update: {
-          created_at?: string;
-          item_id?: string;
-          tag_id?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "item_tags_item_id_fkey";
-            columns: ["item_id"];
-            isOneToOne: false;
-            referencedRelation: "items";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "item_tags_tag_id_fkey";
-            columns: ["tag_id"];
-            isOneToOne: false;
-            referencedRelation: "tags";
-            referencedColumns: ["id"];
-          }
-        ];
-      };
-      profiles: {
-        Row: {
-          created_at: string;
-          email: string;
           id: string;
-          role: string;
+          slug: string;
+          title: string;
+          description: string | null;
+          year: number | null;
+          area: number | null;
+          location: string | null;
+          client: string | null;
+          inquiry_url: string | null;
           status: string;
+          created_at: string;
           updated_at: string;
         };
         Insert: {
-          created_at?: string;
-          email: string;
-          id: string;
-          role?: string;
+          id?: string;
+          slug: string;
+          title: string;
+          description?: string | null;
+          year?: number | null;
+          area?: number | null;
+          location?: string | null;
+          client?: string | null;
+          inquiry_url?: string | null;
           status?: string;
+          created_at?: string;
           updated_at?: string;
         };
         Update: {
-          created_at?: string;
-          email?: string;
           id?: string;
-          role?: string;
+          slug?: string;
+          title?: string;
+          description?: string | null;
+          year?: number | null;
+          area?: number | null;
+          location?: string | null;
+          client?: string | null;
+          inquiry_url?: string | null;
           status?: string;
+          created_at?: string;
           updated_at?: string;
         };
         Relationships: [];
       };
-      project_images: {
+      photos: {
         Row: {
-          created_at: string;
           id: string;
           image_url: string;
-          order: number | null;
-          project_id: string;
+          alt_text: string | null;
+          title: string | null;
+          description: string | null;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
-          created_at?: string;
           id?: string;
           image_url: string;
-          order?: number | null;
-          project_id: string;
+          alt_text?: string | null;
+          title?: string | null;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
         Update: {
-          created_at?: string;
           id?: string;
           image_url?: string;
+          alt_text?: string | null;
+          title?: string | null;
+          description?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      categories: {
+        Row: {
+          id: string;
+          name: string;
+          type: Database["public"]["Enums"]["category_type"];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          type: Database["public"]["Enums"]["category_type"];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          type?: Database["public"]["Enums"]["category_type"];
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      tags: {
+        Row: {
+          id: string;
+          name: string;
+          type: Database["public"]["Enums"]["category_type"];
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          type: Database["public"]["Enums"]["category_type"];
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          type?: Database["public"]["Enums"]["category_type"];
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      project_photos: {
+        Row: {
+          id: string;
+          project_id: string;
+          photo_id: string;
+          is_main: boolean;
+          order: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          project_id: string;
+          photo_id: string;
+          is_main?: boolean;
           order?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
           project_id?: string;
+          photo_id?: string;
+          is_main?: boolean;
+          order?: number | null;
+          created_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "project_images_project_id_fkey";
+            foreignKeyName: "project_photos_project_id_fkey";
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_photos_photo_id_fkey";
+            columns: ["photo_id"];
+            isOneToOne: false;
+            referencedRelation: "photos";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      photo_items: {
+        Row: {
+          id: string;
+          photo_id: string;
+          item_id: string;
+          is_main: boolean;
+          order: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          photo_id: string;
+          item_id: string;
+          is_main?: boolean;
+          order?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          photo_id?: string;
+          item_id?: string;
+          is_main?: boolean;
+          order?: number | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "photo_items_photo_id_fkey";
+            columns: ["photo_id"];
+            isOneToOne: false;
+            referencedRelation: "photos";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "photo_items_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "items";
             referencedColumns: ["id"];
           }
         ];
       };
       project_items: {
         Row: {
-          created_at: string;
-          item_id: string;
           project_id: string;
+          item_id: string;
+          created_at: string;
         };
         Insert: {
-          created_at?: string;
-          item_id: string;
           project_id: string;
+          item_id: string;
+          created_at?: string;
         };
         Update: {
-          created_at?: string;
-          item_id?: string;
           project_id?: string;
+          item_id?: string;
+          created_at?: string;
         };
         Relationships: [
-          {
-            foreignKeyName: "project_items_item_id_fkey";
-            columns: ["item_id"];
-            isOneToOne: false;
-            referencedRelation: "items";
-            referencedColumns: ["id"];
-          },
           {
             foreignKeyName: "project_items_project_id_fkey";
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
             referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "project_items_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "items";
+            referencedColumns: ["id"];
           }
         ];
       };
-      project_tags: {
+      project_categories: {
         Row: {
-          created_at: string;
           project_id: string;
-          tag_id: string;
+          category_id: string;
+          created_at: string;
         };
         Insert: {
-          created_at?: string;
           project_id: string;
-          tag_id: string;
+          category_id: string;
+          created_at?: string;
         };
         Update: {
-          created_at?: string;
           project_id?: string;
-          tag_id?: string;
+          category_id?: string;
+          created_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "project_tags_project_id_fkey";
+            foreignKeyName: "project_categories_project_id_fkey";
             columns: ["project_id"];
             isOneToOne: false;
             referencedRelation: "projects";
             referencedColumns: ["id"];
           },
           {
-            foreignKeyName: "project_tags_project_id_fkey";
-            columns: ["project_id"];
+            foreignKeyName: "project_categories_category_id_fkey";
+            columns: ["category_id"];
             isOneToOne: false;
-            referencedRelation: "projects_with_details";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "project_tags_tag_id_fkey";
-            columns: ["tag_id"];
-            isOneToOne: false;
-            referencedRelation: "tags";
+            referencedRelation: "categories";
             referencedColumns: ["id"];
           }
         ];
       };
-      projects: {
+      item_categories: {
         Row: {
-          area: number | null;
-          cover_image_url: string | null;
+          item_id: string;
+          category_id: string;
           created_at: string;
-          description: string | null;
-          id: string;
-          location: string | null;
-          slug: string;
-          status: string;
-          title: string;
-          updated_at: string;
-          year: number | null;
         };
         Insert: {
-          area?: number | null;
-          cover_image_url?: string | null;
+          item_id: string;
+          category_id: string;
           created_at?: string;
-          description?: string | null;
-          id?: string;
-          location?: string | null;
-          slug: string;
-          status?: string;
-          title: string;
-          updated_at?: string;
-          year?: number | null;
         };
         Update: {
-          area?: number | null;
-          cover_image_url?: string | null;
+          item_id?: string;
+          category_id?: string;
           created_at?: string;
-          description?: string | null;
-          id?: string;
-          location?: string | null;
-          slug?: string;
-          status?: string;
-          title?: string;
-          updated_at?: string;
-          year?: number | null;
         };
+        Relationships: [
+          {
+            foreignKeyName: "item_categories_item_id_fkey";
+            columns: ["item_id"];
+            isOneToOne: false;
+            referencedRelation: "items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "item_categories_category_id_fkey";
+            columns: ["category_id"];
+            isOneToOne: false;
+            referencedRelation: "categories";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      project_tags: {
+        Row: { project_id: string; tag_id: string; created_at: string };
+        Insert: { project_id: string; tag_id: string; created_at?: string };
+        Update: { project_id?: string; tag_id?: string; created_at?: string };
         Relationships: [];
       };
-      tags: {
+      item_tags: {
+        Row: { item_id: string; tag_id: string; created_at: string };
+        Insert: { item_id: string; tag_id: string; created_at?: string };
+        Update: { item_id?: string; tag_id?: string; created_at?: string };
+        Relationships: [];
+      };
+      inquiries: {
         Row: {
-          created_at: string;
           id: string;
           name: string;
-          type: Database["public"]["Enums"]["tag_type"];
+          email: string;
+          phone: string | null;
+          company: string | null;
+          project_slug: string | null;
+          message: string;
+          status: string;
+          created_at: string;
         };
         Insert: {
-          created_at?: string;
           id?: string;
           name: string;
-          type: Database["public"]["Enums"]["tag_type"];
+          email: string;
+          phone?: string | null;
+          company?: string | null;
+          project_slug?: string | null;
+          message: string;
+          status?: string;
+          created_at?: string;
         };
         Update: {
-          created_at?: string;
           id?: string;
           name?: string;
-          type?: Database["public"]["Enums"]["tag_type"];
+          email?: string;
+          phone?: string | null;
+          company?: string | null;
+          project_slug?: string | null;
+          message?: string;
+          status?: string;
+          created_at?: string;
         };
         Relationships: [];
       };
-    };
-    Views: {
-      projects_with_details: {
+      profiles: {
         Row: {
-          area: number | null;
-          cover_image_url: string | null;
-          created_at: string | null;
-          description: string | null;
-          id: string | null;
-          images: Json | null;
-          items: Json | null;
-          slug: string | null;
-          status: string | null;
-          tags: Json | null;
-          title: string | null;
-          updated_at: string | null;
-          year: number | null;
+          id: string;
+          email: string;
+          role: string;
+          status: string;
+          created_at: string;
+          updated_at: string;
         };
         Insert: {
-          area?: number | null;
-          cover_image_url?: string | null;
-          created_at?: string | null;
-          description?: string | null;
-          id?: string | null;
-          images?: never;
-          items?: never;
-          slug?: string | null;
-          status?: string | null;
-          tags?: never;
-          title?: string | null;
-          updated_at?: string | null;
-          year?: number | null;
+          id: string;
+          email: string;
+          role?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
         };
         Update: {
-          area?: number | null;
-          cover_image_url?: string | null;
-          created_at?: string | null;
-          description?: string | null;
-          id?: string | null;
-          images?: never;
-          items?: never;
-          slug?: string | null;
-          status?: string | null;
-          tags?: never;
-          title?: string | null;
-          updated_at?: string | null;
-          year?: number | null;
+          id?: string;
+          email?: string;
+          role?: string;
+          status?: string;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };
     };
-    Functions: {
-      create_project_with_relations: {
-        Args: {
-          p_area: number;
-          p_description: string;
-          p_images: Database["public"]["CompositeTypes"]["project_image_type"][];
-          p_inquiry_url: string;
-          p_item_ids: string[];
-          p_location: string;
-          p_status: Database["public"]["Enums"]["project_status"];
-          p_tag_ids: string[];
-          p_title: string;
-          p_year: number;
-        };
-        Returns: {
-          area: number;
-          created_at: string;
-          description: string;
-          id: string;
-          inquiry_url: string;
-          location: string;
-          status: Database["public"]["Enums"]["project_status"];
-          title: string;
-          updated_at: string;
-          year: number;
-        }[];
-      };
-    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
     Enums: {
-      project_status: "draft" | "published" | "hidden";
-      tag_type: "project" | "item";
+      category_type: "project" | "item";
     };
-    CompositeTypes: {
-      project_image_type: {
-        image_url: string | null;
-        alt_text: string | null;
-        is_main: boolean | null;
-        order: number | null;
-      };
-    };
+    CompositeTypes: Record<string, never>;
   };
 };
 
@@ -553,30 +583,10 @@ export type Enums<
     ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
     : never;
 
-export type CompositeTypes<
-  PublicCompositeTypeNameOrOptions extends
-    | keyof DefaultSchema["CompositeTypes"]
-    | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-    schema: keyof DatabaseWithoutInternals;
-  }
-    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
-> = PublicCompositeTypeNameOrOptions extends {
-  schema: keyof DatabaseWithoutInternals;
-}
-  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-    : never;
-
 export const Constants = {
   public: {
     Enums: {
-      project_status: ["draft", "published", "hidden"],
+      category_type: ["project", "item"],
     },
   },
 } as const;
-
-
-

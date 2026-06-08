@@ -1,7 +1,8 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { SiteHeader } from "@/components/site-header";
-import { SiteFooter } from "@/components/site-footer";
+import { SiteHeader } from "@/components/d4p/site-header";
+import { SiteFooter } from "@/components/d4p/site-footer";
+import { ContactModalProvider } from "@/components/d4p/contact-modal";
 import { JsonLd } from "@/components/json-ld";
 import {
   SITE_DESCRIPTION,
@@ -11,6 +12,7 @@ import {
   organizationSchema,
   websiteSchema,
 } from "@/lib/seo";
+import { fetchSearchIndex } from "@/lib/api";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -21,7 +23,7 @@ export const metadata: Metadata = {
   },
   description: SITE_DESCRIPTION,
   alternates: {
-    canonical: "/projects",
+    canonical: "/",
   },
   openGraph: {
     title: SITE_NAME,
@@ -38,30 +40,18 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const index = await fetchSearchIndex();
+
   return (
     <html lang="ko">
-      <head>
-        {/* Pretendard for body text */}
-        <link
-          rel="stylesheet"
-          as="style"
-          crossOrigin="anonymous"
-          href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css"
-        />
-        {/* Rethink Sans for logo */}
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Rethink+Sans:wght@700&display=swap"
-          rel="stylesheet"
-        />
-      </head>
-      <body className="min-h-screen bg-background font-sans">
+      <body className="min-h-screen">
         <JsonLd data={jsonLdGraph([organizationSchema(), websiteSchema()])} />
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-[1920px] px-6 sm:px-8 lg:px-12 xl:px-16 2xl:px-24 py-8 lg:py-12">{children}</main>
-        <SiteFooter />
+        <ContactModalProvider>
+          <SiteHeader index={index} />
+          <main style={{ minHeight: "60vh" }}>{children}</main>
+          <SiteFooter />
+        </ContactModalProvider>
       </body>
     </html>
   );

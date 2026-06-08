@@ -1,235 +1,232 @@
-import Link from "next/link";
-import Image from "next/image";
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchBrandBySlug } from "@/lib/api";
-import { addCacheBuster } from "@/lib/utils";
-import { JsonLd } from "@/components/json-ld";
-import {
-  absoluteUrl,
-  breadcrumbSchema,
-  compactText,
-  createPageMetadata,
-  jsonLdGraph,
-  stripCacheBuster,
-  truncateDescription,
-} from "@/lib/seo";
+import type { BrandDetail } from "@/lib/types";
+import { createPageMetadata } from "@/lib/seo";
+import { Container, Overline } from "@/components/d4p/primitives";
+import { Breadcrumb } from "@/components/d4p/page-chrome";
+import { StickyTitle } from "@/components/d4p/sticky-title";
+import { ButtonLink } from "@/components/d4p/ui";
+import { ContactButton } from "@/components/d4p/contact-modal";
+import { ItemCard, ProjectCard } from "@/components/d4p/cards";
 
-export const revalidate = 0; // 항상 최신 데이터 가져오기
+export const revalidate = 3600;
 
-type Props = { params: Promise<{ slug: string }> };
-type RelatedProject = {
-  id: string;
-  slug: string;
-  cover_image_url: string | null;
-  title: string;
-  year: number | null;
-};
+type Props = { params: { slug: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const brand = await fetchBrandBySlug(decodedSlug);
+  const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
   if (!brand) return {};
-  const title = brand.name_en ? `${brand.name_ko} (${brand.name_en})` : brand.name_ko;
-  const description = truncateDescription(
-    compactText(brand.description, `${brand.name_ko} 브랜드의 공공조달 가구 제품과 프로젝트 사례입니다.`)
-  );
-
   return createPageMetadata({
-    title,
-    description,
-    path: `/brands/${decodedSlug}`,
-    images: [brand.cover_image_url, brand.logo_image_url],
+    title: brand.nameKo,
+    description:
+      brand.description ??
+      `${brand.nameKo}${brand.nameEn ? ` (${brand.nameEn})` : ""} 브랜드의 오피스 가구 아이템과 도입 프로젝트입니다.`,
+    path: `/brands/${params.slug}`,
+    images: [brand.cover, brand.logo],
+    type: "article",
   });
 }
 
-export default async function BrandDetailPage({ params }: Props) {
-  const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const brand = await fetchBrandBySlug(decodedSlug);
-  if (!brand) return notFound();
+const sectionHeading: React.CSSProperties = {
+  fontFamily: "var(--font-display)",
+  fontWeight: 600,
+  fontSize: 20,
+  margin: "8px 0 22px",
+  color: "var(--ink-900)",
+};
 
-  const projects: RelatedProject[] = brand.projects
-    .map((item: { project_id: string; projects: any | null }) => {
-      if (!item.projects) return null;
-      // cover_image_url이 없으면 project_images의 첫 번째 이미지 사용
-      const coverImage = item.projects.cover_image_url ?? item.projects.project_images?.[0]?.image_url ?? null;
-      return {
-        id: item.projects.id,
-        title: item.projects.title,
-        cover_image_url: coverImage,
-        year: item.projects.year,
-        slug:
-          "slug" in item.projects && typeof item.projects.slug === "string"
-            ? item.projects.slug
-            : item.projects.id,
-      };
-    })
-    .filter((project: RelatedProject | null): project is RelatedProject => Boolean(project));
-  const brandTitle = brand.name_en ? `${brand.name_ko} (${brand.name_en})` : brand.name_ko;
-  const description = truncateDescription(
-    compactText(brand.description, `${brand.name_ko} 브랜드의 공공조달 가구 제품과 프로젝트 사례입니다.`)
-  );
+export default async function BrandDetailPage({ params }: Props) {
+  const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
+  if (!brand) notFound();
+
+  const stats: [number, string][] = [
+    [brand.itemCount, "아이템"],
+    [brand.projectCount, "프로젝트"],
+  ];
 
   return (
-    <article className="-mx-4 -mt-6 sm:-mx-6">
-      <JsonLd
-        data={jsonLdGraph([
-          breadcrumbSchema([
-            { name: "Brands", path: "/brands" },
-            { name: brand.name_ko, path: `/brands/${decodedSlug}` },
-          ]),
-          {
-            "@type": "Brand",
-            "@id": `${absoluteUrl(`/brands/${decodedSlug}`)}#brand`,
-            url: absoluteUrl(`/brands/${decodedSlug}`),
-            name: brand.name_ko,
-            alternateName: brand.name_en ?? undefined,
-            description,
-            logo: stripCacheBuster(brand.logo_image_url),
-            image: stripCacheBuster(brand.cover_image_url),
-            sameAs: brand.website_url ? [brand.website_url] : undefined,
-            subjectOf: projects.map((project: RelatedProject) => ({
-              "@type": "CreativeWork",
-              name: project.title,
-              url: absoluteUrl(`/projects/${project.slug}`),
-            })),
-          },
-        ])}
+    <div>
+      <StickyTitle
+        title={brand.nameKo}
+        meta={brand.nameEn ?? undefined}
+        threshold={320}
+        actions={<ContactButton size="sm">브랜드 문의</ContactButton>}
       />
-      {/* Cover Image Section */}
-      <div className="relative">
-        <div className="relative h-64 w-full overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 sm:h-80">
-          <Image
-            src={addCacheBuster(brand.cover_image_url)}
-            alt={brandTitle}
-            fill
-            priority
-            className="object-cover"
-            sizes="100vw"
+
+      <Container style={{ padding: "var(--sp-5) var(--gutter) var(--sp-9)" }}>
+        <div style={{ marginBottom: "var(--sp-5)" }}>
+          <Breadcrumb
+            items={[
+              { label: "홈", href: "/" },
+              { label: "브랜드", href: "/brands" },
+              { label: brand.nameKo },
+            ]}
           />
         </div>
-        
-        {/* Profile Image */}
-        <div className="absolute -bottom-16 left-4 sm:left-8">
-          <div className="relative h-32 w-32 overflow-hidden rounded-full border-4 border-white bg-white shadow-lg">
-            <Image
-              src={addCacheBuster(brand.logo_image_url ?? brand.cover_image_url)}
-              alt={`${brandTitle} 로고`}
-              fill
-              className="object-contain p-2"
-              sizes="128px"
+
+        {/* Cover */}
+        <div
+          style={{
+            position: "relative",
+            overflow: "hidden",
+            borderRadius: "var(--radius-sm)",
+            aspectRatio: "21 / 9",
+            background: "var(--ink-200)",
+            marginBottom: "var(--sp-7)",
+          }}
+        >
+          {brand.cover ? (
+            <img
+              src={brand.cover}
+              alt={brand.nameKo}
+              loading="lazy"
+              style={{ width: "100%", height: "100%", objectFit: "cover" }}
             />
+          ) : (
+            <div
+              style={{
+                position: "absolute",
+                inset: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "var(--sunken)",
+                color: "var(--ink-400)",
+                fontFamily: "var(--font-display)",
+                fontWeight: 600,
+                fontSize: "2rem",
+              }}
+            >
+              {brand.nameKo.charAt(0) || "DESIGN4PUBLIC"}
+            </div>
+          )}
+          <div style={{ position: "absolute", inset: 0, background: "var(--scrim-bottom)" }} />
+          <div style={{ position: "absolute", left: "var(--sp-6)", bottom: "var(--sp-6)" }}>
+            {brand.nameEn && (
+              <div
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 10,
+                  fontWeight: 700,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  color: "rgba(255,255,255,.74)",
+                }}
+              >
+                {brand.nameEn}
+              </div>
+            )}
+            <div
+              style={{
+                fontFamily: "var(--font-sans)",
+                fontSize: "clamp(2rem,4vw,3rem)",
+                fontWeight: 700,
+                letterSpacing: "0.02em",
+                color: "var(--white)",
+                lineHeight: 1.05,
+                marginTop: 8,
+              }}
+            >
+              {brand.nameKo}
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Brand Info Section */}
-      <div className="mt-20 px-4 sm:px-6">
-        <div className="border-b pb-6">
-          <h1 className="text-3xl font-bold">
-            {brand.name_ko}
-            {brand.name_en && (
-              <span className="ml-3 text-lg font-normal text-muted-foreground">
-                {brand.name_en}
-              </span>
+        {/* About + stats */}
+        <div
+          className="d4p-detail-split"
+          style={{
+            alignItems: "start",
+            marginBottom: "var(--sp-8)",
+            borderBottom: "1px solid var(--border-hair)",
+            paddingBottom: "var(--sp-7)",
+          }}
+        >
+          <div>
+            <Overline>About</Overline>
+            {brand.description && (
+              <p
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 16,
+                  lineHeight: 1.7,
+                  color: "var(--ink-700)",
+                  margin: "18px 0 0",
+                  maxWidth: "48ch",
+                }}
+              >
+                {brand.description}
+              </p>
             )}
-          </h1>
-          
-          {brand.website_url && (
-            <a 
-              href={brand.website_url} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 hover:underline"
-            >
-              <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-              </svg>
-              브랜드 홈페이지
-            </a>
-          )}
-          
-          {brand.description && (
-            <p className="mt-4 text-muted-foreground leading-relaxed">
-              {brand.description}
-            </p>
-          )}
+            {brand.website && (
+              <div style={{ marginTop: 24 }}>
+                <ButtonLink
+                  variant="secondary"
+                  href={brand.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  웹사이트 방문
+                </ButtonLink>
+              </div>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 40 }}>
+            {stats.map(([n, l]) => (
+              <div key={l}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-display)",
+                    fontWeight: 600,
+                    fontSize: 28,
+                    color: "var(--ink-900)",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  {n.toLocaleString()}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "var(--font-sans)",
+                    fontSize: 13,
+                    color: "var(--ink-500)",
+                    marginTop: 3,
+                  }}
+                >
+                  {l}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        {/* Items Section */}
-        {brand.items && brand.items.length > 0 && (
-          <section className="mt-8">
-            <h2 className="mb-4 text-xl font-semibold">제품 목록</h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {brand.items.map((item: any) => (
-                <Link 
-                  key={item.id} 
-                  href={`/items/${item.slug}`}
-                  className="group overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md"
-                >
-                  <div className="relative aspect-square w-full overflow-hidden bg-gray-50">
-                    <Image
-                      src={addCacheBuster(item.image_url)}
-                      alt={item.name}
-                      fill
-                      className="object-cover transition-transform group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium line-clamp-1">{item.name}</h3>
-                    {item.description && (
-                      <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                        {item.description}
-                      </p>
-                    )}
-                  </div>
-                </Link>
+        {/* Items */}
+        {brand.items.length > 0 && (
+          <div style={{ marginBottom: "var(--sp-8)" }}>
+            <Overline>Items</Overline>
+            <h2 style={sectionHeading}>대표 아이템</h2>
+            <div className="d4p-grid-4">
+              {brand.items.map((it) => (
+                <ItemCard key={it.id} item={it} />
               ))}
             </div>
-          </section>
+          </div>
         )}
 
-        {/* Projects Section */}
-        <section className="mt-8 pb-8">
-          <h2 className="mb-4 text-xl font-semibold">관련 프로젝트</h2>
-          {projects.length ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              {projects.map((project: RelatedProject) => (
-                <Link
-                  key={project.id}
-                  href={`/projects/${project.slug}`}
-                  className="group overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md"
-                >
-                  <div className="relative aspect-video w-full overflow-hidden bg-gray-50">
-                    <Image
-                      src={addCacheBuster(project.cover_image_url)}
-                      alt={project.title}
-                      fill
-                      className="object-cover transition-transform group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, 50vw"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-medium">{project.title}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      {project.year ?? "연도 미정"}
-                    </p>
-                  </div>
-                </Link>
+        {/* Projects */}
+        {brand.projects.length > 0 && (
+          <div>
+            <Overline>Projects</Overline>
+            <h2 style={sectionHeading}>도입 프로젝트</h2>
+            <div className="d4p-grid-3">
+              {brand.projects.map((p) => (
+                <ProjectCard key={p.id} project={p} />
               ))}
             </div>
-          ) : (
-            <div className="rounded-lg border border-dashed bg-gray-50 p-8 text-center">
-              <p className="text-sm text-muted-foreground">
-                아직 등록된 프로젝트가 없습니다.
-              </p>
-            </div>
-          )}
-        </section>
-      </div>
-    </article>
+          </div>
+        )}
+      </Container>
+    </div>
   );
 }

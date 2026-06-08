@@ -1,405 +1,405 @@
-import { getSupabaseConfig, supabase } from "./supabase";
-import type { Tables } from "./database.types";
+import { supabase } from "./supabase";
+import type {
+  BrandDetail,
+  BrandSummary,
+  Category,
+  Counts,
+  HomeData,
+  ItemDetail,
+  ItemSummary,
+  PhotoFeedItem,
+  PhotoLite,
+  ProjectDetail,
+  ProjectSummary,
+  SearchIndex,
+} from "./types";
 
-type ProjectFilters = {
-  q?: string;
-  years?: string[];
-  tags?: string[];
-};
+/* ============================================================
+   Raw row helpers (the embedded shapes PostgREST returns)
+   ============================================================ */
+type RawPhoto = { id: string; image_url: string; alt_text: string | null; title: string | null };
+type RawProjectPhoto = { is_main: boolean | null; order: number | null; photos: RawPhoto | null };
+type RawPhotoItem = { is_main: boolean | null; order: number | null; photos: { image_url: string } | null };
+type RawCategoryJoin = { categories: { id?: string; name: string } | null };
 
-export type Project = Tables<"projects"> & {
-  project_images: Tables<"project_images">[];
-  project_tags: (Tables<"project_tags"> & { tags: Tables<"tags"> | null })[];
-  project_items: (Tables<"project_items"> & {
-    items: (Tables<"items"> & { brands: Tables<"brands"> | null }) | null;
-  })[];
-};
+/* Next can hand a route param through still percent-encoded (non-ASCII slugs).
+   Decode defensively so the DB lookup matches the stored slug. */
+function safeDecodeSlug(slug: string): string {
+  try {
+    return decodeURIComponent(slug);
+  } catch {
+    return slug;
+  }
+}
 
-export async function fetchProjects(filters: ProjectFilters = {}) {
+const ord = (n: number | null | undefined) => (n == null ? Number.MAX_SAFE_INTEGER : n);
+const byOrder = <T extends { order: number | null }>(a: T, b: T) => ord(a.order) - ord(b.order);
+
+function coverFrom(rows: RawProjectPhoto[] | null | undefined): string | null {
+  if (!rows?.length) return null;
+  const sorted = [...rows].sort(byOrder);
+  const main = sorted.find((r) => r.is_main && r.photos?.image_url);
+  return (main ?? sorted.find((r) => r.photos?.image_url))?.photos?.image_url ?? null;
+}
+
+function galleryFrom(rows: RawProjectPhoto[] | null | undefined): PhotoLite[] {
+  if (!rows?.length) return [];
+  return [...rows]
+    .sort((a, b) => Number(!!b.is_main) - Number(!!a.is_main) || byOrder(a, b))
+    .filter((r) => r.photos?.image_url)
+    .map((r) => ({
+      id: r.photos!.id,
+      url: r.photos!.image_url,
+      alt: r.photos!.alt_text,
+      title: r.photos!.title,
+    }));
+}
+
+function itemImageFrom(rows: RawPhotoItem[] | null | undefined): string | null {
+  if (!rows?.length) return null;
+  const sorted = [...rows].sort(byOrder);
+  const main = sorted.find((r) => r.is_main && r.photos?.image_url);
+  return (main ?? sorted.find((r) => r.photos?.image_url))?.photos?.image_url ?? null;
+}
+
+function categoryNames(rows: RawCategoryJoin[] | null | undefined): string[] {
+  return (rows ?? []).map((r) => r.categories?.name).filter((n): n is string => Boolean(n));
+}
+
+function normalizeProjectSummary(p: any): ProjectSummary {
+  return {
+    id: p.id,
+    slug: p.slug,
+    title: p.title,
+    description: p.description ?? null,
+    year: p.year ?? null,
+    area: p.area ?? null,
+    location: p.location ?? null,
+    client: p.client ?? null,
+    inquiryUrl: p.inquiry_url ?? null,
+    coverImage: coverFrom(p.project_photos),
+    categories: categoryNames(p.project_categories),
+    imageCount: (p.project_photos ?? []).length,
+  };
+}
+
+function normalizeItemSummary(it: any): ItemSummary {
+  return {
+    id: it.id,
+    slug: it.slug,
+    name: it.name,
+    description: it.description ?? null,
+    naraUrl: it.nara_url ?? null,
+    image: itemImageFrom(it.photo_items),
+    brandName: it.brands?.name_ko ?? null,
+    brandNameEn: it.brands?.name_en ?? null,
+    brandSlug: it.brands?.slug ?? null,
+    categories: categoryNames(it.item_categories),
+  };
+}
+
+function normalizeBrandSummary(b: any): BrandSummary {
+  return {
+    id: b.id,
+    slug: b.slug,
+    nameKo: b.name_ko,
+    nameEn: b.name_en ?? null,
+    description: b.description ?? null,
+    logo: b.logo_image_url ?? null,
+    cover: b.cover_image_url ?? null,
+    website: b.website_url ?? null,
+    itemCount: (b.items ?? []).length,
+    projectCount: 0,
+  };
+}
+
+/* ============================================================
+   Select fragments
+   ============================================================ */
+const PROJECT_SUMMARY_SELECT = `
+  id,slug,title,description,year,area,location,client,inquiry_url,status,updated_at,
+  project_photos(is_main,order,photos(id,image_url,alt_text,title)),
+  project_categories(categories(id,name))
+`;
+
+const ITEM_SUMMARY_SELECT = `
+  id,slug,name,description,nara_url,status,brand_id,
+  brands(name_ko,name_en,slug),
+  photo_items(is_main,order,photos(id,image_url,alt_text,title)),
+  item_categories(categories(id,name))
+`;
+
+/* ============================================================
+   Projects
+   ============================================================ */
+export type ProjectFilters = { q?: string; category?: string; year?: string };
+
+export async function fetchProjects(filters: ProjectFilters = {}): Promise<ProjectSummary[]> {
   const { data, error } = await supabase
     .from("projects")
-    .select(
-      `id,slug,title,description,cover_image_url,year,area,status,location,created_at,updated_at,
-       project_images(id,image_url,order),
-       project_tags(tag_id,tags(id,name,type)),
-       project_items(item_id,items(id,slug,name,description,image_url,nara_url,brand_id,brands(id,slug,name_ko,name_en)))`
-    )
+    .select(PROJECT_SUMMARY_SELECT)
     .eq("status", "published")
     .order("year", { ascending: false, nullsFirst: false })
     .order("title", { ascending: true });
   if (error) throw error;
-  let projects = (data ?? []) as Project[];
+
+  let projects = (data ?? []).map(normalizeProjectSummary);
 
   if (filters.q) {
-    const keyword = filters.q.toLowerCase();
-    projects = projects.filter((project) => {
-      const text = [project.title, project.description, ...project.project_tags.map((tag) => tag.tags?.name ?? "")]
-        .join(" ")
-        .toLowerCase();
-      return text.includes(keyword);
-    });
-  }
-
-  if (filters.years?.length) {
-    projects = projects.filter((project) =>
-      project.year && filters.years!.includes(String(project.year))
+    const k = filters.q.toLowerCase();
+    projects = projects.filter((p) =>
+      [p.title, p.description, p.location, p.client, ...p.categories].join(" ").toLowerCase().includes(k)
     );
   }
-
-  if (filters.tags?.length) {
-    projects = projects.filter((project) =>
-      project.project_tags.some((tag) => tag.tag_id && filters.tags!.includes(tag.tag_id))
-    );
+  if (filters.category && filters.category !== "All") {
+    projects = projects.filter((p) => p.categories.includes(filters.category!));
   }
-
+  if (filters.year) {
+    projects = projects.filter((p) => String(p.year) === filters.year);
+  }
   return projects;
 }
 
-export async function fetchProjectBySlug(slug: string) {
+export async function fetchProjectBySlug(slug: string): Promise<ProjectDetail | null> {
+  slug = safeDecodeSlug(slug);
   const { data, error } = await supabase
     .from("projects")
     .select(
-      `id,slug,title,description,cover_image_url,year,area,status,location,created_at,updated_at,
-       project_images(id,image_url,order),
-       project_tags(tag_id,tags(id,name,type)),
-       project_items(item_id,items(id,slug,name,description,image_url,nara_url,brand_id,brands(id,slug,name_ko,name_en,description,cover_image_url,website_url)))`
+      `${PROJECT_SUMMARY_SELECT},
+       project_items(items(${ITEM_SUMMARY_SELECT}))`
     )
     .eq("slug", slug)
     .eq("status", "published")
     .maybeSingle();
-
   if (error) throw error;
-  return data as Project | null;
+  if (!data) return null;
+
+  const summary = normalizeProjectSummary(data);
+  const items = ((data as any).project_items ?? [])
+    .map((pi: any) => pi.items)
+    .filter(Boolean)
+    .map(normalizeItemSummary);
+
+  return { ...summary, gallery: galleryFrom((data as any).project_photos), items };
 }
 
-export type Brand = Tables<"brands">;
+/* ============================================================
+   Items
+   ============================================================ */
+export type ItemFilters = { q?: string; category?: string; brand?: string };
 
-export async function fetchBrands() {
+export async function fetchItems(filters: ItemFilters = {}): Promise<ItemSummary[]> {
+  const { data, error } = await supabase
+    .from("items")
+    .select(ITEM_SUMMARY_SELECT)
+    .neq("status", "hidden")
+    .order("name", { ascending: true });
+  if (error) throw error;
+
+  let items = (data ?? []).map(normalizeItemSummary);
+
+  if (filters.q) {
+    const k = filters.q.toLowerCase();
+    items = items.filter((i) =>
+      [i.name, i.description, i.brandName, i.brandNameEn, ...i.categories].join(" ").toLowerCase().includes(k)
+    );
+  }
+  if (filters.category && filters.category !== "All") {
+    items = items.filter((i) => i.categories.includes(filters.category!));
+  }
+  if (filters.brand) {
+    items = items.filter((i) => i.brandSlug === filters.brand);
+  }
+  return items;
+}
+
+export async function fetchItemBySlug(slug: string): Promise<ItemDetail | null> {
+  slug = safeDecodeSlug(slug);
+  const { data, error } = await supabase
+    .from("items")
+    .select(
+      `id,slug,name,description,nara_url,status,brand_id,
+       brands(id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url),
+       photo_items(is_main,order,photos(id,image_url,alt_text,title)),
+       item_categories(categories(id,name)),
+       project_items(projects(${PROJECT_SUMMARY_SELECT}))`
+    )
+    .eq("slug", slug)
+    .neq("status", "hidden")
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  const summary = normalizeItemSummary(data);
+  const gallery: PhotoLite[] = [...((data as any).photo_items ?? [])]
+    .sort((a: any, b: any) => Number(!!b.is_main) - Number(!!a.is_main) || ord(a.order) - ord(b.order))
+    .filter((r: any) => r.photos?.image_url)
+    .map((r: any) => ({ id: r.photos.id, url: r.photos.image_url, alt: r.photos.alt_text, title: r.photos.title }));
+
+  const brandRaw = (data as any).brands;
+  const brand: BrandSummary | null = brandRaw ? { ...normalizeBrandSummary({ ...brandRaw, items: [] }) } : null;
+
+  const projects = ((data as any).project_items ?? [])
+    .map((pi: any) => pi.projects)
+    .filter((p: any) => p && p.status === "published")
+    .map(normalizeProjectSummary);
+
+  return { ...summary, gallery, brand, projects };
+}
+
+/* ============================================================
+   Brands
+   ============================================================ */
+export async function fetchBrands(): Promise<BrandSummary[]> {
   const { data, error } = await supabase
     .from("brands")
-    .select("id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url")
+    .select(`id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,status,items(id)`)
     .order("name_ko", { ascending: true });
-
   if (error) throw error;
-
-  // Fallback to direct REST API call if Supabase client returns empty data
-  if (!data || data.length === 0) {
-    const { url: supabaseUrl, key } = getSupabaseConfig();
-    const url = `${supabaseUrl}/rest/v1/brands?select=*&order=name_ko.asc`;
-    const response = await fetch(url, {
-      headers: {
-        'apikey': key,
-        'Authorization': `Bearer ${key}`,
-      },
-      cache: 'no-store',
-    });
-
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const restData = await response.json();
-    return restData as Brand[];
-  }
-
-  return (data ?? []) as Brand[];
+  return (data ?? []).map(normalizeBrandSummary);
 }
 
-export async function fetchBrandBySlug(slug: string) {
-  // Use REST API directly to avoid complex relationship issues with Supabase JS client
-  const { url: supabaseUrl, key } = getSupabaseConfig();
-  const brandUrl = `${supabaseUrl}/rest/v1/brands?select=id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,items(id,slug,name,description,image_url,nara_url)&slug=eq.${slug}`;
-  const brandResponse = await fetch(brandUrl, {
-    headers: {
-      'apikey': key,
-      'Authorization': `Bearer ${key}`,
-    },
-    cache: 'no-store',
-  });
-
-  if (!brandResponse.ok) {
-    throw new Error(`HTTP error! status: ${brandResponse.status}`);
-  }
-
-  const brandData = await brandResponse.json();
-  if (!brandData || brandData.length === 0) {
-    return null;
-  }
-
-  const brand = brandData[0];
-
-  // Initialize empty projects array
-  brand.projects = [];
-
-  // Try to fetch project_items for this brand if items exist
-  if (brand.items && brand.items.length > 0) {
-    try {
-      const itemIds = brand.items.map((item: any) => item.id).join(',');
-      const projectItemsUrl = `${supabaseUrl}/rest/v1/project_items?select=project_id,item_id,projects(id,slug,title,cover_image_url,year,status,project_images(id,image_url,order))&item_id=in.(${itemIds})`;
-      const projectItemsResponse = await fetch(projectItemsUrl, {
-        headers: {
-          'apikey': key,
-          'Authorization': `Bearer ${key}`,
-        },
-        cache: 'no-store',
-      });
-
-      if (projectItemsResponse.ok) {
-        const projectItemsData = await projectItemsResponse.json();
-        brand.projects = projectItemsData || [];
-      }
-    } catch (err) {
-      console.error('Error fetching project_items:', err);
-      // Continue with empty projects array
-    }
-  }
-
-  return brand as (Brand & {
-    items: (Tables<"items"> & {
-      project_items: { project_id: string; projects: Tables<"projects"> | null }[];
-    })[];
-    projects: { project_id: string; projects: Tables<"projects"> | null }[];
-  }) | null;
-}
-
-export type Item = Tables<"items"> & {
-  brands: Tables<"brands"> | null;
-  item_tags: (Tables<"item_tags"> & { tags: Tables<"tags"> | null })[];
-  project_items: {
-    project_id: string;
-    projects: (Tables<"projects"> & {
-      project_images: Tables<"project_images">[]
-    }) | null
-  }[];
-};
-
-export async function fetchItems() {
+export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null> {
+  slug = safeDecodeSlug(slug);
   const { data, error } = await supabase
-    .from("items")
+    .from("brands")
     .select(
-      `id,slug,name,description,image_url,nara_url,status,brand_id,
-       brands(id,slug,name_ko,name_en,logo_image_url,cover_image_url),
-       item_tags(tag_id,tags(id,name,type))`
-    )
-    .order("name");
-  if (error) throw error;
-  return (data ?? []) as Item[];
-}
-
-export async function fetchItemBySlug(slug: string) {
-  const { data, error } = await supabase
-    .from("items")
-    .select(
-      `id,slug,name,description,image_url,nara_url,brand_id,status,
-       brands(id,slug,name_ko,name_en,description,cover_image_url,website_url),
-       item_tags(tag_id,tags(id,name,type)),
-       project_items(project_id,projects(id,slug,title,cover_image_url,year,status,area,location,project_images(id,image_url,order)))`
+      `id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,
+       items(${ITEM_SUMMARY_SELECT},
+         project_items(projects(${PROJECT_SUMMARY_SELECT})))`
     )
     .eq("slug", slug)
     .maybeSingle();
   if (error) throw error;
-  return data as Item | null;
-}
+  if (!data) return null;
 
-export async function fetchTags() {
-  const { data, error } = await supabase.from("tags").select("id,name,type").order("name");
-  if (error) throw error;
-  return (data ?? []) as Tables<"tags">[];
-}
+  const rawItems = (data as any).items ?? [];
+  const items = rawItems.map(normalizeItemSummary);
 
-export type Photo = Tables<"project_images"> & {
-  projects: Tables<"projects"> | null;
-  image_tags: (Tables<"image_tags"> & { tags: Tables<"tags"> | null })[];
-};
-
-export async function fetchPhotos() {
-  const { data, error } = await supabase
-    .from("project_images")
-    .select(
-      `id,image_url,order,project_id,
-       projects(id,slug,title,description,status),
-       image_tags(tag_id,tags(id,name))`
-    )
-    .order("order", { ascending: true })
-    .limit(60);
-  if (error) throw error;
-  return (data ?? []) as Photo[];
-}
-
-export async function fetchPhotoById(id: string) {
-  const { data, error } = await supabase
-    .from("project_images")
-    .select(
-      `id,image_url,order,project_id,
-       projects(id,slug,title,description,status),
-       image_tags(tag_id,tags(id,name))`
-    )
-    .eq("id", id)
-    .maybeSingle();
-  if (error) throw error;
-  return data as Photo | null;
-}
-
-// Photo with linked items type
-export type PhotoWithItems = {
-  id: string;
-  image_url: string;
-  alt_text: string | null;
-  title: string | null;
-  order: number;
-  items: (Tables<"items"> & { brands: Tables<"brands"> | null })[];
-};
-
-// Fetch project photos with items linked to each photo
-export async function fetchProjectPhotosWithItems(projectId: string): Promise<PhotoWithItems[]> {
-  const { url: baseUrl, key: apiKey } = getSupabaseConfig();
-
-  // First, get project_photos with photo details
-  const projectPhotosUrl = `${baseUrl}/rest/v1/project_photos?select=id,order,is_main,photo_id,photos(id,image_url,alt_text,title)&project_id=eq.${projectId}&order=order.asc`;
-  const projectPhotosResponse = await fetch(projectPhotosUrl, {
-    headers: {
-      'apikey': apiKey,
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    cache: 'no-store',
-  });
-
-  if (!projectPhotosResponse.ok) {
-    console.error('Failed to fetch project_photos');
-    return [];
-  }
-
-  const projectPhotosData = await projectPhotosResponse.json();
-  if (!projectPhotosData || projectPhotosData.length === 0) {
-    return [];
-  }
-
-  // Get all photo IDs
-  const photoIds = projectPhotosData
-    .map((pp: any) => pp.photos?.id)
-    .filter(Boolean);
-
-  if (photoIds.length === 0) {
-    return [];
-  }
-
-  // Fetch photo_items with items for all photos
-  const photoItemsUrl = `${baseUrl}/rest/v1/photo_items?select=photo_id,items(id,slug,name,description,image_url,nara_url,brand_id,brands(id,slug,name_ko,name_en))&photo_id=in.(${photoIds.join(',')})`;
-  const photoItemsResponse = await fetch(photoItemsUrl, {
-    headers: {
-      'apikey': apiKey,
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    cache: 'no-store',
-  });
-
-  let photoItemsData: any[] = [];
-  if (photoItemsResponse.ok) {
-    photoItemsData = await photoItemsResponse.json();
-  }
-
-  // Group items by photo_id
-  const itemsByPhotoId: Record<string, (Tables<"items"> & { brands: Tables<"brands"> | null })[]> = {};
-  for (const pi of photoItemsData) {
-    if (pi.items) {
-      if (!itemsByPhotoId[pi.photo_id]) {
-        itemsByPhotoId[pi.photo_id] = [];
+  // distinct published projects across this brand's items
+  const projMap = new Map<string, ProjectSummary>();
+  for (const it of rawItems) {
+    for (const pi of it.project_items ?? []) {
+      const proj = pi.projects;
+      if (proj && proj.status === "published" && !projMap.has(proj.id)) {
+        projMap.set(proj.id, normalizeProjectSummary(proj));
       }
-      itemsByPhotoId[pi.photo_id].push(pi.items);
     }
   }
+  const projects = [...projMap.values()].sort((a, b) => ord(b.year) - ord(a.year));
 
-  // Build result
-  const result: PhotoWithItems[] = projectPhotosData
-    .filter((pp: any) => pp.photos)
-    .map((pp: any, index: number) => ({
-      id: pp.photos.id,
-      image_url: pp.photos.image_url,
-      alt_text: pp.photos.alt_text,
-      title: pp.photos.title,
-      order: pp.order ?? index,
-      items: itemsByPhotoId[pp.photos.id] || [],
-    }));
-
-  return result;
+  const summary = normalizeBrandSummary({ ...data, items: rawItems });
+  return { ...summary, itemCount: items.length, projectCount: projects.length, items, projects };
 }
 
-// Fetch photos that contain a specific item
-export async function fetchItemPhotos(itemId: string) {
-  const { url: baseUrl, key: apiKey } = getSupabaseConfig();
-
-  // Get photo_items for this item
-  const photoItemsUrl = `${baseUrl}/rest/v1/photo_items?select=photo_id,photos(id,image_url,alt_text,title)&item_id=eq.${itemId}`;
-  const photoItemsResponse = await fetch(photoItemsUrl, {
-    headers: {
-      'apikey': apiKey,
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    cache: 'no-store',
-  });
-
-  if (!photoItemsResponse.ok) {
-    return [];
-  }
-
-  const photoItemsData = await photoItemsResponse.json();
-  if (!photoItemsData || photoItemsData.length === 0) {
-    return [];
-  }
-
-  // Get photo IDs
-  const photoIds = photoItemsData
-    .map((pi: any) => pi.photos?.id)
-    .filter(Boolean);
-
-  if (photoIds.length === 0) {
-    return [];
-  }
-
-  // Get project info for each photo via project_photos
-  const projectPhotosUrl = `${baseUrl}/rest/v1/project_photos?select=photo_id,projects(id,slug,title,status)&photo_id=in.(${photoIds.join(',')})`;
-  const projectPhotosResponse = await fetch(projectPhotosUrl, {
-    headers: {
-      'apikey': apiKey,
-      'Authorization': `Bearer ${apiKey}`,
-    },
-    cache: 'no-store',
-  });
-
-  let projectPhotosData: any[] = [];
-  if (projectPhotosResponse.ok) {
-    projectPhotosData = await projectPhotosResponse.json();
-  }
-
-  // Map project info by photo_id
-  const projectByPhotoId: Record<string, any> = {};
-  for (const pp of projectPhotosData) {
-    if (pp.projects && pp.projects.status === 'published') {
-      projectByPhotoId[pp.photo_id] = pp.projects;
-    }
-  }
-
-  // Build result with photo and project info
-  const result = photoItemsData
-    .filter((pi: any) => pi.photos && projectByPhotoId[pi.photos.id])
-    .map((pi: any) => ({
-      id: pi.photos.id,
-      image_url: pi.photos.image_url,
-      alt_text: pi.photos.alt_text,
-      title: pi.photos.title,
-      project: projectByPhotoId[pi.photos.id],
-    }));
-
-  return result as {
-    id: string;
-    image_url: string;
-    alt_text: string | null;
-    title: string | null;
-    project: { id: string; slug: string; title: string; status: string };
-  }[];
+/* ============================================================
+   Photos
+   ============================================================ */
+function normalizePhotoFeed(row: any): PhotoFeedItem {
+  const proj = row.project_photos?.[0]?.projects ?? null;
+  return {
+    id: row.id,
+    url: row.image_url,
+    alt: row.alt_text ?? null,
+    title: row.title ?? null,
+    description: row.description ?? null,
+    projectId: proj?.id ?? null,
+    projectSlug: proj?.slug ?? null,
+    projectTitle: proj?.title ?? null,
+    projectCategories: categoryNames(proj?.project_categories),
+    year: proj?.year ?? null,
+    location: proj?.location ?? null,
+  };
 }
 
-// Inquiry form types
+export async function fetchPhotos(limit = 120): Promise<PhotoFeedItem[]> {
+  const { data, error } = await supabase
+    .from("photos")
+    .select(
+      `id,image_url,alt_text,title,description,created_at,
+       project_photos(order,projects(id,slug,title,year,location,status,project_categories(categories(name))))`
+    )
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? [])
+    .map(normalizePhotoFeed)
+    // only show photos that belong to a published project
+    .filter((p) => p.projectSlug != null);
+}
+
+/* ============================================================
+   Categories / counts / search index / home
+   ============================================================ */
+export async function fetchCategories(type: "project" | "item"): Promise<Category[]> {
+  const { data, error } = await supabase
+    .from("categories")
+    .select("id,name,type")
+    .eq("type", type)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((c) => ({ id: c.id, name: c.name }));
+}
+
+async function count(table: "projects" | "items" | "brands" | "photos"): Promise<number> {
+  const q = supabase.from(table).select("id", { count: "exact", head: true });
+  const { count: c, error } = table === "projects" ? await q.eq("status", "published") : await q;
+  if (error) return 0;
+  return c ?? 0;
+}
+
+export async function fetchCounts(): Promise<Counts> {
+  const [projects, items, brands, photos] = await Promise.all([
+    count("projects"),
+    count("items"),
+    count("brands"),
+    count("photos"),
+  ]);
+  return { projects, items, brands, photos };
+}
+
+export async function fetchSearchIndex(): Promise<SearchIndex> {
+  const [projects, items, brands] = await Promise.all([fetchProjects(), fetchItems(), fetchBrands()]);
+  return {
+    projects: projects.slice(0, 200).map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      year: p.year,
+      location: p.location,
+      categories: p.categories,
+      image: p.coverImage,
+    })),
+    items: items.slice(0, 300).map((i) => ({
+      slug: i.slug,
+      name: i.name,
+      brandName: i.brandName,
+      categories: i.categories,
+      image: i.image,
+    })),
+    brands: brands.map((b) => ({ slug: b.slug, nameKo: b.nameKo, nameEn: b.nameEn, image: b.cover ?? b.logo })),
+  };
+}
+
+export async function fetchHomeData(): Promise<HomeData> {
+  const [projects, items, brands, photos, counts] = await Promise.all([
+    fetchProjects(),
+    fetchItems(),
+    fetchBrands(),
+    fetchPhotos(12),
+    fetchCounts(),
+  ]);
+
+  // Featured = the published project with the most photos (richest gallery).
+  const featuredSummary = [...projects].sort((a, b) => b.imageCount - a.imageCount)[0] ?? null;
+  const featured = featuredSummary ? await fetchProjectBySlug(featuredSummary.slug) : null;
+
+  // Showcase items that actually have a photo first on the home grid.
+  const homeItems = [...items].sort((a, b) => Number(!!b.image) - Number(!!a.image));
+
+  return { featured, projects, items: homeItems, brands, photos, counts };
+}
+
+/* Inquiry form payload (consumed by the contact modal + /api/inquiry) */
 export type InquiryFormData = {
   name: string;
   email: string;

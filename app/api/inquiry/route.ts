@@ -27,29 +27,28 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        // Create Supabase client
-        const { url, key } = getSupabaseConfig();
-        const supabase = createClient(url, key);
-
-        // Insert inquiry into database
-        const { error: dbError } = await supabase.from("inquiries").insert([
-            {
-                name,
-                email,
-                phone: phone || null,
-                company: company || null,
-                project_slug: project_slug || null,
-                message,
-                status: "pending",
-            },
-        ]);
-
-        if (dbError) {
-            console.error("Database error:", dbError);
-            return NextResponse.json(
-                { error: "문의 저장에 실패했습니다. 다시 시도해주세요." },
-                { status: 500 }
-            );
+        // Best-effort persist to the database. Row-level security may block the
+        // public (anon) role from inserting; the email below is the source of
+        // truth, so a failed insert must NOT fail the user's request.
+        try {
+            const { url, key } = getSupabaseConfig();
+            const supabase = createClient(url, key);
+            const { error: dbError } = await supabase.from("inquiries").insert([
+                {
+                    name,
+                    email,
+                    phone: phone || null,
+                    company: company || null,
+                    project_slug: project_slug || null,
+                    message,
+                    status: "pending",
+                },
+            ]);
+            if (dbError) {
+                console.error("Inquiry DB insert skipped:", dbError.message);
+            }
+        } catch (dbException) {
+            console.error("Inquiry DB insert exception:", dbException);
         }
 
         // Send email notification using Resend

@@ -1,301 +1,159 @@
-import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
-import { Metadata } from "next";
-import { fetchItemBySlug, fetchItemPhotos } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { JsonLd } from "@/components/json-ld";
-import { addCacheBuster } from "@/lib/utils";
+import { notFound } from "next/navigation";
 import { ExternalLink, Mail } from "lucide-react";
-import {
-  SITE_URL,
-  absoluteUrl,
-  breadcrumbSchema,
-  compactText,
-  createPageMetadata,
-  jsonLdGraph,
-  stripCacheBuster,
-  truncateDescription,
-} from "@/lib/seo";
+import { fetchItemBySlug } from "@/lib/api";
+import type { ItemDetail } from "@/lib/types";
+import { createPageMetadata } from "@/lib/seo";
+import { Container, Overline, SpecSheet } from "@/components/d4p/primitives";
+import { Breadcrumb } from "@/components/d4p/page-chrome";
+import { StickyTitle } from "@/components/d4p/sticky-title";
+import { DetailHero } from "@/components/d4p/gallery";
+import { ButtonLink } from "@/components/d4p/ui";
+import { ContactButton } from "@/components/d4p/contact-modal";
+import { ProjectCard } from "@/components/d4p/cards";
 
-export const revalidate = 0; // 항상 최신 데이터 가져오기
+export const revalidate = 3600;
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: { slug: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const item = await fetchItemBySlug(decodeURIComponent(slug));
+  const item: ItemDetail | null = await fetchItemBySlug(params.slug);
   if (!item) return {};
-  const decodedSlug = decodeURIComponent(slug);
-  const description = truncateDescription(
-    compactText(item.description, `${item.name} 공공조달 가구 제품 정보와 적용 프로젝트 사례입니다.`)
-  );
-  const metadata = createPageMetadata({
+  return createPageMetadata({
     title: item.name,
-    description,
-    path: `/items/${decodedSlug}`,
-    images: [item.image_url],
+    description:
+      item.description ??
+      `${item.brandName ? `${item.brandName} ` : ""}${item.name} 오피스 가구 아이템 정보와 사양입니다.`,
+    path: `/items/${params.slug}`,
+    images: [item.image, ...item.gallery.map((g) => g.url)],
+    type: "article",
   });
-
-  if (item.status === "hidden") {
-    metadata.robots = {
-      index: false,
-      follow: false,
-    };
-  }
-
-  return metadata;
 }
 
 export default async function ItemDetailPage({ params }: Props) {
-  const { slug } = await params;
-  const item = await fetchItemBySlug(decodeURIComponent(slug));
-  if (!item) return notFound();
-  const decodedSlug = decodeURIComponent(slug);
+  const item: ItemDetail | null = await fetchItemBySlug(params.slug);
+  if (!item) notFound();
 
-  // Fetch photos that contain this item
-  type ItemPhoto = {
-    id: string;
-    image_url: string;
-    alt_text: string | null;
-    title: string | null;
-    project: { id: string; slug: string; title: string; status: string };
-  };
-  const itemPhotos: ItemPhoto[] = await fetchItemPhotos(item.id);
+  const brandLabel = item.brandName ?? item.brandNameEn;
+  const categoriesLabel = item.categories.join(" · ");
+  const stickyMeta = [brandLabel, categoriesLabel].filter(Boolean).join(" · ");
 
-  type RelatedProject = {
-    id: string;
-    slug: string;
-    title: string;
-    cover_image_url: string | null;
-    year: number | null;
-    area?: number | null;
-    project_images?: { id: string; image_url: string; order: number }[];
-  };
-
-  const relatedProjects: RelatedProject[] = item.project_items
-    .map((pi: { project_id: string; projects: RelatedProject | null }) => {
-      if (!pi.projects) return null;
-      const coverImage = pi.projects.cover_image_url ?? pi.projects.project_images?.[0]?.image_url ?? null;
-      return {
-        ...pi.projects,
-        cover_image_url: coverImage,
-      };
-    })
-    .filter((project: RelatedProject | null): project is RelatedProject => Boolean(project));
-
-  const tags = item.item_tags
-    ?.map((tag: { tags: { name: string; type?: string } | null }) =>
-      tag.tags?.type === "item" ? tag.tags?.name : undefined
-    )
-    .filter((name: string | undefined): name is string => Boolean(name));
-  const description = truncateDescription(
-    compactText(item.description, `${item.name} 공공조달 가구 제품 정보와 적용 프로젝트 사례입니다.`)
-  );
+  const specRows = [
+    { label: "브랜드", value: brandLabel },
+    { label: "분류", value: categoriesLabel },
+  ].filter((r): r is { label: string; value: string } => Boolean(r.value));
 
   return (
-    <article className="space-y-10">
-      <JsonLd
-        data={jsonLdGraph([
-          breadcrumbSchema([
-            { name: "Items", path: "/items" },
-            { name: item.name, path: `/items/${decodedSlug}` },
-          ]),
-          {
-            "@type": "Product",
-            "@id": `${absoluteUrl(`/items/${decodedSlug}`)}#product`,
-            url: absoluteUrl(`/items/${decodedSlug}`),
-            name: item.name,
-            description,
-            image: stripCacheBuster(item.image_url),
-            brand: item.brands
-              ? {
-                  "@type": "Brand",
-                  name: item.brands.name_ko,
-                  alternateName: item.brands.name_en ?? undefined,
-                  url: absoluteUrl(`/brands/${item.brands.slug}`),
-                }
-              : undefined,
-            category: "공공조달 가구",
-            keywords: tags,
-            offers: item.nara_url
-              ? {
-                  "@type": "Offer",
-                  url: item.nara_url,
-                  availability: "https://schema.org/InStock",
-                  seller: {
-                    "@id": `${SITE_URL}/#organization`,
-                  },
-                }
-              : undefined,
-          },
-        ])}
+    <div>
+      <StickyTitle
+        title={item.name}
+        meta={stickyMeta || undefined}
+        threshold={300}
+        actions={
+          <ContactButton size="sm">문의하기</ContactButton>
+        }
       />
-      {/* 카탈로그 레이아웃 - 이미지 + 정보 */}
-      <div className="flex flex-col lg:flex-row gap-8 lg:gap-12">
-        {/* 좌측: 제품 이미지 */}
-        <div className="lg:w-1/2 space-y-4">
-          <div className="relative aspect-square w-full overflow-hidden rounded-lg bg-gray-100">
-            <Image
-              src={addCacheBuster(item.image_url)}
-              alt={item.name}
-              fill
-              priority
-              className="object-contain"
-              sizes="(max-width: 1024px) 100vw, 50vw"
-            />
-          </div>
 
-          {/* 추가 이미지가 있다면 썸네일로 표시 (현재는 1개만 있음) */}
-          {/* 향후 item_images 테이블이 추가되면 여기에 썸네일 갤러리 표시 */}
+      <Container style={{ padding: "var(--sp-5) var(--gutter) var(--sp-9)" }}>
+        <div style={{ marginBottom: "var(--sp-5)" }}>
+          <Breadcrumb
+            items={[
+              { label: "홈", href: "/" },
+              { label: "아이템", href: "/items" },
+              { label: item.name },
+            ]}
+          />
         </div>
 
-        {/* 우측: 제품 정보 */}
-        <div className="lg:w-1/2 space-y-6">
-          <header className="space-y-3">
-            <h1 className="text-3xl font-bold">{item.name}</h1>
-
-            {item.brands && (
-              <p className="text-lg">
-                <span className="text-muted-foreground">from </span>
-                <Link
-                  href={`/brands/${item.brands.slug}`}
-                  className="text-sage-600 hover:text-sage-700 hover:underline font-medium"
-                >
-                  {item.brands.name_ko}
-                  {item.brands.name_en && (
-                    <span className="text-muted-foreground ml-1">({item.brands.name_en})</span>
-                  )}
-                </Link>
-              </p>
-            )}
-          </header>
-
-          {/* CTA 버튼들 */}
-          <div className="flex flex-wrap gap-3">
-            {item.nara_url && (
-              <a href={item.nara_url} target="_blank" rel="noopener noreferrer">
-                <Button className="bg-sage-600 hover:bg-sage-700">
-                  <ExternalLink className="w-4 h-4 mr-2" />
-                  제품 사이트 방문
-                </Button>
-              </a>
-            )}
-            <Button variant="outline">
-              <Mail className="w-4 h-4 mr-2" />
-              견적 / 문의하기
-            </Button>
+        <div className="d4p-detail-split" style={{ alignItems: "start", gap: "var(--sp-8)" }}>
+          <div>
+            <DetailHero images={item.gallery} ratio="4 / 3" />
           </div>
 
-          {/* 제품 설명 */}
-          {item.description && (
-            <div className="prose prose-gray max-w-none">
-              <p className="text-muted-foreground leading-relaxed">{item.description}</p>
-            </div>
-          )}
-
-          {/* 태그 */}
-          {tags && tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {tags.map((tag: string) => (
-                <Badge key={tag} variant="muted">#{tag}</Badge>
+          <div>
+            {brandLabel &&
+              (item.brandSlug ? (
+                <Link href={`/brands/${item.brandSlug}`}>
+                  <Overline>{brandLabel}</Overline>
+                </Link>
+              ) : (
+                <Overline>{brandLabel}</Overline>
               ))}
-            </div>
-          )}
+            <h1
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 600,
+                fontSize: "clamp(1.7rem,2.4vw,2.1rem)",
+                letterSpacing: "-0.02em",
+                color: "var(--ink-900)",
+                margin: "12px 0 0",
+              }}
+            >
+              {item.name}
+            </h1>
+            {categoriesLabel && (
+              <p
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: 15,
+                  color: "var(--ink-500)",
+                  margin: "10px 0 0",
+                }}
+              >
+                {categoriesLabel}
+              </p>
+            )}
 
-          {/* 브랜드 정보 */}
-          {item.brands?.website_url && (
-            <div className="pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                <strong>LEARN MORE:</strong>{" "}
-                <a
-                  href={item.brands.website_url}
+            <div style={{ display: "flex", gap: 10, margin: "24px 0 28px", flexWrap: "wrap" }}>
+              <ContactButton variant="primary" iconLeft={<Mail size={16} strokeWidth={1.5} />}>
+                문의하기
+              </ContactButton>
+              {item.naraUrl && (
+                <ButtonLink
+                  variant="secondary"
+                  href={item.naraUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sage-600 hover:underline"
+                  iconRight={<ExternalLink size={16} strokeWidth={1.5} />}
                 >
-                  {item.brands.website_url}
-                </a>
-              </p>
+                  나라장터에서 보기
+                </ButtonLink>
+              )}
             </div>
-          )}
+
+            <SpecSheet title="사양" rows={specRows} />
+          </div>
         </div>
-      </div>
 
-      {/* 해당 아이템이 포함된 프로젝트 사진들 */}
-      {itemPhotos.length > 0 && (
-        <section className="space-y-4">
-          <h2 className="text-xl font-semibold">
-            이 아이템이 포함된 사진
-            <span className="text-muted-foreground font-normal ml-2">({itemPhotos.length})</span>
-          </h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {itemPhotos.map((photo) => (
-              <Link
-                key={photo.id}
-                href={`/projects/${photo.project.slug}`}
-                className="group relative aspect-[4/3] overflow-hidden rounded-lg bg-gray-100"
-              >
-                <Image
-                  src={addCacheBuster(photo.image_url)}
-                  alt={photo.alt_text || photo.project.title}
-                  fill
-                  className="object-cover transition-transform duration-300 group-hover:scale-105"
-                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="absolute bottom-0 left-0 right-0 p-3">
-                    <p className="text-white text-sm font-medium truncate">
-                      {photo.project.title}
-                    </p>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* 연관 프로젝트 */}
-      <section className="space-y-4">
-        <h2 className="text-xl font-semibold">아이템이 사용된 프로젝트</h2>
-        {relatedProjects.length > 0 ? (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {relatedProjects.map((project) => (
-              <Link
-                key={project.id}
-                href={`/projects/${project.slug}`}
-                className="group block"
-              >
-                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-lg bg-gray-100">
-                  {project.cover_image_url && (
-                    <Image
-                      src={addCacheBuster(project.cover_image_url)}
-                      alt={project.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                  )}
-                </div>
-                <div className="mt-3">
-                  <h3 className="font-medium group-hover:text-sage-600 transition-colors">
-                    {project.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {project.year ?? "연도 미정"}
-                  </p>
-                </div>
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="rounded-lg border-2 border-dashed border-gray-200 p-8 text-center">
-            <p className="text-muted-foreground">아직 연관된 프로젝트가 없습니다.</p>
+        {item.projects.length > 0 && (
+          <div
+            style={{
+              marginTop: "var(--sp-8)",
+              borderTop: "1px solid var(--border-hair)",
+              paddingTop: "var(--sp-7)",
+            }}
+          >
+            <Overline>Used in projects</Overline>
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontWeight: 600,
+                fontSize: 20,
+                margin: "8px 0 22px",
+                color: "var(--ink-900)",
+              }}
+            >
+              도입 프로젝트
+            </h2>
+            <div className="d4p-grid-3">
+              {item.projects.map((p) => (
+                <ProjectCard key={p.id} project={p} />
+              ))}
+            </div>
           </div>
         )}
-      </section>
-    </article>
+      </Container>
+    </div>
   );
 }

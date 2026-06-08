@@ -1,181 +1,148 @@
-import { Metadata } from "next";
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { fetchProjectBySlug, fetchProjectPhotosWithItems } from "@/lib/api";
-import { Badge } from "@/components/ui/badge";
-import { InquiryDialog } from "@/components/inquiry-dialog";
-import { PhotoGallerySlider } from "@/components/photo-gallery-slider";
-import { JsonLd } from "@/components/json-ld";
-import {
-  SITE_URL,
-  absoluteUrl,
-  breadcrumbSchema,
-  compactText,
-  createPageMetadata,
-  getSeoImages,
-  jsonLdGraph,
-  truncateDescription,
-} from "@/lib/seo";
+import { fetchProjectBySlug } from "@/lib/api";
+import { Container, Overline, SpecSheet } from "@/components/d4p/primitives";
+import { Breadcrumb } from "@/components/d4p/page-chrome";
+import { StickyTitle } from "@/components/d4p/sticky-title";
+import { ProjectMasthead } from "@/components/d4p/project-masthead";
+import { Gallery } from "@/components/d4p/gallery";
+import { ItemCard } from "@/components/d4p/cards";
+import { ContactButton } from "@/components/d4p/contact-modal";
+import { createPageMetadata, compactText, truncateDescription } from "@/lib/seo";
 
-type GalleryPhoto = Awaited<ReturnType<typeof fetchProjectPhotosWithItems>>[number];
+export const revalidate = 3600;
 
-type Props = { params: Promise<{ slug: string }> };
+type Props = { params: { slug: string } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug } = await params;
-  const project = await fetchProjectBySlug(decodeURIComponent(slug));
+  const project = await fetchProjectBySlug(params.slug);
   if (!project) return {};
-  const decodedSlug = decodeURIComponent(slug);
+
   const description = truncateDescription(
-    compactText(
-      project.description,
-      `${project.title} 공공조달 가구 납품 프로젝트 사례입니다.`
-    )
+    compactText(project.description, `${project.title} 공공조달 가구 납품 프로젝트 사례입니다.`)
   );
+
   return createPageMetadata({
     title: project.title,
     description,
-    path: `/projects/${decodedSlug}`,
-    images: [
-      project.cover_image_url,
-      ...project.project_images.map((image: { image_url: string | null }) => image.image_url),
-    ],
+    path: `/projects/${project.slug}`,
+    images: [project.coverImage, project.gallery[0]?.url],
     type: "article",
   });
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
-  const { slug } = await params;
-  const decodedSlug = decodeURIComponent(slug);
-  const project = await fetchProjectBySlug(decodedSlug);
-  if (!project) return notFound();
+  const project = await fetchProjectBySlug(params.slug);
+  if (!project) notFound();
 
-  // Fetch photos with linked items
-  const photosWithItems = await fetchProjectPhotosWithItems(project.id);
+  const meta = [...project.categories, project.year, project.location]
+    .filter(Boolean)
+    .join(" · ");
 
-  const tags = project.project_tags
-    .map((tag: { tag_id: string; tags: { name: string; type?: string } | null }) =>
-      tag.tags?.type === "project" ? tag.tags?.name : undefined
-    )
-    .filter((name: string | null): name is string => Boolean(name));
-
-  // Fallback to project_images if no photos from new table
-  const hasPhotosWithItems = photosWithItems.length > 0;
-  const fallbackImages: GalleryPhoto[] = project.project_images.map((img: { id: string; image_url: string; order?: number }, index: number) => ({
-    id: img.id,
-    image_url: img.image_url,
-    alt_text: project.title,
-    title: null,
-    order: img.order ?? index,
-    items: [],
-  }));
-
-  const galleryPhotos: GalleryPhoto[] = hasPhotosWithItems ? photosWithItems : fallbackImages;
-  const description = truncateDescription(
-    compactText(
-      project.description,
-      `${project.title} 공공조달 가구 납품 프로젝트 사례입니다.`
-    )
-  );
-  const imageUrls = getSeoImages(galleryPhotos.map((photo: GalleryPhoto) => photo.image_url)).map(
-    (image) => image.url
-  );
+  const specRows = [
+    { label: "용도", value: project.categories.join(" · ") || "-" },
+    { label: "위치", value: project.location ?? "-" },
+    { label: "발주", value: project.client ?? "-" },
+    {
+      label: "면적",
+      value: project.area != null ? `${project.area.toLocaleString()}㎡` : "-",
+    },
+    { label: "준공", value: project.year != null ? String(project.year) : "-" },
+    { label: "사진", value: `${project.imageCount}장` },
+  ];
 
   return (
-    <article className="space-y-6">
-      <JsonLd
-        data={jsonLdGraph([
-          breadcrumbSchema([
-            { name: "Projects", path: "/projects" },
-            { name: project.title, path: `/projects/${decodedSlug}` },
-          ]),
-          {
-            "@type": "CreativeWork",
-            "@id": `${absoluteUrl(`/projects/${decodedSlug}`)}#project`,
-            url: absoluteUrl(`/projects/${decodedSlug}`),
-            name: project.title,
-            headline: project.title,
-            description,
-            image: imageUrls,
-            datePublished: project.created_at,
-            dateModified: project.updated_at,
-            inLanguage: "ko-KR",
-            temporalCoverage: project.year ? String(project.year) : undefined,
-            contentLocation: project.location
-              ? {
-                  "@type": "Place",
-                  name: project.location,
-                }
-              : undefined,
-            keywords: tags,
-            publisher: {
-              "@id": `${SITE_URL}/#organization`,
-            },
-          },
-        ])}
+    <Container style={{ padding: "var(--sp-5) var(--gutter) var(--sp-9)" }}>
+      <div style={{ marginBottom: "var(--sp-5)" }}>
+        <Breadcrumb
+          items={[
+            { label: "홈", href: "/" },
+            { label: "프로젝트", href: "/projects" },
+            { label: project.title },
+          ]}
+        />
+      </div>
+
+      <StickyTitle
+        title={project.title}
+        meta={meta}
+        threshold={360}
+        actions={
+          <ContactButton size="sm" projectSlug={project.slug}>
+            문의하기
+          </ContactButton>
+        }
       />
-      {/* 프로젝트 타이틀 - 상단 */}
-      <header>
-        <h1 className="text-2xl font-semibold">{project.title}</h1>
-      </header>
 
-      {/* 메인 컨텐츠: 좌측 사이드바 + 우측 슬라이더 */}
-      <div className="flex flex-col lg:flex-row gap-6">
-        {/* 좌측 사이드바: 프로젝트 정보 */}
-        <aside className="lg:w-48 shrink-0 space-y-4">
-          {/* 프로젝트 정보 - 하나의 div로 정리 */}
-          <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-            {/* 설치 연도 */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500 w-14 shrink-0">설치연도</span>
-              <span className="text-sm font-medium text-gray-900">
-                {project.year ?? "미정"}
-              </span>
-            </div>
+      <div style={{ marginBottom: "var(--sp-8)" }}>
+        <ProjectMasthead project={project} />
+      </div>
 
-            {/* 지역 */}
-            {project.location && (
-              <div className="flex items-start gap-2">
-                <span className="text-xs text-gray-500 w-14 shrink-0">지역</span>
-                <span className="text-sm font-medium text-gray-900">
-                  {project.location}
-                </span>
-              </div>
-            )}
+      <div
+        className="d4p-detail-split"
+        style={{
+          marginBottom: "var(--sp-8)",
+          borderTop: "1px solid var(--border-hair)",
+          paddingTop: "var(--sp-7)",
+        }}
+      >
+        <div>
+          <Overline>Overview</Overline>
+          <p
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: 16,
+              lineHeight: 1.7,
+              color: "var(--ink-700)",
+              margin: "18px 0 0",
+              maxWidth: "46ch",
+            }}
+          >
+            {project.description}
+          </p>
+        </div>
+        <SpecSheet title="개요" rows={specRows} />
+      </div>
 
-            {/* 설명 */}
-            {project.description && (
-              <div className="pt-2 border-t border-gray-200">
-                <p className="text-sm text-gray-600 leading-relaxed">
-                  {project.description}
-                </p>
-              </div>
-            )}
-
-            {/* 태그 */}
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 pt-2">
-                {tags.map((tag: string) => (
-                  <Badge key={tag}>#{tag}</Badge>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 문의 버튼 */}
-          <InquiryDialog label="담당자에게 물어보기" />
-        </aside>
-
-        {/* 우측: 이미지 슬라이더 */}
-        <div className="flex-1 min-w-0">
-          {galleryPhotos.length > 0 && (
-            <PhotoGallerySlider
-              photos={galleryPhotos}
-              projectTitle={project.title}
-              projectSlug={decodedSlug}
-            />
-          )}
+      <div style={{ marginBottom: "var(--sp-8)" }}>
+        <Overline>Gallery</Overline>
+        <div style={{ marginTop: 20 }}>
+          <Gallery images={project.gallery} />
         </div>
       </div>
-    </article>
+
+      {project.items.length > 0 && (
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "flex-end",
+              justifyContent: "space-between",
+              marginBottom: 22,
+            }}
+          >
+            <div>
+              <Overline>Featured Items</Overline>
+              <h2
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontWeight: 600,
+                  fontSize: 20,
+                  marginTop: 8,
+                  color: "var(--ink-900)",
+                }}
+              >
+                이 공간에 사용된 가구
+              </h2>
+            </div>
+          </div>
+          <div className="d4p-grid-4">
+            {project.items.map((it) => (
+              <ItemCard key={it.id} item={it} />
+            ))}
+          </div>
+        </div>
+      )}
+    </Container>
   );
 }
