@@ -52,10 +52,6 @@ function SectionHead({ overline, title, href }: { overline: string; title: strin
 export default async function HomePage() {
   const data = await fetchHomeData();
   const featured = data.featured;
-  const moreProjects = (featured
-    ? data.projects.filter((p) => p.id !== featured.id)
-    : data.projects
-  ).slice(0, 3);
 
   return (
     <div>
@@ -68,7 +64,7 @@ export default async function HomePage() {
       <Container style={{ padding: "var(--sp-7) var(--gutter)" }}>
         <SectionHead overline="Projects" title="주목할 만한 프로젝트" href="/projects" />
         <div className="d4p-grid-3">
-          {moreProjects.map((p) => (
+          {data.projects.map((p) => (
             <ProjectCard key={p.id} project={p} />
           ))}
         </div>
@@ -93,7 +89,7 @@ export default async function HomePage() {
       <Container style={{ padding: "var(--sp-7) var(--gutter)" }}>
         <SectionHead overline="Items" title="인기 아이템" href="/items" />
         <div className="d4p-grid-4">
-          {data.items.slice(0, 4).map((it) => (
+          {data.items.map((it) => (
             <ItemCard key={it.id} item={it} />
           ))}
         </div>

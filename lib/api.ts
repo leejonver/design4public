@@ -380,23 +380,65 @@ export async function fetchSearchIndex(): Promise<SearchIndex> {
   };
 }
 
+/* Home is curated from the admin config tables:
+   - site_settings.featured_project_id → the hero project
+   - home_featured(entity_type, entity_id, order) → the project/item showcase rows */
+async function fetchSiteSettings(): Promise<{ featured_project_id: string | null } | null> {
+  const { data } = await supabase
+    .from("site_settings")
+    .select("featured_project_id")
+    .limit(1)
+    .maybeSingle();
+  return data ?? null;
+}
+
+async function fetchHomeFeatured(): Promise<{ projectIds: string[]; itemIds: string[] }> {
+  const { data } = await supabase
+    .from("home_featured")
+    .select("entity_type,entity_id,order")
+    .order("order", { ascending: true });
+  const rows = data ?? [];
+  return {
+    projectIds: rows.filter((r) => r.entity_type === "project").map((r) => r.entity_id),
+    itemIds: rows.filter((r) => r.entity_type === "item").map((r) => r.entity_id),
+  };
+}
+
 export async function fetchHomeData(): Promise<HomeData> {
-  const [projects, items, brands, photos, counts] = await Promise.all([
+  const [projects, items, brands, photos, counts, settings, featuredList] = await Promise.all([
     fetchProjects(),
     fetchItems(),
     fetchBrands(),
     fetchPhotos(12),
     fetchCounts(),
+    fetchSiteSettings(),
+    fetchHomeFeatured(),
   ]);
 
-  // Featured = the published project with the most photos (richest gallery).
-  const featuredSummary = [...projects].sort((a, b) => b.imageCount - a.imageCount)[0] ?? null;
-  const featured = featuredSummary ? await fetchProjectBySlug(featuredSummary.slug) : null;
+  // Featured hero: configured project if set, else the richest gallery as a fallback.
+  const featuredId = settings?.featured_project_id ?? null;
+  let featuredSlug = featuredId ? projects.find((p) => p.id === featuredId)?.slug : undefined;
+  if (!featuredSlug) {
+    featuredSlug = [...projects].sort((a, b) => b.imageCount - a.imageCount)[0]?.slug;
+  }
+  const featured = featuredSlug ? await fetchProjectBySlug(featuredSlug) : null;
 
-  // Showcase items that actually have a photo first on the home grid.
-  const homeItems = [...items].sort((a, b) => Number(!!b.image) - Number(!!a.image));
+  const pick = <T extends { id: string }>(arr: T[], ids: string[]): T[] =>
+    ids.map((id) => arr.find((x) => x.id === id)).filter((x): x is T => Boolean(x));
 
-  return { featured, projects, items: homeItems, brands, photos, counts };
+  // Curated projects (ordered) → fall back to recent published; never duplicate the hero.
+  const curatedProjects = pick(projects, featuredList.projectIds).filter((p) => p.id !== featured?.id);
+  const homeProjects = (
+    curatedProjects.length ? curatedProjects : projects.filter((p) => p.id !== featured?.id)
+  ).slice(0, 6);
+
+  // Curated items (ordered) → fall back to items that have a photo first.
+  const curatedItems = pick(items, featuredList.itemIds);
+  const homeItems = (
+    curatedItems.length ? curatedItems : [...items].sort((a, b) => Number(!!b.image) - Number(!!a.image))
+  ).slice(0, 8);
+
+  return { featured, projects: homeProjects, items: homeItems, brands, photos, counts };
 }
 
 /* Inquiry form payload (consumed by the contact modal + /api/inquiry) */

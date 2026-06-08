@@ -473,6 +473,56 @@ export type Database = {
         };
         Relationships: [];
       };
+      site_settings: {
+        Row: {
+          id: boolean;
+          featured_project_id: string | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: boolean;
+          featured_project_id?: string | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: boolean;
+          featured_project_id?: string | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "site_settings_featured_project_id_fkey";
+            columns: ["featured_project_id"];
+            isOneToOne: false;
+            referencedRelation: "projects";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      home_featured: {
+        Row: {
+          id: string;
+          entity_type: string;
+          entity_id: string;
+          order: number | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          entity_type: string;
+          entity_id: string;
+          order?: number | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          entity_type?: string;
+          entity_id?: string;
+          order?: number | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
