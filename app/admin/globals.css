@@ -3,6 +3,7 @@
  * Vapor ships its own reset; Tailwind preflight is intentionally NOT imported. */
 @layer tw-theme, vapor, tw-utilities;
 
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
 @import '@vapor-ui/core/styles.css';
 @import '@vapor-ui/core/tailwind.css';
 @import 'tailwindcss/theme.css' layer(tw-theme);
