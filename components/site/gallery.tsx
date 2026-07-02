@@ -83,11 +83,10 @@ export function DetailHero({
 
 export function Gallery({
   images,
-  /* column count is responsive via .d4p-masonry in globals.css; the
-     `columns` prop is kept for the documented component contract. */
-  columns: _columns = 3,
 }: {
   images: PhotoLite[];
+  /* column count is responsive via .d4p-masonry in globals.css; the
+     `columns` prop is accepted for the documented component contract but not read here. */
   columns?: number;
 }) {
   const [open, setOpen] = useState(-1);

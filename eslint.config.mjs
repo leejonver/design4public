@@ -10,6 +10,11 @@ const compat = new FlatCompat({ baseDirectory: __dirname });
 const eslintConfig = [
   ...compat.extends("next/core-web-vitals", "next/typescript"),
   {
+    // CommonJS config files legitimately use require(); the TS-oriented rule does not apply.
+    files: ["*.config.js"],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+  },
+  {
     ignores: [
       "node_modules/**",
       ".next/**",

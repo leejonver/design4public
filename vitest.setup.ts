@@ -5,7 +5,10 @@ import { vi } from "vitest";
 if (!globalThis.fetch && typeof process !== "undefined" && process.env.VITEST) {
   globalThis.fetch = async (input: string | URL | Request, init?: RequestInit) => {
     const { default: fetch } = await import("node-fetch");
-    return fetch(input as any, init as any) as unknown as Promise<Response>;
+    return fetch(
+      input as unknown as Parameters<typeof fetch>[0],
+      init as unknown as Parameters<typeof fetch>[1],
+    ) as unknown as Promise<Response>;
   };
 }
 
