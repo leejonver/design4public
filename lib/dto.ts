@@ -6,7 +6,7 @@
 //   - tags: free-form (no type), attach to project/item/photo. project_tags/item_tags/photo_tags.
 // Brand has neither.
 
-import type { Brand, Category, Item, Photo, Project, Tag, ImageData, Manager } from '@/types'
+import type { Brand, Category, Item, Photo, Project, Tag, ImageData, Manager } from '@/lib/admin-types'
 import type { Tables } from './database.types'
 
 // ---- select strings ----
