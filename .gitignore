@@ -10,3 +10,8 @@ playwright-report/
 test-results/
 
 .vercel
+
+# build artifacts / local tooling
+tsconfig.tsbuildinfo
+.claude/
+.playwright-mcp/
