@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button, Callout, Card, Field, Spinner, Text, TextInput } from '@vapor-ui/core';
 import { LockOutlineIcon, MailOutlineIcon } from '@vapor-ui/icons';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/components/admin/AuthContext';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -37,7 +37,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       await login(email, password);
-      router.push('/projects');
+      router.push('/admin/projects');
     } catch (err) {
       setError(err instanceof Error ? err.message : '로그인에 실패했습니다.');
     } finally {
@@ -136,7 +136,7 @@ export default function LoginPage() {
             <Text typography="body2" render={<span />} className="text-gray-500">
               계정이 없으신가요?{' '}
             </Text>
-            <Link href="/signup" className="text-v-primary-100 hover:underline">
+            <Link href="/admin/signup" className="text-v-primary-100 hover:underline">
               회원가입
             </Link>
           </div>

@@ -10,7 +10,7 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/projects');
+    router.replace('/admin/projects');
   }, [router]);
 
   return (

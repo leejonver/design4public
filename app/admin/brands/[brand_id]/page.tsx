@@ -6,10 +6,10 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Card, Spinner, Text } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, EditOutlineIcon, LinkOutlineIcon, BookmarkOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { Thumbnail } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { Brand } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { Thumbnail } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { Brand } from '@/lib/admin-types';
 
 // 이미지 URL에 캐시 무효화를 위한 타임스탬프 추가
 function addCacheBuster(url: string | null | undefined, updatedAt?: string): string | undefined {
@@ -88,7 +88,7 @@ export default function BrandDetailPage() {
         <Button
           colorPalette="primary"
           variant="fill"
-          onClick={() => router.push(`/brands/${brand.id}/edit`)}
+          onClick={() => router.push(`/admin/brands/${brand.id}/edit`)}
         >
           <EditOutlineIcon size={16} />
           편집

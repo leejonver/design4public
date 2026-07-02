@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireRole, authErrorResponse } from '@/lib/auth'
 import { mapManager } from '@/lib/dto'
 

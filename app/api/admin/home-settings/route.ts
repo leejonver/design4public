@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
-import type { HomeFeaturedItem } from '@/types'
+import type { HomeFeaturedItem } from '@/lib/admin-types'
 
 type EntityType = 'project' | 'item' | 'photo' | 'brand'
 const ENTITY_TYPES: EntityType[] = ['project', 'item', 'photo', 'brand']

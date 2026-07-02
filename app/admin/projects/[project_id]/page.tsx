@@ -13,11 +13,11 @@ import {
   OpenInNewOutlineIcon,
   TrashOutlineIcon,
 } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { ConfirmDialog, DataTable, StatusBadge, Thumbnail } from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { Item, Project } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { ConfirmDialog, DataTable, StatusBadge, Thumbnail } from '@/components/admin/ui';
+import type { DataTableColumn } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { Item, Project } from '@/lib/admin-types';
 
 function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -64,7 +64,7 @@ export default function ProjectDetailPage() {
     try {
       const response = await api.delete(`/projects/${projectId}`);
       if (response.success) {
-        router.push('/projects');
+        router.push('/admin/projects');
       }
     } catch (error) {
       console.error('프로젝트 삭제 오류:', error);
@@ -274,7 +274,7 @@ export default function ProjectDetailPage() {
                 연결된 아이템 ({connectedItems.length}개)
               </Text>
               {connectedItems.length > 0 ? (
-                <Link href="/items" className="text-sm text-v-primary-100 hover:underline">
+                <Link href="/admin/items" className="text-sm text-v-primary-100 hover:underline">
                   전체보기
                 </Link>
               ) : null}

@@ -6,10 +6,10 @@ import { useRouter, useParams } from 'next/navigation';
 import { useState, useEffect, type ReactNode } from 'react';
 import { Badge, Button, Card, Spinner, Text } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, EditOutlineIcon, LinkOutlineIcon, DashboardOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { PageHeader, StatusBadge, Thumbnail } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { Item } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { PageHeader, StatusBadge, Thumbnail } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { Item } from '@/lib/admin-types';
 
 function InfoRow({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -76,7 +76,7 @@ export default function ItemDetailPage() {
             <Button
               variant="fill"
               colorPalette="primary"
-              onClick={() => router.push(`/items/${item.id}/edit`)}
+              onClick={() => router.push(`/admin/items/${item.id}/edit`)}
             >
               <EditOutlineIcon size={16} />편집
             </Button>
@@ -143,7 +143,7 @@ export default function ItemDetailPage() {
                 </InfoRow>
                 <InfoRow label="브랜드">
                   {brand ? (
-                    <button type="button" onClick={() => router.push(`/brands/${brand.id}`)}>
+                    <button type="button" onClick={() => router.push(`/admin/brands/${brand.id}`)}>
                       <Badge colorPalette="hint" size="md">
                         {brand.name}
                       </Badge>
@@ -216,7 +216,7 @@ export default function ItemDetailPage() {
               variant="ghost"
               colorPalette="primary"
               size="sm"
-              onClick={() => router.push(`/brands/${brand.id}`)}
+              onClick={() => router.push(`/admin/brands/${brand.id}`)}
             >
               브랜드 상세보기
             </Button>

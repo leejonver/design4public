@@ -13,7 +13,7 @@ import {
   LinkOutlineIcon,
   BookmarkOutlineIcon,
 } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
+import MainLayout from '@/components/admin/MainLayout';
 import {
   PageHeader,
   ListToolbar,
@@ -26,10 +26,10 @@ import {
   Thumbnail,
   SuccessCallout,
   type DataTableColumn,
-} from '@/components/ui';
-import { api } from '@/lib/api';
+} from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
 import { useListController, type ListSort } from '@/lib/use-list-controller';
-import type { Brand } from '@/types';
+import type { Brand } from '@/lib/admin-types';
 
 const LIMIT = 10;
 
@@ -194,7 +194,7 @@ export default function BrandsPage() {
             size="sm"
             variant="ghost"
             colorPalette="secondary"
-            onClick={() => router.push(`/brands/${brand.id}`)}
+            onClick={() => router.push(`/admin/brands/${brand.id}`)}
           >
             <ViewOnOutlineIcon size={16} />
           </IconButton>
@@ -203,7 +203,7 @@ export default function BrandsPage() {
             size="sm"
             variant="ghost"
             colorPalette="secondary"
-            onClick={() => router.push(`/brands/${brand.id}/edit`)}
+            onClick={() => router.push(`/admin/brands/${brand.id}/edit`)}
           >
             <EditOutlineIcon size={16} />
           </IconButton>
@@ -228,7 +228,7 @@ export default function BrandsPage() {
       <PageHeader
         title="브랜드 관리"
         action={
-          <Button colorPalette="primary" variant="fill" onClick={() => router.push('/brands/new')}>
+          <Button colorPalette="primary" variant="fill" onClick={() => router.push('/admin/brands/new')}>
             <PlusOutlineIcon size={16} />
             새 브랜드 추가
           </Button>

@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useState } from 'react';
 import Sidebar, { MenuCounts } from './Sidebar';
-import { api } from '@/lib/api';
+import { api } from '@/lib/admin-api';
 
 const EMPTY: MenuCounts = { projects: 0, photos: 0, items: 0, brands: 0, categories: 0, managers: 0 };
 const COLLAPSE_KEY = 'd4p:sidebar-collapsed';

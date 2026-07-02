@@ -1,7 +1,7 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase'
+import { supabase } from '@/lib/supabase/browser'
 import type { UserRole } from '@/lib/database.types'
 
 export interface AuthUser {
@@ -73,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const signup = async (name: string, email: string, password: string) => {
-    const res = await fetch('/api/auth/signup', {
+    const res = await fetch('/api/admin/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ name, email, password }),

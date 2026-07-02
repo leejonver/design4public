@@ -11,7 +11,7 @@ import {
   TrashOutlineIcon,
   ViewOnOutlineIcon,
 } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
+import MainLayout from '@/components/admin/MainLayout';
 import {
   ConfirmDialog,
   DataTable,
@@ -23,12 +23,12 @@ import {
   StatusBadge,
   SuccessCallout,
   Thumbnail,
-} from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
+} from '@/components/admin/ui';
+import type { DataTableColumn } from '@/components/admin/ui';
 import { useListController } from '@/lib/use-list-controller';
 import type { ListFetchParams, ListResult } from '@/lib/use-list-controller';
-import { api } from '@/lib/api';
-import type { Project } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { Project } from '@/lib/admin-types';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: '전체' },
@@ -253,7 +253,7 @@ export default function ProjectsPage() {
         title="프로젝트 관리"
         action={
           <Button
-            render={<Link href="/projects/new" />}
+            render={<Link href="/admin/projects/new" />}
             colorPalette="primary"
             variant="fill"
             size="md"

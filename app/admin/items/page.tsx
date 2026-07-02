@@ -12,7 +12,7 @@ import {
   TrashOutlineIcon,
   DashboardOutlineIcon,
 } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
+import MainLayout from '@/components/admin/MainLayout';
 import {
   PageHeader,
   ListToolbar,
@@ -24,11 +24,11 @@ import {
   EmptyState,
   Thumbnail,
   SuccessCallout,
-} from '@/components/ui';
-import type { DataTableColumn, FilterSelectOption } from '@/components/ui';
+} from '@/components/admin/ui';
+import type { DataTableColumn, FilterSelectOption } from '@/components/admin/ui';
 import { useListController } from '@/lib/use-list-controller';
-import { api } from '@/lib/api';
-import type { Item, Brand } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { Item, Brand } from '@/lib/admin-types';
 
 const PAGE_SIZE = 10;
 
@@ -199,7 +199,7 @@ export default function ItemsPage() {
             variant="ghost"
             colorPalette="secondary"
             aria-label="상세보기"
-            onClick={() => router.push(`/items/${item.id}`)}
+            onClick={() => router.push(`/admin/items/${item.id}`)}
           >
             <ViewOnOutlineIcon size={16} />
           </IconButton>
@@ -208,7 +208,7 @@ export default function ItemsPage() {
             variant="ghost"
             colorPalette="secondary"
             aria-label="편집"
-            onClick={() => router.push(`/items/${item.id}/edit`)}
+            onClick={() => router.push(`/admin/items/${item.id}/edit`)}
           >
             <EditOutlineIcon size={16} />
           </IconButton>
@@ -231,7 +231,7 @@ export default function ItemsPage() {
       <PageHeader
         title="아이템 관리"
         action={
-          <Button variant="fill" colorPalette="primary" onClick={() => router.push('/items/new')}>
+          <Button variant="fill" colorPalette="primary" onClick={() => router.push('/admin/items/new')}>
             <PlusOutlineIcon size={16} />새 아이템
           </Button>
         }

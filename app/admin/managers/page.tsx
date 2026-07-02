@@ -10,7 +10,7 @@ import {
   EditOutlineIcon,
   GroupOutlineIcon,
 } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
+import MainLayout from '@/components/admin/MainLayout';
 import {
   PageHeader,
   ListToolbar,
@@ -20,11 +20,11 @@ import {
   DataTable,
   EmptyState,
   Pagination,
-} from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
-import { api } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
-import type { Manager, ManagerRole, ApprovalStatus } from '@/types';
+} from '@/components/admin/ui';
+import type { DataTableColumn } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import { useAuth } from '@/components/admin/AuthContext';
+import type { Manager, ManagerRole, ApprovalStatus } from '@/lib/admin-types';
 
 const LIMIT = 10;
 

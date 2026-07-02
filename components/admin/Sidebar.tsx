@@ -15,7 +15,7 @@ import {
   ChevronRightOutlineIcon,
   OutOutlineIcon,
 } from '@vapor-ui/icons';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/components/admin/AuthContext';
 
 export interface MenuCounts {
   projects: number;
@@ -33,12 +33,12 @@ export interface SidebarProps {
 }
 
 const NAV = [
-  { key: 'home', href: '/home-settings', label: '홈 화면 설정', Icon: HomeOutlineIcon },
-  { key: 'projects', href: '/projects', label: '프로젝트', Icon: FolderOutlineIcon },
-  { key: 'items', href: '/items', label: '아이템', Icon: DashboardOutlineIcon },
-  { key: 'brands', href: '/brands', label: '브랜드', Icon: BookmarkOutlineIcon },
-  { key: 'photos', href: '/photos', label: '사진', Icon: ImageOutlineIcon },
-  { key: 'categories', href: '/categories', label: '카테고리 설정', Icon: SettingOutlineIcon },
+  { key: 'home', href: '/admin/home-settings', label: '홈 화면 설정', Icon: HomeOutlineIcon },
+  { key: 'projects', href: '/admin/projects', label: '프로젝트', Icon: FolderOutlineIcon },
+  { key: 'items', href: '/admin/items', label: '아이템', Icon: DashboardOutlineIcon },
+  { key: 'brands', href: '/admin/brands', label: '브랜드', Icon: BookmarkOutlineIcon },
+  { key: 'photos', href: '/admin/photos', label: '사진', Icon: ImageOutlineIcon },
+  { key: 'categories', href: '/admin/categories', label: '카테고리 설정', Icon: SettingOutlineIcon },
 ] as const;
 
 export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
@@ -49,16 +49,16 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
   const items = isMaster
     ? [
         ...NAV,
-        { key: 'managers', href: '/managers', label: '사용자관리', Icon: GroupOutlineIcon } as const,
+        { key: 'managers', href: '/admin/managers', label: '사용자관리', Icon: GroupOutlineIcon } as const,
       ]
     : NAV;
 
   const isActive = (href: string) =>
-    pathname === href || pathname.startsWith(`${href}/`) || (href === '/projects' && pathname === '/');
+    pathname === href || pathname.startsWith(`${href}/`) || (href === '/admin/projects' && pathname === '/admin');
 
   const handleLogout = async () => {
     await logout();
-    router.push('/login');
+    router.push('/admin/login');
   };
 
   const roleLabel =

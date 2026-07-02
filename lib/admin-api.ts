@@ -1,8 +1,8 @@
 // API 호출을 위한 유틸리티 함수들
 
-import type { UploadResponse } from '@/types'
+import type { UploadResponse } from '@/lib/admin-types'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || '/api'
+const API_BASE_URL = '/api/admin'
 
 // API 응답 타입 정의
 interface ApiResponse<T = unknown> {

@@ -16,10 +16,10 @@ import {
   Textarea,
 } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { CategorySelect, EntityPicker, FreeTagSelect, PageHeader, PhotoUploader } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { ImageData, ProjectStatus } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { CategorySelect, EntityPicker, FreeTagSelect, PageHeader, PhotoUploader } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { ImageData, ProjectStatus } from '@/lib/admin-types';
 
 const STATUS_OPTIONS = [
   { value: 'draft', label: '초안' },
@@ -109,7 +109,7 @@ export default function NewProjectPage() {
 
       const response = await api.projects.create(body);
       if (response.success) {
-        router.push('/projects');
+        router.push('/admin/projects');
       } else {
         setError(response.error || '프로젝트 추가 중 오류가 발생했습니다.');
       }

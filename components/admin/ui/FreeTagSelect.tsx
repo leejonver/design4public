@@ -3,8 +3,8 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Badge, Button, Callout, Spinner, TextInput } from '@vapor-ui/core';
 import { CloseOutlineIcon, PlusOutlineIcon } from '@vapor-ui/icons';
-import { api } from '@/lib/api';
-import type { Tag } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { Tag } from '@/lib/admin-types';
 
 export interface FreeTagSelectProps {
   value: string[];

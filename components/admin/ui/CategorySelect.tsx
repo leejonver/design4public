@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Badge, Button, Callout, Popover, Spinner, TextInput } from '@vapor-ui/core';
 import { CloseOutlineIcon, CorrectOutlineIcon, PlusOutlineIcon } from '@vapor-ui/icons';
-import { api } from '@/lib/api';
-import type { Category, CategoryType } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { Category, CategoryType } from '@/lib/admin-types';
 
 export interface CategorySelectProps {
   type: CategoryType;

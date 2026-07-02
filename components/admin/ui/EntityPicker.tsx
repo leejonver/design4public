@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react';
 import { Button, Callout, Dialog, IconButton, Spinner } from '@vapor-ui/core';
 import { CloseOutlineIcon, CorrectOutlineIcon, ImageOutlineIcon } from '@vapor-ui/icons';
-import { api } from '@/lib/api';
-import type { Brand, Item, Photo, Project } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { Brand, Item, Photo, Project } from '@/lib/admin-types';
 import SearchInput from './SearchInput';
 import ImagePlaceholder from './ImagePlaceholder';
 

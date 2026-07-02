@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireRole, authErrorResponse } from '@/lib/auth'
 
 // Route Segment Config - Vercel 제한 완화

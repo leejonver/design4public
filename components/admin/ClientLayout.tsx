@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { ThemeProvider } from '@vapor-ui/core';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/components/admin/AuthContext';
 
 interface ClientLayoutProps {
   children: ReactNode;

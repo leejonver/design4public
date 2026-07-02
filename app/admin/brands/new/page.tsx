@@ -6,10 +6,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { ImageUploader, PageHeader } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { ImageData } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { ImageUploader, PageHeader } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { ImageData } from '@/lib/admin-types';
 
 const STATUS_LABELS: Record<string, string> = { visible: '노출', hidden: '숨김' };
 
@@ -65,7 +65,7 @@ export default function NewBrandPage() {
       };
       const response = await api.post('/brands', body);
       if (response.success) {
-        window.location.href = '/brands';
+        window.location.href = '/admin/brands';
       } else {
         setError(`브랜드 추가 실패: ${response.error || '알 수 없는 오류'}`);
       }

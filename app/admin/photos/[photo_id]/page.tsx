@@ -15,10 +15,10 @@ import {
   ImageOutlineIcon,
   CalendarOutlineIcon,
 } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { ConfirmDialog, Thumbnail } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { Photo } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { ConfirmDialog, Thumbnail } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { Photo } from '@/lib/admin-types';
 
 interface UsedProject {
   id: string;
@@ -68,7 +68,7 @@ export default function PhotoDetailPage() {
     try {
       const res = await api.delete(`/photos/${photo_id}`);
       if (res.success) {
-        router.push('/photos');
+        router.push('/admin/photos');
       } else {
         setError(res.error ?? '사진 삭제에 실패했습니다.');
         setConfirmOpen(false);
@@ -99,7 +99,7 @@ export default function PhotoDetailPage() {
           <Text typography="body1" className="text-gray-500">
             사진을 찾을 수 없습니다
           </Text>
-          <Button variant="outline" colorPalette="secondary" onClick={() => router.push('/photos')}>
+          <Button variant="outline" colorPalette="secondary" onClick={() => router.push('/admin/photos')}>
             사진 목록으로
           </Button>
         </div>
@@ -111,7 +111,7 @@ export default function PhotoDetailPage() {
     <MainLayout>
       <div className="mb-6 flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-2">
-          <Button variant="outline" colorPalette="secondary" onClick={() => router.push('/photos')}>
+          <Button variant="outline" colorPalette="secondary" onClick={() => router.push('/admin/photos')}>
             <ChevronLeftOutlineIcon size={16} />
             돌아가기
           </Button>
@@ -126,7 +126,7 @@ export default function PhotoDetailPage() {
           <Button
             variant="outline"
             colorPalette="secondary"
-            onClick={() => router.push(`/photos/${photo_id}/edit`)}
+            onClick={() => router.push(`/admin/photos/${photo_id}/edit`)}
           >
             <EditOutlineIcon size={16} />
             편집
@@ -215,7 +215,7 @@ export default function PhotoDetailPage() {
                           variant="ghost"
                           colorPalette="primary"
                           size="sm"
-                          onClick={() => router.push(`/items/${item.id}`)}
+                          onClick={() => router.push(`/admin/items/${item.id}`)}
                         >
                           보기
                         </Button>
@@ -278,7 +278,7 @@ export default function PhotoDetailPage() {
                         variant="ghost"
                         colorPalette="primary"
                         size="sm"
-                        onClick={() => router.push(`/projects/${project.id}`)}
+                        onClick={() => router.push(`/admin/projects/${project.id}`)}
                       >
                         보기
                       </Button>

@@ -12,7 +12,7 @@ import {
   MailOutlineIcon,
   UserOutlineIcon,
 } from '@vapor-ui/icons';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/components/admin/AuthContext';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_RE = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
@@ -88,7 +88,7 @@ export default function SignupPage() {
             <Button
               colorPalette="primary"
               size="lg"
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/admin/login')}
               className="mt-8 w-full"
             >
               로그인 페이지로 이동
@@ -235,7 +235,7 @@ export default function SignupPage() {
             <Text typography="body2" render={<span />} className="text-gray-500">
               이미 계정이 있으신가요?{' '}
             </Text>
-            <Link href="/login" className="text-v-primary-100 hover:underline">
+            <Link href="/admin/login" className="text-v-primary-100 hover:underline">
               로그인
             </Link>
           </div>

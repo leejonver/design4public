@@ -5,12 +5,12 @@
 import { useState } from 'react';
 import { Badge, Button, Card, Dialog, Field, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
 import { EditOutlineIcon, PlusOutlineIcon, TrashOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { PageHeader, ListToolbar, FilterSelect, DataTable, Pagination, ConfirmDialog } from '@/components/ui';
-import type { DataTableColumn, FilterSelectOption } from '@/components/ui';
+import MainLayout from '@/components/admin/MainLayout';
+import { PageHeader, ListToolbar, FilterSelect, DataTable, Pagination, ConfirmDialog } from '@/components/admin/ui';
+import type { DataTableColumn, FilterSelectOption } from '@/components/admin/ui';
 import { useListController } from '@/lib/use-list-controller';
-import { api } from '@/lib/api';
-import type { Category, CategoryType } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { Category, CategoryType } from '@/lib/admin-types';
 
 type BadgeColor = 'primary' | 'hint' | 'danger' | 'success' | 'warning' | 'contrast';
 

@@ -6,10 +6,10 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { PageHeader, PhotoUploader, CategorySelect, FreeTagSelect } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { Brand, ImageData, Item, ItemStatus } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { PageHeader, PhotoUploader, CategorySelect, FreeTagSelect } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { Brand, ImageData, Item, ItemStatus } from '@/lib/admin-types';
 
 const STATUS_OPTIONS = [
   { label: '구입가능', value: 'available' },
@@ -119,7 +119,7 @@ export default function EditItemPage() {
     setSaving(false);
 
     if (res.success) {
-      router.push(`/items/${itemId}`);
+      router.push(`/admin/items/${itemId}`);
     } else {
       setError(res.error || '아이템 수정에 실패했습니다.');
     }

@@ -4,10 +4,10 @@
 
 import { useEffect, useState } from 'react';
 import { Button, Callout, Card, Spinner, Text } from '@vapor-ui/core';
-import MainLayout from '@/components/MainLayout';
-import { PageHeader, EntityPicker, SuccessCallout } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { HomeFeaturedItem, HomeSettings } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { PageHeader, EntityPicker, SuccessCallout } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { HomeFeaturedItem, HomeSettings } from '@/lib/admin-types';
 
 type EntityType = HomeFeaturedItem['entityType'];
 

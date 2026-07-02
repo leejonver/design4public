@@ -8,8 +8,8 @@ import {
   TrashOutlineIcon,
   UploadOutlineIcon,
 } from '@vapor-ui/icons';
-import { api } from '@/lib/api';
-import type { ImageData } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { ImageData } from '@/lib/admin-types';
 
 export interface PhotoUploaderProps {
   value: ImageData[];

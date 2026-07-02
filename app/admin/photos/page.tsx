@@ -11,7 +11,7 @@ import {
   TrashOutlineIcon,
   ImageOutlineIcon,
 } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
+import MainLayout from '@/components/admin/MainLayout';
 import {
   PageHeader,
   ListToolbar,
@@ -22,12 +22,12 @@ import {
   EmptyState,
   SuccessCallout,
   Thumbnail,
-} from '@/components/ui';
-import type { DataTableColumn } from '@/components/ui';
+} from '@/components/admin/ui';
+import type { DataTableColumn } from '@/components/admin/ui';
 import { useListController } from '@/lib/use-list-controller';
 import type { ListFetchParams, ListResult } from '@/lib/use-list-controller';
-import { api } from '@/lib/api';
-import type { Photo } from '@/types';
+import { api } from '@/lib/admin-api';
+import type { Photo } from '@/lib/admin-types';
 
 const LIMIT = 12;
 
@@ -168,7 +168,7 @@ export default function PhotosPage() {
             variant="ghost"
             colorPalette="secondary"
             aria-label="상세보기"
-            onClick={() => router.push(`/photos/${photo.id}`)}
+            onClick={() => router.push(`/admin/photos/${photo.id}`)}
           >
             <ViewOnOutlineIcon size={16} />
           </IconButton>
@@ -177,7 +177,7 @@ export default function PhotosPage() {
             variant="ghost"
             colorPalette="secondary"
             aria-label="편집"
-            onClick={() => router.push(`/photos/${photo.id}/edit`)}
+            onClick={() => router.push(`/admin/photos/${photo.id}/edit`)}
           >
             <EditOutlineIcon size={16} />
           </IconButton>

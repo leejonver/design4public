@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { FreeTagSelect } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { Photo } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { FreeTagSelect } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { Photo } from '@/lib/admin-types';
 
 export default function PhotoEditPage() {
   const params = useParams();
@@ -61,7 +61,7 @@ export default function PhotoEditPage() {
       });
 
       if (res.success) {
-        router.push(`/photos/${photo_id}`);
+        router.push(`/admin/photos/${photo_id}`);
       } else {
         setError(res.error ?? '사진 수정에 실패했습니다.');
       }

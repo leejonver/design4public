@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button, Callout, Card, Field, Select, Spinner, Text, TextInput, Textarea } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon, SaveOutlineIcon } from '@vapor-ui/icons';
-import MainLayout from '@/components/MainLayout';
-import { ImageUploader, PageHeader } from '@/components/ui';
-import { api } from '@/lib/api';
-import type { Brand, ImageData } from '@/types';
+import MainLayout from '@/components/admin/MainLayout';
+import { ImageUploader, PageHeader } from '@/components/admin/ui';
+import { api } from '@/lib/admin-api';
+import type { Brand, ImageData } from '@/lib/admin-types';
 
 const STATUS_LABELS: Record<string, string> = { visible: '노출', hidden: '숨김' };
 
@@ -103,7 +103,7 @@ export default function EditBrandPage() {
       if (response.success) {
         // 완전 새로고침으로 이미지 캐시를 무효화한다.
         setTimeout(() => {
-          window.location.href = '/brands';
+          window.location.href = '/admin/brands';
         }, 500);
       } else {
         setError(`브랜드 수정 실패: ${response.error || '알 수 없는 오류'}`);
