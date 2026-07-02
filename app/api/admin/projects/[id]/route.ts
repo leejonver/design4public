@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PROJECT_SELECT, mapProject } from '@/lib/dto'
 import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -57,6 +58,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .eq('id', params.id)
       .single()
 
+    // `full` is typed via PROJECT_SELECT's join string; the generated Database
+    // type has no declared FK relationship for projects, which makes Supabase's
+    // type parser drop the top-level `*` columns from the inferred row shape.
+    revalidateEntity('project', (full as { slug?: string } | null)?.slug)
+
     return NextResponse.json({
       success: true,
       data: full ? mapProject(full) : null,
@@ -72,9 +78,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    // Capture the slug before deletion so we can purge the project's detail page.
+    const { data: existing } = await supabaseAdmin
+      .from('projects')
+      .select('slug')
+      .eq('id', params.id)
+      .maybeSingle()
     // project_photos / project_tags / project_items links cascade on project delete (FK ON DELETE CASCADE).
     const { error } = await supabaseAdmin.from('projects').delete().eq('id', params.id)
     if (error) throw error
+    revalidateEntity('project', existing?.slug)
     return NextResponse.json({ success: true, message: '프로젝트가 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

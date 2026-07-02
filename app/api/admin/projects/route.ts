@@ -4,6 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PROJECT_SELECT, mapProject } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -92,6 +93,8 @@ export async function POST(request: NextRequest) {
       .select(PROJECT_SELECT)
       .eq('id', project.id)
       .single()
+
+    revalidateEntity('project', slug)
 
     return NextResponse.json(
       { success: true, data: full ? mapProject(full) : null, message: '프로젝트가 생성되었습니다.' },
