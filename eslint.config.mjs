@@ -19,6 +19,9 @@ const eslintConfig = [
       "_cms-import/**",
       "scripts/**",
       "tests/e2e/**",
+      "playwright-report/**",
+      "test-results/**",
+      "coverage/**",
     ],
   },
 ];
