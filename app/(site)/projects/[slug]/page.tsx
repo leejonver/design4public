@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchProjectBySlug } from "@/lib/api";
-import { Container, Overline, SpecSheet } from "@/components/d4p/primitives";
-import { Breadcrumb } from "@/components/d4p/page-chrome";
-import { StickyTitle } from "@/components/d4p/sticky-title";
-import { ProjectMasthead } from "@/components/d4p/project-masthead";
-import { Gallery } from "@/components/d4p/gallery";
-import { ItemCard } from "@/components/d4p/cards";
-import { ContactButton } from "@/components/d4p/contact-modal";
+import { Container, Overline, SpecSheet } from "@/components/site/primitives";
+import { Breadcrumb } from "@/components/site/page-chrome";
+import { StickyTitle } from "@/components/site/sticky-title";
+import { ProjectMasthead } from "@/components/site/project-masthead";
+import { Gallery } from "@/components/site/gallery";
+import { ItemCard } from "@/components/site/cards";
+import { ContactButton } from "@/components/site/contact-modal";
 import { createPageMetadata, compactText, truncateDescription } from "@/lib/seo";
 
 export const revalidate = 3600;

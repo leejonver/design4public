@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { LegalPage } from "@/components/d4p/legal";
+import { LegalPage } from "@/components/site/legal";
 import { createPageMetadata } from "@/lib/seo";
 
 export const revalidate = 3600;

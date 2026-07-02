@@ -198,19 +198,16 @@ export type Database = {
         Row: {
           id: string;
           name: string;
-          type: Database["public"]["Enums"]["category_type"];
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
-          type: Database["public"]["Enums"]["category_type"];
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
-          type?: Database["public"]["Enums"]["category_type"];
           created_at?: string;
         };
         Relationships: [];
@@ -450,24 +447,30 @@ export type Database = {
         Row: {
           id: string;
           email: string;
-          role: string;
-          status: string;
+          name: string | null;
+          role: UserRole;
+          status: ApprovalStatus;
+          last_login_at: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           email: string;
-          role?: string;
-          status?: string;
+          name?: string | null;
+          role?: UserRole;
+          status?: ApprovalStatus;
+          last_login_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           email?: string;
-          role?: string;
-          status?: string;
+          name?: string | null;
+          role?: UserRole;
+          status?: ApprovalStatus;
+          last_login_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };

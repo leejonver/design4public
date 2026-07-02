@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import { Container } from "@/components/d4p/primitives";
-import { PageHero } from "@/components/d4p/page-chrome";
-import { PhotosView } from "@/components/d4p/photo-grid";
+import { Container } from "@/components/site/primitives";
+import { PageHero } from "@/components/site/page-chrome";
+import { PhotosView } from "@/components/site/photo-grid";
 import { fetchCategories, fetchPhotos } from "@/lib/api";
 import type { Category } from "@/lib/types";
 import { createPageMetadata } from "@/lib/seo";

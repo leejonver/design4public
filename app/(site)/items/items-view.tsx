@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Container } from "@/components/d4p/primitives";
-import { PageHero, FilterBar } from "@/components/d4p/page-chrome";
-import { FacetRow, FilterButton, Divider, SortMenu, ViewToggle } from "@/components/d4p/list-controls";
-import { ItemCard } from "@/components/d4p/cards";
+import { Container } from "@/components/site/primitives";
+import { PageHero, FilterBar } from "@/components/site/page-chrome";
+import { FacetRow, FilterButton, Divider, SortMenu, ViewToggle } from "@/components/site/list-controls";
+import { ItemCard } from "@/components/site/cards";
 import type { ItemSummary } from "@/lib/types";
 
 export function ItemsView({

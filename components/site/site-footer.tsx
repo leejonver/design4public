@@ -3,7 +3,7 @@
 import type { CSSProperties } from "react";
 import Link from "next/link";
 import { Mail, Phone } from "lucide-react";
-import { Container } from "@/components/d4p/primitives";
+import { Container } from "@/components/site/primitives";
 
 const link: CSSProperties = {
   fontFamily: "var(--font-sans)",

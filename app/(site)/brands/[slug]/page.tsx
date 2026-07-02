@@ -3,12 +3,12 @@ import { notFound } from "next/navigation";
 import { fetchBrandBySlug } from "@/lib/api";
 import type { BrandDetail } from "@/lib/types";
 import { createPageMetadata } from "@/lib/seo";
-import { Container, Overline } from "@/components/d4p/primitives";
-import { Breadcrumb } from "@/components/d4p/page-chrome";
-import { StickyTitle } from "@/components/d4p/sticky-title";
-import { ButtonLink } from "@/components/d4p/ui";
-import { ContactButton } from "@/components/d4p/contact-modal";
-import { ItemCard, ProjectCard } from "@/components/d4p/cards";
+import { Container, Overline } from "@/components/site/primitives";
+import { Breadcrumb } from "@/components/site/page-chrome";
+import { StickyTitle } from "@/components/site/sticky-title";
+import { ButtonLink } from "@/components/site/ui";
+import { ContactButton } from "@/components/site/contact-modal";
+import { ItemCard, ProjectCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
 

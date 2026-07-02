@@ -20,7 +20,9 @@ export async function GET(request: NextRequest) {
 
     let query = supabaseAdmin
       .from('profiles')
-      .select('*', { count: 'exact' })
+      .select('id, email, name, role, status, last_login_at, created_at, updated_at', {
+        count: 'exact',
+      })
       .order(sort, { ascending: false })
 
     if (status && status !== 'all')

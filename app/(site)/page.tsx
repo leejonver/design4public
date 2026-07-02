@@ -1,9 +1,9 @@
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { fetchHomeData } from "@/lib/api";
-import { Container, Overline } from "@/components/d4p/primitives";
-import { FeaturedHero } from "@/components/d4p/featured-hero";
-import { ProjectCard, ItemCard, BrandCard } from "@/components/d4p/cards";
+import { Container, Overline } from "@/components/site/primitives";
+import { FeaturedHero } from "@/components/site/featured-hero";
+import { ProjectCard, ItemCard, BrandCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
 

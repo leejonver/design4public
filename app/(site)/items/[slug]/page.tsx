@@ -5,13 +5,13 @@ import { ExternalLink, Mail } from "lucide-react";
 import { fetchItemBySlug } from "@/lib/api";
 import type { ItemDetail } from "@/lib/types";
 import { createPageMetadata } from "@/lib/seo";
-import { Container, Overline, SpecSheet } from "@/components/d4p/primitives";
-import { Breadcrumb } from "@/components/d4p/page-chrome";
-import { StickyTitle } from "@/components/d4p/sticky-title";
-import { DetailHero } from "@/components/d4p/gallery";
-import { ButtonLink } from "@/components/d4p/ui";
-import { ContactButton } from "@/components/d4p/contact-modal";
-import { ProjectCard } from "@/components/d4p/cards";
+import { Container, Overline, SpecSheet } from "@/components/site/primitives";
+import { Breadcrumb } from "@/components/site/page-chrome";
+import { StickyTitle } from "@/components/site/sticky-title";
+import { DetailHero } from "@/components/site/gallery";
+import { ButtonLink } from "@/components/site/ui";
+import { ContactButton } from "@/components/site/contact-modal";
+import { ProjectCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
 

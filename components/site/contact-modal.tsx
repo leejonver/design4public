@@ -9,8 +9,8 @@ import {
     type ReactNode,
 } from "react";
 import { Check, X } from "lucide-react";
-import { Button, FilterChip, Input } from "@/components/d4p/ui";
-import { Overline } from "@/components/d4p/primitives";
+import { Button, FilterChip, Input } from "@/components/site/ui";
+import { Overline } from "@/components/site/primitives";
 
 const INQUIRY_TYPES = ["프로젝트 문의", "아이템 문의", "브랜드 입점", "기타"];
 

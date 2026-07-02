@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { ArrowRight, ArrowLeft } from "lucide-react";
-import { ButtonLink } from "@/components/d4p/ui";
+import { ButtonLink } from "@/components/site/ui";
 import type { ProjectDetail } from "@/lib/types";
 
 export function FeaturedHero({ project }: { project: ProjectDetail }) {

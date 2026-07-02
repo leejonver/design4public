@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { Container } from "@/components/d4p/primitives";
-import { PageHero, FilterBar } from "@/components/d4p/page-chrome";
-import { FilterButton, Divider, SortMenu } from "@/components/d4p/list-controls";
-import { BrandCard } from "@/components/d4p/cards";
+import { Container } from "@/components/site/primitives";
+import { PageHero, FilterBar } from "@/components/site/page-chrome";
+import { FilterButton, Divider, SortMenu } from "@/components/site/list-controls";
+import { BrandCard } from "@/components/site/cards";
 import type { BrandSummary } from "@/lib/types";
 
 export function BrandsView({ brands, count }: { brands: BrandSummary[]; count: number }) {

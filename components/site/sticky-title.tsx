@@ -3,7 +3,7 @@
 /* DESIGN4PUBLIC — appear-on-scroll compact title bar for detail/legal pages */
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { Container } from "@/components/d4p/primitives";
+import { Container } from "@/components/site/primitives";
 
 export function StickyTitle({
   title,

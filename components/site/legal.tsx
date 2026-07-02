@@ -1,8 +1,8 @@
 /* DESIGN4PUBLIC — Legal pages (개인정보처리방침 / 이용약관) */
 
 import Link from "next/link";
-import { PageHero } from "@/components/d4p/page-chrome";
-import { StickyTitle } from "@/components/d4p/sticky-title";
+import { PageHero } from "@/components/site/page-chrome";
+import { StickyTitle } from "@/components/site/sticky-title";
 
 type Kind = "privacy" | "terms";
 

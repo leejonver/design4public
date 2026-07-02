@@ -7,8 +7,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, Menu, X, ArrowUpRight } from "lucide-react";
 import type { SearchIndex } from "@/lib/types";
-import { BrandSearch } from "@/components/d4p/brand-search";
-import { ContactButton } from "@/components/d4p/contact-modal";
+import { BrandSearch } from "@/components/site/brand-search";
+import { ContactButton } from "@/components/site/contact-modal";
 
 const NAV_ITEMS = [
   { href: "/projects", label: "Projects" },

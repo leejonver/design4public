@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Mail } from "lucide-react";
-import { Overline } from "@/components/d4p/primitives";
-import { ButtonLink } from "@/components/d4p/ui";
-import { ContactButton } from "@/components/d4p/contact-modal";
+import { Overline } from "@/components/site/primitives";
+import { ButtonLink } from "@/components/site/ui";
+import { ContactButton } from "@/components/site/contact-modal";
 import type { ProjectDetail } from "@/lib/types";
 
 export function ProjectMasthead({ project }: { project: ProjectDetail }) {

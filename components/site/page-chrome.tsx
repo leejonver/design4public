@@ -2,7 +2,7 @@
 
 import { Fragment, type ReactNode } from "react";
 import Link from "next/link";
-import { Container } from "@/components/d4p/primitives";
+import { Container } from "@/components/site/primitives";
 
 type Crumb = { label: string; href?: string };
 

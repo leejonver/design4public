@@ -19,7 +19,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
     await requireRole('master')
     const { data, error } = await supabaseAdmin
       .from('profiles')
-      .select('*')
+      .select('id, email, name, role, status, last_login_at, created_at, updated_at')
       .eq('id', params.id)
       .single()
     if (error || !data) {
@@ -78,7 +78,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const { data: full } = await supabaseAdmin
       .from('profiles')
-      .select('*')
+      .select('id, email, name, role, status, last_login_at, created_at, updated_at')
       .eq('id', params.id)
       .single()
 

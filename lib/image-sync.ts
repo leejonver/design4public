@@ -3,7 +3,7 @@
 // is_main/order. These helpers find-or-create the photo asset (dedup by URL) and replace the
 // parent's links, enforcing the "max one is_main per parent" invariant.
 import 'server-only'
-import { supabaseAdmin } from './supabase-admin'
+import { supabaseAdmin } from './supabase/admin'
 
 export interface ImageInput {
   url: string

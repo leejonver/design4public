@@ -4,7 +4,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, LayoutGrid, List, SlidersHorizontal } from "lucide-react";
-import { FilterChip, Button, IconButton } from "@/components/d4p/ui";
+import { FilterChip, Button, IconButton } from "@/components/site/ui";
 
 export function SortMenu({ value, onChange, options }: { value: string; onChange: (v: string) => void; options: string[] }) {
   const [open, setOpen] = useState(false);

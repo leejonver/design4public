@@ -3,8 +3,8 @@
 import { useState, useCallback, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight, X } from "lucide-react";
-import { FilterChip } from "@/components/d4p/ui";
-import { Overline, Badge } from "@/components/d4p/primitives";
+import { FilterChip } from "@/components/site/ui";
+import { Overline, Badge } from "@/components/site/primitives";
 import type { PhotoFeedItem } from "@/lib/types";
 
 export function PhotosView({
