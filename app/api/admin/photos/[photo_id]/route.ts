@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
 import { syncPhotoItems, syncFreeTags } from '@/lib/image-sync'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(_request: NextRequest, { params }: { params: { photo_id: string } }) {
   try {
@@ -48,6 +49,8 @@ export async function PUT(request: NextRequest, { params }: { params: { photo_id
       .eq('id', params.photo_id)
       .single()
 
+    revalidateEntity('photo')
+
     return NextResponse.json({
       success: true,
       data: full ? mapPhoto(full) : null,
@@ -66,6 +69,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { phot
     // photo_items / photo_tags / project_photos links cascade on photo delete (FK ON DELETE CASCADE).
     const { error } = await supabaseAdmin.from('photos').delete().eq('id', params.photo_id)
     if (error) throw error
+    revalidateEntity('photo')
     return NextResponse.json({ success: true, message: '사진이 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

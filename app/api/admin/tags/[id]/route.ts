@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapTag } from '@/lib/dto'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -28,6 +29,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     // project_tags / item_tags / photo_tags links cascade on tag delete (FK ON DELETE CASCADE).
     const { error } = await supabaseAdmin.from('tags').delete().eq('id', params.id)
     if (error) throw error
+    revalidateEntity('tag')
     return NextResponse.json({ success: true, message: '태그가 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

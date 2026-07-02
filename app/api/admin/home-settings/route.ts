@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import type { HomeFeaturedItem } from '@/lib/admin-types'
+import { revalidateEntity } from '@/lib/revalidation'
 
 type EntityType = 'project' | 'item' | 'photo' | 'brand'
 const ENTITY_TYPES: EntityType[] = ['project', 'item', 'photo', 'brand']
@@ -68,6 +69,9 @@ export async function PUT(request: NextRequest) {
       const { error: fErr } = await supabaseAdmin.from('home_featured').insert(rows)
       if (fErr) throw fErr
     }
+
+    // Both featured_project_id and the home_featured list only affect the home page.
+    revalidateEntity('home_featured')
 
     return NextResponse.json({ success: true, message: '홈 설정이 저장되었습니다.' })
   } catch (error) {

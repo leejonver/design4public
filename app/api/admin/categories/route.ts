@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapCategory } from '@/lib/dto'
 import type { CategoryType } from '@/lib/database.types'
+import { revalidateEntity } from '@/lib/revalidation'
 
 const CATEGORY_TYPES: readonly CategoryType[] = ['project', 'item']
 
@@ -88,6 +89,8 @@ export async function POST(request: NextRequest) {
       .select('*')
       .single()
     if (error) throw error
+
+    revalidateEntity('category')
 
     return NextResponse.json(
       { success: true, data: mapCategory(category), message: '카테고리가 생성되었습니다.' },

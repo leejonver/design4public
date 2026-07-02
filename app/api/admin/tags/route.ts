@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapTag } from '@/lib/dto'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -54,6 +55,7 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .maybeSingle()
     if (existing) {
+      revalidateEntity('tag')
       return NextResponse.json(
         { success: true, data: mapTag(existing), message: '태그가 생성되었습니다.' },
         { status: 201 },
@@ -74,6 +76,7 @@ export async function POST(request: NextRequest) {
         .limit(1)
         .maybeSingle()
       if (again) {
+        revalidateEntity('tag')
         return NextResponse.json(
           { success: true, data: mapTag(again), message: '태그가 생성되었습니다.' },
           { status: 201 },
@@ -82,6 +85,7 @@ export async function POST(request: NextRequest) {
       throw error
     }
 
+    revalidateEntity('tag')
     return NextResponse.json(
       { success: true, data: mapTag(tag), message: '태그가 생성되었습니다.' },
       { status: 201 },

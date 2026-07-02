@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapCategory } from '@/lib/dto'
 import type { CategoryType } from '@/lib/database.types'
+import { revalidateEntity } from '@/lib/revalidation'
 
 const CATEGORY_TYPES: readonly CategoryType[] = ['project', 'item']
 
@@ -71,6 +72,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       )
     }
 
+    revalidateEntity('category')
+
     return NextResponse.json({
       success: true,
       data: mapCategory(category),
@@ -92,6 +95,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     // project_categories / item_categories links cascade on category delete (FK ON DELETE CASCADE).
     const { error } = await supabaseAdmin.from('categories').delete().eq('id', params.id)
     if (error) throw error
+    revalidateEntity('category')
     return NextResponse.json({ success: true, message: '카테고리가 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)
