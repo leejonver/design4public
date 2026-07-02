@@ -1,3 +1,4 @@
+import { vi } from "vitest";
 /**
  * Sidebar 컴포넌트 테스트
  * Phase 1: 컴포넌트 단위 테스트
@@ -6,25 +7,25 @@
 import React from 'react'
 import '@testing-library/jest-dom'
 import { render, screen } from '@testing-library/react'
-import Sidebar from '@/components/Sidebar'
+import Sidebar from '@/components/admin/Sidebar'
 
 // Next.js 라우터 모킹
-jest.mock('next/navigation', () => ({
-  usePathname: jest.fn(() => '/projects'),
-  useRouter: jest.fn(() => ({
-    push: jest.fn(),
+vi.mock('next/navigation', () => ({
+  usePathname: vi.fn(() => '/projects'),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
   })),
 }))
 
 // AuthContext 모킹
-jest.mock('@/contexts/AuthContext', () => ({
-  useAuth: jest.fn(() => ({
+vi.mock('@/components/admin/AuthContext', () => ({
+  useAuth: vi.fn(() => ({
     user: {
       email: 'test@test.com',
       name: 'Test User',
       role: 'admin',
     },
-    logout: jest.fn(),
+    logout: vi.fn(),
   })),
 }))
 

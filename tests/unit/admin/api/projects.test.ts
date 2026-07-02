@@ -1,3 +1,4 @@
+import { vi, type Mock } from "vitest";
 /**
  * 프로젝트 API 라우트 테스트 (renewal: cookie 인증 + RBAC + DTO 매핑)
  * - GET: 인증된 사용자에게 { success, data:{ items, total, page, limit } } 반환,
@@ -8,12 +9,12 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import type { SessionUser } from '@/lib/auth'
-import { GET, POST } from '@/app/api/projects/route'
+import { GET, POST } from '@/app/api/admin/projects/route'
 import { requireUser, requireRole, AuthError } from '@/lib/auth'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
-// auth: requireUser/requireRole 는 jest.fn, AuthError/authErrorResponse 는 실제 동작 유지.
-jest.mock('@/lib/auth', () => {
+// auth: requireUser/requireRole 는 vi.fn, AuthError/authErrorResponse 는 실제 동작 유지.
+vi.mock('@/lib/auth', () => {
   class AuthError extends Error {
     status: number
     constructor(status: number, message: string) {
@@ -34,24 +35,24 @@ jest.mock('@/lib/auth', () => {
   return {
     AuthError,
     authErrorResponse,
-    requireUser: jest.fn(),
-    requireRole: jest.fn(),
-    getCurrentUser: jest.fn(),
-    hasRole: jest.fn(),
+    requireUser: vi.fn(),
+    requireRole: vi.fn(),
+    getCurrentUser: vi.fn(),
+    hasRole: vi.fn(),
   }
 })
 
 // 서비스 롤 클라이언트: 체이너블 쿼리 빌더로 모킹.
-jest.mock('@/lib/supabase-admin', () => ({
-  supabaseAdmin: { from: jest.fn() },
+vi.mock('@/lib/supabase/admin', () => ({
+  supabaseAdmin: { from: vi.fn() },
 }))
 
 // 이미지/관계 동기화는 no-op.
-jest.mock('@/lib/image-sync', () => ({
-  syncProjectPhotos: jest.fn().mockResolvedValue(undefined),
-  syncProjectItems: jest.fn().mockResolvedValue(undefined),
-  syncCategories: jest.fn().mockResolvedValue(undefined),
-  syncFreeTags: jest.fn().mockResolvedValue(undefined),
+vi.mock('@/lib/image-sync', () => ({
+  syncProjectPhotos: vi.fn().mockResolvedValue(undefined),
+  syncProjectItems: vi.fn().mockResolvedValue(undefined),
+  syncCategories: vi.fn().mockResolvedValue(undefined),
+  syncFreeTags: vi.fn().mockResolvedValue(undefined),
 }))
 
 // jsdom/whatwg-fetch 환경에서 NextResponse.json 의 body 스트림이 유실되므로
@@ -73,13 +74,13 @@ function makeQB(result: QBResult): Record<string, unknown> {
   ]
   const qb: Record<string, unknown> = {}
   methods.forEach((m) => {
-    qb[m] = jest.fn(() => qb)
+    qb[m] = vi.fn(() => qb)
   })
   qb.then = (resolve: (r: QBResult) => unknown) => resolve(result)
   return qb
 }
 
-const fromMock = supabaseAdmin.from as unknown as jest.Mock
+const fromMock = supabaseAdmin.from as unknown as Mock
 
 const fakeUser: SessionUser = {
   id: 'u1',
@@ -155,18 +156,18 @@ function makeRequest(url: string, body?: unknown): NextRequest {
 
 describe('Projects API Routes (renewal)', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.spyOn(console, 'error').mockImplementation(() => {})
-    jest
+    vi.clearAllMocks()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi
       .spyOn(NextResponse, 'json')
       .mockImplementation(jsonResponse as unknown as typeof NextResponse.json)
     fromMock.mockReset()
-    jest.mocked(requireUser).mockResolvedValue(fakeUser)
-    jest.mocked(requireRole).mockResolvedValue(fakeUser)
+    vi.mocked(requireUser).mockResolvedValue(fakeUser)
+    vi.mocked(requireRole).mockResolvedValue(fakeUser)
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   describe('GET /api/projects', () => {
@@ -214,7 +215,7 @@ describe('Projects API Routes (renewal)', () => {
 
   describe('POST /api/projects', () => {
     it('RBAC: requireRole 거부 시 403 { success:false } 를 반환한다', async () => {
-      jest.mocked(requireRole).mockRejectedValueOnce(new AuthError(403, '권한이 없습니다.'))
+      vi.mocked(requireRole).mockRejectedValueOnce(new AuthError(403, '권한이 없습니다.'))
 
       const res = await POST(makeRequest('http://localhost/api/projects', { name: '새 프로젝트' }))
       const json = await res.json()

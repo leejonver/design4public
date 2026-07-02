@@ -1,3 +1,4 @@
+import { vi, type Mock } from "vitest";
 /**
  * 인증 API 라우트 테스트 (renewal: @supabase/ssr 쿠키 인증)
  * - signup: 가입 시 pending 프로필 생성 + 승인 안내 메시지 반환.
@@ -6,30 +7,30 @@
  */
 
 import { NextResponse } from 'next/server'
-import { POST as signupPost } from '@/app/api/auth/signup/route'
-import { POST as loginPost } from '@/app/api/auth/login/route'
-import { createServerSupabase } from '@/lib/supabase-server'
-import { supabaseAdmin } from '@/lib/supabase-admin'
+import { POST as signupPost } from '@/app/api/admin/auth/signup/route'
+import { POST as loginPost } from '@/app/api/admin/auth/login/route'
+import { createServerSupabase } from '@/lib/supabase/server'
+import { supabaseAdmin } from '@/lib/supabase/admin'
 
 type AuthMock = {
-  signUp: jest.Mock
-  signInWithPassword: jest.Mock
-  signOut: jest.Mock
+  signUp: Mock
+  signInWithPassword: Mock
+  signOut: Mock
 }
 
 // createServerSupabase() -> { auth: { signUp, signInWithPassword, signOut } } (모킹)
-jest.mock('@/lib/supabase-server', () => {
+vi.mock('@/lib/supabase/server', () => {
   const auth = {
-    signUp: jest.fn(),
-    signInWithPassword: jest.fn(),
-    signOut: jest.fn(),
+    signUp: vi.fn(),
+    signInWithPassword: vi.fn(),
+    signOut: vi.fn(),
   }
-  return { createServerSupabase: jest.fn(() => ({ auth })) }
+  return { createServerSupabase: vi.fn(() => ({ auth })) }
 })
 
 // 서비스 롤 클라이언트: 체이너블 쿼리 빌더로 모킹.
-jest.mock('@/lib/supabase-admin', () => ({
-  supabaseAdmin: { from: jest.fn() },
+vi.mock('@/lib/supabase/admin', () => ({
+  supabaseAdmin: { from: vi.fn() },
 }))
 
 // jsdom/whatwg-fetch 환경에서 NextResponse.json 의 body 스트림이 유실되므로
@@ -50,13 +51,13 @@ function makeQB(result: QBResult): Record<string, unknown> {
   ]
   const qb: Record<string, unknown> = {}
   methods.forEach((m) => {
-    qb[m] = jest.fn(() => qb)
+    qb[m] = vi.fn(() => qb)
   })
   qb.then = (resolve: (r: QBResult) => unknown) => resolve(result)
   return qb
 }
 
-const fromMock = supabaseAdmin.from as unknown as jest.Mock
+const fromMock = supabaseAdmin.from as unknown as Mock
 // createServerSupabase 는 동일한 auth 객체(클로저)를 반환하므로 한 번만 꺼내면 된다.
 const auth = (createServerSupabase() as unknown as { auth: AuthMock }).auth
 
@@ -70,9 +71,9 @@ function makeRequest(body: Record<string, unknown>): Request {
 
 describe('Auth API Routes (renewal)', () => {
   beforeEach(() => {
-    jest.clearAllMocks()
-    jest.spyOn(console, 'error').mockImplementation(() => {})
-    jest
+    vi.clearAllMocks()
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    vi
       .spyOn(NextResponse, 'json')
       .mockImplementation(jsonResponse as unknown as typeof NextResponse.json)
     fromMock.mockReset()
@@ -82,7 +83,7 @@ describe('Auth API Routes (renewal)', () => {
   })
 
   afterEach(() => {
-    jest.restoreAllMocks()
+    vi.restoreAllMocks()
   })
 
   describe('POST /api/auth/signup', () => {
@@ -108,7 +109,7 @@ describe('Auth API Routes (renewal)', () => {
       expect(json.success).toBe(true)
       expect(json.message).toContain('승인')
       expect(fromMock).toHaveBeenCalledWith('profiles')
-      expect(qb.upsert as jest.Mock).toHaveBeenCalledWith(
+      expect(qb.upsert as Mock).toHaveBeenCalledWith(
         expect.objectContaining({ status: 'pending', role: 'content_manager', id: 'new-user-id' }),
         expect.anything(),
       )

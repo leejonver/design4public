@@ -1,9 +1,10 @@
+import { vi } from "vitest";
 /**
  * API 유틸리티 함수 테스트
  * 쿠키 기반(@supabase/ssr) 인증: Authorization 헤더를 추가하지 않는다.
  */
 
-import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api'
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/admin-api'
 
 interface FetchResult {
   ok: boolean
@@ -13,7 +14,7 @@ interface FetchResult {
 
 const okJson = (body: unknown): FetchResult => ({ ok: true, json: async () => body })
 
-const fetchMock = jest.fn()
+const fetchMock = vi.fn()
 
 // fetch 호출 인자에서 헤더를 안전하게 추출한다.
 const headersOf = (call: number): Record<string, string> => {
@@ -35,7 +36,7 @@ describe('API Utility Functions', () => {
       const result = await apiGet('/test')
 
       expect(fetchMock).toHaveBeenCalledWith(
-        '/api/test',
+        '/api/admin/test',
         expect.objectContaining({
           headers: expect.objectContaining({ 'Content-Type': 'application/json' }),
         })
@@ -48,7 +49,7 @@ describe('API Utility Functions', () => {
 
       await apiGet('/test', { page: 1, limit: 10 })
 
-      expect(fetchMock).toHaveBeenCalledWith('/api/test?page=1&limit=10', expect.any(Object))
+      expect(fetchMock).toHaveBeenCalledWith('/api/admin/test?page=1&limit=10', expect.any(Object))
     })
 
     it('쿠키 세션(same-origin)으로 요청하며 Authorization 헤더를 추가하지 않아야 합니다', async () => {
@@ -93,7 +94,7 @@ describe('API Utility Functions', () => {
       const result = await apiPost('/test', mockData)
 
       expect(fetchMock).toHaveBeenCalledWith(
-        '/api/test',
+        '/api/admin/test',
         expect.objectContaining({
           method: 'POST',
           body: JSON.stringify(mockData),
@@ -120,7 +121,7 @@ describe('API Utility Functions', () => {
       const result = await apiPut('/test/1', mockData)
 
       expect(fetchMock).toHaveBeenCalledWith(
-        '/api/test/1',
+        '/api/admin/test/1',
         expect.objectContaining({
           method: 'PUT',
           body: JSON.stringify(mockData),
@@ -138,7 +139,7 @@ describe('API Utility Functions', () => {
       const result = await apiDelete('/test/1')
 
       expect(fetchMock).toHaveBeenCalledWith(
-        '/api/test/1',
+        '/api/admin/test/1',
         expect.objectContaining({ method: 'DELETE' })
       )
       expect(result).toEqual(mockResponse)

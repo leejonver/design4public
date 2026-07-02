@@ -1,3 +1,4 @@
+import { vi, type Mock } from "vitest";
 /**
  * 인증 플로우 통합 테스트
  * 쿠키 기반(@supabase/ssr) AuthProvider 동작 검증 (localStorage 토큰 제거).
@@ -5,44 +6,44 @@
 
 import React from 'react'
 import { render, act } from '@testing-library/react'
-import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { AuthProvider, useAuth } from '@/components/admin/AuthContext'
 import type { UserRole } from '@/lib/database.types'
 
 // 쿠키 세션 기반 supabase 클라이언트를 모킹한다.
-jest.mock('@/lib/supabase', () => {
-  const profileSingle = jest.fn()
+vi.mock('@/lib/supabase/browser', () => {
+  const profileSingle = vi.fn()
   const eqResult = { single: profileSingle }
-  const selectResult = { eq: jest.fn(() => eqResult) }
-  const fromResult = { select: jest.fn(() => selectResult) }
+  const selectResult = { eq: vi.fn(() => eqResult) }
+  const fromResult = { select: vi.fn(() => selectResult) }
   return {
     supabase: {
       auth: {
-        signInWithPassword: jest.fn(),
-        signOut: jest.fn(() => Promise.resolve({ error: null })),
-        getUser: jest.fn(() => Promise.resolve({ data: { user: null } })),
-        onAuthStateChange: jest.fn(() => ({
-          data: { subscription: { unsubscribe: jest.fn() } },
+        signInWithPassword: vi.fn(),
+        signOut: vi.fn(() => Promise.resolve({ error: null })),
+        getUser: vi.fn(() => Promise.resolve({ data: { user: null } })),
+        onAuthStateChange: vi.fn(() => ({
+          data: { subscription: { unsubscribe: vi.fn() } },
         })),
       },
-      from: jest.fn(() => fromResult),
+      from: vi.fn(() => fromResult),
     },
   }
 })
 
-// 모킹된 supabase 의 jest.fn 들에 접근하기 위한 핸들.
-import { supabase } from '@/lib/supabase'
+// 모킹된 supabase 의 vi.fn 들에 접근하기 위한 핸들.
+import { supabase } from '@/lib/supabase/browser'
 
 const auth = supabase.auth as unknown as {
-  signInWithPassword: jest.Mock
-  signOut: jest.Mock
-  getUser: jest.Mock
-  onAuthStateChange: jest.Mock
+  signInWithPassword: Mock
+  signOut: Mock
+  getUser: Mock
+  onAuthStateChange: Mock
 }
 
 // profiles 조회 체인의 leaf(.single) 참조. 클로저로 항상 동일 인스턴스.
-const profileSingle = (supabase.from as unknown as jest.Mock)('profiles')
+const profileSingle = (supabase.from as unknown as Mock)('profiles')
   .select()
-  .eq().single as jest.Mock
+  .eq().single as Mock
 
 interface ProfileRow {
   id: string
@@ -78,7 +79,7 @@ async function renderAuth() {
 }
 
 beforeEach(() => {
-  jest.clearAllMocks()
+  vi.clearAllMocks()
 })
 
 describe('Authentication Flow (cookie-based)', () => {
@@ -192,7 +193,7 @@ describe('Authentication Flow (cookie-based)', () => {
       profileSingle.mockResolvedValue({ data: approvedProfile('admin') })
 
       localStorage.removeItem('authToken')
-      const setItemSpy = jest.spyOn(Storage.prototype, 'setItem')
+      const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
 
       await renderAuth()
       await act(async () => {
