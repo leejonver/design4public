@@ -640,3 +640,12 @@ export const Constants = {
     },
   },
 } as const;
+
+/* --- Named enum aliases consumed by admin code (auth.ts, AuthContext).
+   TODO(post-M1): replace with Enums<'...'> derivations from Database. --- */
+export type UserRole = 'master' | 'admin' | 'content_manager'
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
+export type ProjectStatus = 'draft' | 'published' | 'hidden'
+export type ItemStatus = 'available' | 'discontinued' | 'hidden'
+export type BrandStatus = 'visible' | 'hidden'
+export type CategoryType = 'project' | 'item'

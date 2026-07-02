@@ -2,7 +2,7 @@
 // Roles: master (everything) > admin (content CRUD) > content_manager (limited CRUD, no user mgmt).
 import 'server-only'
 import { NextResponse } from 'next/server'
-import { createServerSupabase } from './supabase-server'
+import { createServerSupabase } from './supabase/server'
 import type { UserRole, ApprovalStatus } from './database.types'
 
 export interface SessionUser {

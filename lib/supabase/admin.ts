@@ -3,7 +3,7 @@
 // (Storage uploads, master-only privileged writes after server-side role checks).
 import 'server-only'
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from './database.types'
+import type { Database } from '../database.types'
 
 export const supabaseAdmin = createClient<Database>(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
