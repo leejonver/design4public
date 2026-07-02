@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -90,6 +91,8 @@ export async function POST(request: NextRequest) {
       .select(BRAND_SELECT)
       .eq('id', brand.id)
       .single()
+
+    revalidateEntity('brand', slug)
 
     return NextResponse.json(
       { success: true, data: full ? mapBrand(full) : null, message: '브랜드가 생성되었습니다.' },

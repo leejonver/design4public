@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { ITEM_SELECT, mapItem } from '@/lib/dto'
 import { syncItemPhotos, syncCategories, syncFreeTags } from '@/lib/image-sync'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -50,6 +51,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       .eq('id', params.id)
       .single()
 
+    // ITEM_SELECT's item_tags join has no declared FK relationship in the
+    // generated Database type, which makes Supabase's type parser drop the
+    // top-level `*` columns from the inferred row shape.
+    revalidateEntity('item', (full as { slug?: string } | null)?.slug)
+
     return NextResponse.json({
       success: true,
       data: full ? mapItem(full) : null,
@@ -65,9 +71,16 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    // Capture the slug before deletion so we can purge the item's detail page.
+    const { data: existing } = await supabaseAdmin
+      .from('items')
+      .select('slug')
+      .eq('id', params.id)
+      .maybeSingle()
     // photo_items / item_tags / project_items links cascade on item delete (FK ON DELETE CASCADE).
     const { error } = await supabaseAdmin.from('items').delete().eq('id', params.id)
     if (error) throw error
+    revalidateEntity('item', existing?.slug)
     return NextResponse.json({ success: true, message: '아이템이 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

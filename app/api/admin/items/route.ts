@@ -4,6 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { ITEM_SELECT, mapItem } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { syncItemPhotos, syncCategories, syncFreeTags } from '@/lib/image-sync'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(request: NextRequest) {
   try {
@@ -89,6 +90,8 @@ export async function POST(request: NextRequest) {
       .select(ITEM_SELECT)
       .eq('id', item.id)
       .single()
+
+    revalidateEntity('item', slug)
 
     return NextResponse.json(
       { success: true, data: full ? mapItem(full) : null, message: '아이템이 생성되었습니다.' },
