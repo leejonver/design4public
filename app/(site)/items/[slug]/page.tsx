@@ -18,24 +18,24 @@ export const revalidate = 3600;
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
-  const item: ItemDetail | null = await fetchItemBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const item: ItemDetail | null = await fetchItemBySlug(slug);
   if (!item) return {};
   return createPageMetadata({
     title: item.name,
     description:
       item.description ??
       `${item.brandName ? `${item.brandName} ` : ""}${item.name} 오피스 가구 아이템 정보와 사양입니다.`,
-    path: `/items/${params.slug}`,
+    path: `/items/${slug}`,
     images: [item.image, ...item.gallery.map((g) => g.url)],
     type: "article",
   });
 }
 
-export default async function ItemDetailPage(props: Props) {
-  const params = await props.params;
-  const item: ItemDetail | null = await fetchItemBySlug(params.slug);
+export default async function ItemDetailPage({ params }: Props) {
+  const { slug } = await params;
+  const item: ItemDetail | null = await fetchItemBySlug(slug);
   if (!item) notFound();
 
   const jsonLd = jsonLdGraph([

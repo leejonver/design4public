@@ -24,9 +24,9 @@ function photoTitle(p: { title: string | null; alt: string | null; projectTitle:
   return p.title ?? p.alt ?? p.projectTitle ?? "사진";
 }
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
-  const photo = await fetchPhotoById(params.id);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
+  const photo = await fetchPhotoById(id);
   if (!photo) return {};
   const title = photoTitle(photo);
   const description = truncateDescription(
@@ -44,9 +44,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   });
 }
 
-export default async function PhotoDetailPage(props: Props) {
-  const params = await props.params;
-  const photo = await fetchPhotoById(params.id);
+export default async function PhotoDetailPage({ params }: Props) {
+  const { id } = await params;
+  const photo = await fetchPhotoById(id);
   if (!photo) notFound();
 
   const title = photoTitle(photo);

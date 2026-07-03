@@ -18,9 +18,9 @@ export const revalidate = 3600;
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
-  const project = await fetchProjectBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const project = await fetchProjectBySlug(slug);
   if (!project) return {};
 
   const description = truncateDescription(
@@ -36,9 +36,9 @@ export async function generateMetadata(props: Props): Promise<Metadata> {
   });
 }
 
-export default async function ProjectDetailPage(props: Props) {
-  const params = await props.params;
-  const project = await fetchProjectBySlug(params.slug);
+export default async function ProjectDetailPage({ params }: Props) {
+  const { slug } = await params;
+  const project = await fetchProjectBySlug(slug);
   if (!project) notFound();
 
   const galleryUrls = project.gallery.map((g) => g.url);

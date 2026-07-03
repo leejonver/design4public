@@ -15,16 +15,16 @@ export const revalidate = 3600;
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata(props: Props): Promise<Metadata> {
-  const params = await props.params;
-  const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const brand: BrandDetail | null = await fetchBrandBySlug(slug);
   if (!brand) return {};
   return createPageMetadata({
     title: brand.nameKo,
     description:
       brand.description ??
       `${brand.nameKo}${brand.nameEn ? ` (${brand.nameEn})` : ""} 브랜드의 오피스 가구 아이템과 도입 프로젝트입니다.`,
-    path: `/brands/${params.slug}`,
+    path: `/brands/${slug}`,
     images: [brand.cover, brand.logo],
     type: "article",
   });
@@ -38,9 +38,9 @@ const sectionHeading: React.CSSProperties = {
   color: "var(--ink-900)",
 };
 
-export default async function BrandDetailPage(props: Props) {
-  const params = await props.params;
-  const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
+export default async function BrandDetailPage({ params }: Props) {
+  const { slug } = await params;
+  const brand: BrandDetail | null = await fetchBrandBySlug(slug);
   if (!brand) notFound();
 
   const jsonLd = jsonLdGraph([
