@@ -33,7 +33,8 @@ test.describe('통합 검색', () => {
   test('/search 는 아이템과 파생 프로젝트를 함께 보여준다 (아에론)', async ({ page }) => {
     await page.goto('/search?q=아에론')
     // aeron item + the projects whose body includes the linked item name.
-    await expect(page.getByRole('link', { name: /아에론 체어/ })).toBeVisible()
+    // exact: the photo '아에론 체어 클로즈업' also matches '아에론 체어' as a substring.
+    await expect(page.getByRole('link', { name: '아에론 체어', exact: true })).toBeVisible()
     await expect(page.getByRole('link', { name: /강남 오피스 리노베이션/ })).toBeVisible()
   })
 

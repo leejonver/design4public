@@ -20,6 +20,10 @@ export async function embedBatch(texts: string[]): Promise<(number[] | null)[]> 
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
       body: JSON.stringify({ model: EMBEDDING_MODEL, input }),
+      // Never let Next's Data Cache store this response: a cached transient
+      // failure (429/5xx → null) would silently pin that exact query to
+      // trigram-only with no revalidation window to self-heal.
+      cache: 'no-store',
     })
     if (!res.ok) {
       console.error('[embedding] OpenAI error', res.status, await res.text().catch(() => ''))
