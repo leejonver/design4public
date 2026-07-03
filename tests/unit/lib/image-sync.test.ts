@@ -1,15 +1,13 @@
 import { vi, type Mock } from 'vitest'
+import type { SupabaseClient } from '@supabase/supabase-js'
+import type { Database } from '@/lib/database.types'
 /**
  * lib/image-sync.ts - syncProjectPhotos 의 itemIds opt-in 동작 검증 (M4 Task 4).
  * itemIds 는 ref 단위 opt-in: 명시적으로 실은 ref 만 photo_items 를 (재)기록하고,
  * itemIds 를 아예 싣지 않은 레거시 ref 는 기존 photo_items 를 그대로 둔다.
+ * M8: 헬퍼는 첫 인자로 RLS 스코프 Supabase 클라이언트를 받는다 — 여기서는 모의 db 를 주입한다.
  */
 import { syncProjectPhotos } from '@/lib/image-sync'
-import { supabaseAdmin } from '@/lib/supabase/admin'
-
-vi.mock('@/lib/supabase/admin', () => ({
-  supabaseAdmin: { from: vi.fn() },
-}))
 
 type Call = { table: string; method: string; args: unknown[] }
 
@@ -31,7 +29,8 @@ function makeChain(table: string, calls: Call[]): Record<string, unknown> {
   return chain
 }
 
-const fromMock = supabaseAdmin.from as unknown as Mock
+const fromMock = vi.fn() as Mock
+const db = { from: fromMock } as unknown as SupabaseClient<Database>
 
 describe('syncProjectPhotos - itemIds opt-in (M4)', () => {
   let calls: Call[]
@@ -47,13 +46,13 @@ describe('syncProjectPhotos - itemIds opt-in (M4)', () => {
   })
 
   it('itemIds 를 싣지 않은 ref 는 photo_items 를 건드리지 않는다 (레거시 호출자)', async () => {
-    await syncProjectPhotos('p1', [{ photoId: 'ph1' }])
+    await syncProjectPhotos(db, 'p1', [{ photoId: 'ph1' }])
 
     expect(calls.some((c) => c.table === 'photo_items')).toBe(false)
   })
 
   it('itemIds 를 명시한 ref 는 photo_items 를 (재)기록한다', async () => {
-    await syncProjectPhotos('p1', [{ photoId: 'ph1', itemIds: ['it1', 'it2'] }])
+    await syncProjectPhotos(db, 'p1', [{ photoId: 'ph1', itemIds: ['it1', 'it2'] }])
 
     const del = calls.find((c) => c.table === 'photo_items' && c.method === 'delete')
     expect(del).toBeDefined()
@@ -68,14 +67,14 @@ describe('syncProjectPhotos - itemIds opt-in (M4)', () => {
   })
 
   it('itemIds 로 빈 배열을 명시하면 photo_items 를 비운다 (삭제만, insert 없음)', async () => {
-    await syncProjectPhotos('p1', [{ photoId: 'ph1', itemIds: [] }])
+    await syncProjectPhotos(db, 'p1', [{ photoId: 'ph1', itemIds: [] }])
 
     expect(calls.some((c) => c.table === 'photo_items' && c.method === 'delete')).toBe(true)
     expect(calls.some((c) => c.table === 'photo_items' && c.method === 'insert')).toBe(false)
   })
 
   it('여러 ref 중 itemIds 를 실은 ref 만 photo_items 를 동기화한다', async () => {
-    await syncProjectPhotos('p1', [
+    await syncProjectPhotos(db, 'p1', [
       { photoId: 'ph1', itemIds: ['it1'] },
       { photoId: 'ph2' },
     ])
@@ -87,7 +86,7 @@ describe('syncProjectPhotos - itemIds opt-in (M4)', () => {
   })
 
   it('itemIds 유무와 무관하게 project_photos 행은 그대로 (재)기록된다', async () => {
-    await syncProjectPhotos('p1', [{ photoId: 'ph1', itemIds: ['it1'] }])
+    await syncProjectPhotos(db, 'p1', [{ photoId: 'ph1', itemIds: ['it1'] }])
 
     const upsert = calls.find((c) => c.table === 'project_photos' && c.method === 'upsert')
     expect(upsert?.args[0]).toEqual([{ project_id: 'p1', photo_id: 'ph1', is_main: true, order: 0 }])
