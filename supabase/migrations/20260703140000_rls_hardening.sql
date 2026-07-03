@@ -50,3 +50,48 @@ create policy "profiles_update_master" on public.profiles
   using (public.has_role('master'))
   with check (public.has_role('master'));
 -- kept from baseline: users_select_own, users_insert_own, service_role_all.
+
+-- 3. project_photos: only images of PUBLISHED projects are publicly SELECTable
+--    (mirrors the original migration-009 EXISTS gate).
+drop policy if exists "project_photos_select_public" on public.project_photos;
+create policy "project_photos_select_published" on public.project_photos
+  for select
+  using (exists (
+    select 1 from public.projects p
+    where p.id = project_photos.project_id and p.status = 'published'
+  ));
+
+-- 4. photos: publicly SELECTable iff the photo is in a PUBLISHED project OR in an
+--    item gallery (photo_items). The item-gallery branch keeps item-detail
+--    galleries working (lib/api.ts fetchItemBySlug reads photo_items->photos).
+drop policy if exists "photos_select_public" on public.photos;
+create policy "photos_select_published_or_item" on public.photos
+  for select
+  using (
+    exists (
+      select 1 from public.project_photos pp
+      join public.projects p on p.id = pp.project_id
+      where pp.photo_id = photos.id and p.status = 'published'
+    )
+    or exists (
+      select 1 from public.photo_items pi where pi.photo_id = photos.id
+    )
+  );
+
+-- 5. Staff SELECT-all: approved staff read EVERYTHING (drafts included) through the
+--    RLS client, so admin list + edit-form join reads keep working after the code
+--    switch. anon is unaffected (these are TO authenticated and OR-combine with the
+--    gated public policies above). Needed on the published-gated tables only.
+create policy "projects_select_staff" on public.projects
+  for select to authenticated using (public.has_role('content_manager'));
+create policy "project_photos_select_staff" on public.project_photos
+  for select to authenticated using (public.has_role('content_manager'));
+create policy "photos_select_staff" on public.photos
+  for select to authenticated using (public.has_role('content_manager'));
+create policy "project_items_select_staff" on public.project_items
+  for select to authenticated using (public.has_role('content_manager'));
+create policy "project_categories_select_staff" on public.project_categories
+  for select to authenticated using (public.has_role('content_manager'));
+-- Baseline projects SELECT policies remain: "Everyone can view published projects"
+-- (anon/pub) stays; "Authenticated users can view all projects" is replaced by the
+-- staff policy in Task 4 so pending sessions cannot read drafts.

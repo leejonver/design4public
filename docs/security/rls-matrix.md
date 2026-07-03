@@ -53,6 +53,21 @@ Every drop/create pair applied by the M8 hardening migration.
 | profiles | `users_update_own` (UPDATE) | — | closes self-role-escalation vector (edit own role) |
 | profiles | — kept — | `users_select_own`, `users_insert_own`, `service_role_all` | unchanged from baseline |
 
+### Task 3 — restore 009 draft-photo gating + staff SELECT-all
+| table | dropped | created | reason |
+|---|---|---|---|
+| project_photos | `project_photos_select_public` (SELECT, unconditional) | `project_photos_select_published` (SELECT, published-project gate) | draft/hidden project images were publicly readable (009 regression) |
+| photos | `photos_select_public` (SELECT, unconditional) | `photos_select_published_or_item` (SELECT, published-project OR item-gallery) | same leak; item-gallery branch keeps item-detail galleries working |
+| projects | — | `projects_select_staff` (SELECT, authenticated + has_role) | staff read drafts via RLS client |
+| project_photos | — | `project_photos_select_staff` (SELECT, authenticated + has_role) | staff read draft images via RLS client |
+| photos | — | `photos_select_staff` (SELECT, authenticated + has_role) | staff read draft images via RLS client |
+| project_items | — | `project_items_select_staff` (SELECT, authenticated + has_role) | staff read draft joins via RLS client |
+| project_categories | — | `project_categories_select_staff` (SELECT, authenticated + has_role) | staff read draft joins via RLS client |
+
+Deferred to Task 4 (not in this migration): dropping `projects` "Authenticated users
+can view all projects" (still lets any authenticated session read drafts) and the
+content-write tightening. Until then the staff SELECT-all policies are additive.
+
 ## Known residual risks (documented, not fixed in M8)
 - `users_insert_own` lets a session insert its own profile row, but the
   `on_auth_user_created` trigger already inserts it first (PK conflict blocks a
