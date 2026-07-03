@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
 import { syncPhotoItems, syncFreeTags } from '@/lib/image-sync'
@@ -9,7 +9,8 @@ import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
 export async function GET(_request: NextRequest, { params }: { params: { photo_id: string } }) {
   try {
     await requireUser()
-    const { data, error } = await supabaseAdmin
+    const supabase = createServerSupabase()
+    const { data, error } = await supabase
       .from('photos')
       .select(PHOTO_SELECT)
       .eq('id', params.photo_id)
@@ -28,6 +29,7 @@ export async function GET(_request: NextRequest, { params }: { params: { photo_i
 export async function PUT(request: NextRequest, { params }: { params: { photo_id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     const body = await request.json()
     const { imageUrl, altText, title, description, connectedItems, tags } = body
 
@@ -38,13 +40,13 @@ export async function PUT(request: NextRequest, { params }: { params: { photo_id
     if (description !== undefined) update.description = description
 
     if (Object.keys(update).length > 0) {
-      const { error } = await supabaseAdmin.from('photos').update(update).eq('id', params.photo_id)
+      const { error } = await supabase.from('photos').update(update).eq('id', params.photo_id)
       if (error) throw error
     }
-    if (connectedItems !== undefined) await syncPhotoItems(params.photo_id, connectedItems)
-    if (tags !== undefined) await syncFreeTags('photo_tags', 'photo_id', params.photo_id, tags)
+    if (connectedItems !== undefined) await syncPhotoItems(supabase, params.photo_id, connectedItems)
+    if (tags !== undefined) await syncFreeTags(supabase, 'photo_tags', 'photo_id', params.photo_id, tags)
 
-    const { data: full } = await supabaseAdmin
+    const { data: full } = await supabase
       .from('photos')
       .select(PHOTO_SELECT)
       .eq('id', params.photo_id)
@@ -68,8 +70,9 @@ export async function PUT(request: NextRequest, { params }: { params: { photo_id
 export async function DELETE(_request: NextRequest, { params }: { params: { photo_id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     // photo_items / photo_tags / project_photos links cascade on photo delete (FK ON DELETE CASCADE).
-    const { error } = await supabaseAdmin.from('photos').delete().eq('id', params.photo_id)
+    const { error } = await supabase.from('photos').delete().eq('id', params.photo_id)
     if (error) throw error
     revalidateEntity('photo')
     await deleteFromIndex('photo', params.photo_id)
