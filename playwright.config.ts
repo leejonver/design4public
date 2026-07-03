@@ -57,6 +57,15 @@ export default defineConfig({
       use: { ...devices['Desktop Chrome'], storageState: MASTER_STATE },
       dependencies: ['setup'],
     },
+    {
+      // Direct-REST RLS probes: hit PostgREST with its own anon/service/CM
+      // clients (no browser session), so no storageState. Depends on setup for
+      // the provisioned CM/master users.
+      name: 'security',
+      testDir: './tests/e2e/security',
+      fullyParallel: false,
+      dependencies: ['setup'],
+    },
   ],
   webServer: {
     command: 'npm run dev',
