@@ -12,16 +12,12 @@ import { supabaseAdmin } from '@/lib/supabase/admin'
 
 type AuthMock = {
   signUp: Mock
-  signInWithPassword: Mock
-  signOut: Mock
 }
 
-// createServerSupabase() -> { auth: { signUp, signInWithPassword, signOut } } (모킹)
+// createServerSupabase() -> { auth: { signUp } } (모킹)
 vi.mock('@/lib/supabase/server', () => {
   const auth = {
     signUp: vi.fn(),
-    signInWithPassword: vi.fn(),
-    signOut: vi.fn(),
   }
   return { createServerSupabase: vi.fn(() => ({ auth })) }
 })
@@ -76,8 +72,6 @@ describe('Auth API Routes (renewal)', () => {
       .mockImplementation(jsonResponse as unknown as typeof NextResponse.json)
     fromMock.mockReset()
     auth.signUp.mockReset()
-    auth.signInWithPassword.mockReset()
-    auth.signOut.mockReset()
   })
 
   afterEach(() => {
