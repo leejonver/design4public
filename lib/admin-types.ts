@@ -51,6 +51,7 @@ export interface ImageData {
   isMain?: boolean; // 대표 이미지 여부 (기본: false)
   title?: string; // 사진 제목 (선택)
   order?: number; // 표시 순서 (0-기반)
+  itemIds?: string[]; // 이 사진에 태깅된 아이템 id (프로젝트→사진→아이템 파생 모델)
 }
 
 /**

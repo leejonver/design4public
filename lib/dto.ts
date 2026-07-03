@@ -14,7 +14,7 @@ export const BRAND_SELECT = '*'
 export const ITEM_SELECT =
   '*, brands(*), item_categories(categories(*)), item_tags(tags(*)), photo_items(is_main, order, photos(*))'
 export const PROJECT_SELECT =
-  '*, project_categories(categories(*)), project_tags(tags(*)), project_items(items(*, brands(*))), project_photos(is_main, order, photos(*))'
+  '*, project_categories(categories(*)), project_tags(tags(*)), project_items(items(*, brands(*))), project_photos(is_main, order, photos(*, photo_items(items(id))))'
 export const PHOTO_SELECT =
   '*, photo_tags(tags(*)), photo_items(is_main, order, items(*, brands(*))), project_photos(projects(id, title, slug, status))'
 
@@ -48,14 +48,20 @@ function mapImagesFromPhotos(join: Row[] | null | undefined): ImageData[] {
     .filter((j) => j.photos)
     .slice()
     .sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0) || (a.order ?? 0) - (b.order ?? 0))
-    .map((j, i) => ({
-      id: j.photos.id,
-      url: j.photos.image_url,
-      alt: j.photos.alt_text ?? '',
-      isMain: !!j.is_main,
-      title: j.photos.title ?? undefined,
-      order: j.order ?? i,
-    }))
+    .map((j, i) => {
+      const itemIds = (j.photos.photo_items ?? [])
+        .map((pi: Row) => pi.items?.id)
+        .filter((id: unknown): id is string => Boolean(id))
+      return {
+        id: j.photos.id,
+        url: j.photos.image_url,
+        alt: j.photos.alt_text ?? '',
+        isMain: !!j.is_main,
+        title: j.photos.title ?? undefined,
+        order: j.order ?? i,
+        itemIds: itemIds.length ? itemIds : undefined,
+      }
+    })
 }
 
 export function mapBrand(r: Row): Brand {
