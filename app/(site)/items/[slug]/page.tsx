@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { ExternalLink, Mail } from "lucide-react";
 import { fetchItemBySlug } from "@/lib/api";
 import type { ItemDetail } from "@/lib/types";
-import { createPageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import { createPageMetadata, productSchema, breadcrumbSchema, jsonLdGraph } from "@/lib/seo";
 import { Container, Overline, SpecSheet } from "@/components/site/primitives";
 import { Breadcrumb } from "@/components/site/page-chrome";
 import { StickyTitle } from "@/components/site/sticky-title";
@@ -35,6 +36,21 @@ export default async function ItemDetailPage({ params }: Props) {
   const item: ItemDetail | null = await fetchItemBySlug(params.slug);
   if (!item) notFound();
 
+  const jsonLd = jsonLdGraph([
+    productSchema({
+      name: item.name,
+      description: item.description,
+      images: [item.image, ...item.gallery.map((g) => g.url)],
+      brand: item.brandName ?? item.brandNameEn,
+      path: `/items/${item.slug}`,
+    }),
+    breadcrumbSchema([
+      { name: "홈", path: "/" },
+      { name: "아이템", path: "/items" },
+      { name: item.name, path: `/items/${item.slug}` },
+    ]),
+  ]);
+
   const brandLabel = item.brandName ?? item.brandNameEn;
   const categoriesLabel = item.categories.join(" · ");
   const stickyMeta = [brandLabel, categoriesLabel].filter(Boolean).join(" · ");
@@ -46,6 +62,7 @@ export default async function ItemDetailPage({ params }: Props) {
 
   return (
     <div>
+      <JsonLd data={jsonLd} />
       <StickyTitle
         title={item.name}
         meta={stickyMeta || undefined}
