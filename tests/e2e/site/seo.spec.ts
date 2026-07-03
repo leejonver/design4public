@@ -98,7 +98,12 @@ test.describe('사진 상세', () => {
   test('태그된 아이템이 있는 사진은 가구 블록을 표시한다', async ({ page }) => {
     await page.goto('/photos/55555555-0000-0000-0000-000000000003')
     await expect(page.getByText('이 사진 속 가구')).toBeVisible()
-    await expect(page.getByText('아에론 체어')).toBeVisible()
+    // Scope to the furniture grid + exact match: the photo's own title
+    // ('아에론 체어 클로즈업') is a superstring of the tagged item's card title,
+    // so a bare getByText resolves to 3 elements under strict mode.
+    await expect(
+      page.locator('.d4p-grid-4').getByText('아에론 체어', { exact: true })
+    ).toBeVisible()
   })
 
   test('아이템 갤러리 전용(비공개) 사진은 404', async ({ page }) => {
