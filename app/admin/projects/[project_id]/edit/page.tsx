@@ -17,7 +17,7 @@ import {
 } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/admin/MainLayout';
-import { CategorySelect, EntityPicker, FreeTagSelect, PageHeader, PhotoUploader } from '@/components/admin/ui';
+import { CategorySelect, FreeTagSelect, PageHeader, PhotoUploader } from '@/components/admin/ui';
 import { api } from '@/lib/admin-api';
 import type { ImageData, Project, ProjectStatus } from '@/lib/admin-types';
 
@@ -53,6 +53,7 @@ export default function EditProjectPage() {
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
   const [connectedItems, setConnectedItems] = useState<string[]>([]);
+  const [legacyItems, setLegacyItems] = useState<{ id: string; name: string }[]>([]);
   const [photos, setPhotos] = useState<ImageData[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -77,6 +78,7 @@ export default function EditProjectPage() {
           setCategories(proj.categories?.map((c) => c.id) || []);
           setTags(proj.tags?.map((t) => t.name) || []);
           setConnectedItems(proj.connectedItems?.map((i) => i.id) || []);
+          setLegacyItems(proj.connectedItems?.map((i) => ({ id: i.id, name: i.name })) || []);
 
           const images = [...(proj.images || [])].sort(
             (a, b) => (a.order ?? 0) - (b.order ?? 0),
@@ -141,6 +143,7 @@ export default function EditProjectPage() {
           title: p.title,
           isMain: p.isMain,
           order: index,
+          itemIds: p.itemIds ?? [],
         })),
         inquiryUrl: inquiryUrl.trim(),
       };
@@ -158,6 +161,8 @@ export default function EditProjectPage() {
       setLoading(false);
     }
   };
+
+  const derivedItemIds = new Set(photos.flatMap((p) => p.itemIds ?? []));
 
   if (initialLoading) {
     return (
@@ -311,7 +316,7 @@ export default function EditProjectPage() {
               </Text>
             </Card.Header>
             <Card.Body>
-              <PhotoUploader folder="projects" value={photos} onChange={setPhotos} />
+              <PhotoUploader folder="projects" value={photos} onChange={setPhotos} itemTagging />
               {errors.photos ? (
                 <Text typography="body3" className="mt-2 text-red-600">
                   {errors.photos}
@@ -323,11 +328,38 @@ export default function EditProjectPage() {
           <Card.Root>
             <Card.Header>
               <Text typography="heading5" render={<h4 />} className="text-gray-900">
-                연결 아이템
+                레거시 연결 (아이템)
+              </Text>
+              <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
+                직접 연결은 읽기 전용입니다. 아이템 연결은 위 “프로젝트 사진”에서 사진별로 태깅하세요.
               </Text>
             </Card.Header>
             <Card.Body>
-              <EntityPicker kind="item" value={connectedItems} onChange={setConnectedItems} />
+              {legacyItems.length === 0 ? (
+                <p className="text-sm text-gray-400">레거시 직접 연결이 없습니다.</p>
+              ) : (
+                <div className="flex flex-wrap gap-2" data-testid="legacy-items">
+                  {legacyItems.map((it) => {
+                    const needsRetag = !derivedItemIds.has(it.id);
+                    return (
+                      <span
+                        key={it.id}
+                        className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-2 py-1 text-sm text-gray-700"
+                      >
+                        {it.name}
+                        {needsRetag ? (
+                          <span
+                            data-testid="retag-badge"
+                            className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700"
+                          >
+                            재태깅 필요
+                          </span>
+                        ) : null}
+                      </span>
+                    );
+                  })}
+                </div>
+              )}
             </Card.Body>
           </Card.Root>
         </div>
@@ -364,7 +396,7 @@ export default function EditProjectPage() {
                   value={status}
                   onValueChange={(value) => setStatus(value as ProjectStatus)}
                 >
-                  <Select.Trigger className="w-full" />
+                  <Select.Trigger className="w-full" data-testid="status-trigger" />
                   <Select.Popup>
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Item key={option.value} value={option.value}>

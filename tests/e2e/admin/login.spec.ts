@@ -5,9 +5,12 @@
 
 import { test, expect } from '@playwright/test'
 
+// Login page is exercised logged-out; drop the admin project's master state.
+test.use({ storageState: { cookies: [], origins: [] } })
+
 test.describe('로그인 페이지', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/login')
+    await page.goto('/admin/login')
   })
 
   test('로그인 페이지가 렌더링되어야 합니다', async ({ page }) => {

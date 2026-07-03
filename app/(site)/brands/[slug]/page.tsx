@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchBrandBySlug } from "@/lib/api";
 import type { BrandDetail } from "@/lib/types";
-import { createPageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import { createPageMetadata, brandSchema, breadcrumbSchema, jsonLdGraph } from "@/lib/seo";
 import { Container, Overline } from "@/components/site/primitives";
 import { Breadcrumb } from "@/components/site/page-chrome";
 import { StickyTitle } from "@/components/site/sticky-title";
@@ -12,17 +13,18 @@ import { ItemCard, ProjectCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
+  const { slug } = await params;
+  const brand: BrandDetail | null = await fetchBrandBySlug(slug);
   if (!brand) return {};
   return createPageMetadata({
     title: brand.nameKo,
     description:
       brand.description ??
       `${brand.nameKo}${brand.nameEn ? ` (${brand.nameEn})` : ""} 브랜드의 오피스 가구 아이템과 도입 프로젝트입니다.`,
-    path: `/brands/${params.slug}`,
+    path: `/brands/${slug}`,
     images: [brand.cover, brand.logo],
     type: "article",
   });
@@ -37,8 +39,25 @@ const sectionHeading: React.CSSProperties = {
 };
 
 export default async function BrandDetailPage({ params }: Props) {
-  const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
+  const { slug } = await params;
+  const brand: BrandDetail | null = await fetchBrandBySlug(slug);
   if (!brand) notFound();
+
+  const jsonLd = jsonLdGraph([
+    brandSchema({
+      name: brand.nameKo,
+      nameEn: brand.nameEn,
+      description: brand.description,
+      logo: brand.logo,
+      website: brand.website,
+      path: `/brands/${brand.slug}`,
+    }),
+    breadcrumbSchema([
+      { name: "홈", path: "/" },
+      { name: "브랜드", path: "/brands" },
+      { name: brand.nameKo, path: `/brands/${brand.slug}` },
+    ]),
+  ]);
 
   const stats: [number, string][] = [
     [brand.itemCount, "아이템"],
@@ -47,6 +66,7 @@ export default async function BrandDetailPage({ params }: Props) {
 
   return (
     <div>
+      <JsonLd data={jsonLd} />
       <StickyTitle
         title={brand.nameKo}
         meta={brand.nameEn ?? undefined}
@@ -77,6 +97,7 @@ export default async function BrandDetailPage({ params }: Props) {
           }}
         >
           {brand.cover ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
             <img
               src={brand.cover}
               alt={brand.nameKo}
@@ -117,7 +138,7 @@ export default async function BrandDetailPage({ params }: Props) {
                 {brand.nameEn}
               </div>
             )}
-            <div
+            <h1
               style={{
                 fontFamily: "var(--font-sans)",
                 fontSize: "clamp(2rem,4vw,3rem)",
@@ -129,7 +150,7 @@ export default async function BrandDetailPage({ params }: Props) {
               }}
             >
               {brand.nameKo}
-            </div>
+            </h1>
           </div>
         </div>
 

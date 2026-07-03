@@ -27,6 +27,7 @@ export type ProjectSummary = {
   coverImage: string | null;
   categories: string[];
   imageCount: number;
+  updatedAt: string;
 };
 
 export type BrandSummary = {
@@ -40,6 +41,7 @@ export type BrandSummary = {
   website: string | null;
   itemCount: number;
   projectCount: number;
+  updatedAt: string;
 };
 
 export type ItemSummary = {
@@ -53,6 +55,7 @@ export type ItemSummary = {
   brandNameEn: string | null;
   brandSlug: string | null;
   categories: string[];
+  updatedAt: string;
 };
 
 export type ProjectDetail = ProjectSummary & {
@@ -83,6 +86,7 @@ export type PhotoFeedItem = {
   projectCategories: string[];
   year: number | null;
   location: string | null;
+  updatedAt: string;
 };
 
 export type PhotoDetail = PhotoFeedItem & {
@@ -103,11 +107,4 @@ export type HomeData = {
   brands: BrandSummary[];
   photos: PhotoFeedItem[];
   counts: Counts;
-};
-
-/* Lightweight index used by the header BrandSearch autocomplete. */
-export type SearchIndex = {
-  projects: { slug: string; title: string; year: number | null; location: string | null; categories: string[]; image: string | null }[];
-  items: { slug: string; name: string; brandName: string | null; categories: string[]; image: string | null }[];
-  brands: { slug: string; nameKo: string; nameEn: string | null; image: string | null }[];
 };

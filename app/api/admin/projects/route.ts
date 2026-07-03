@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PROJECT_SELECT, mapProject } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
+import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity } from '@/lib/search/indexer'
 
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const search = searchParams.get('search')
@@ -22,7 +25,7 @@ export async function GET(request: NextRequest) {
       : 'created_at'
     const ascending = searchParams.get('dir') === 'asc'
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('projects')
       .select(PROJECT_SELECT, { count: 'exact' })
       .order(sortCol, { ascending })
@@ -52,6 +55,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { name, description, client, location, completionYear, area, categories, tags, connectedItems, photos, inquiryUrl, status } =
       body
@@ -61,11 +65,11 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = await uniqueSlug(name, async (s) => {
-      const { data } = await supabaseAdmin.from('projects').select('id').eq('slug', s).maybeSingle()
+      const { data } = await supabase.from('projects').select('id').eq('slug', s).maybeSingle()
       return !!data
     })
 
-    const { data: project, error } = await supabaseAdmin
+    const { data: project, error } = await supabase
       .from('projects')
       .insert({
         title: name,
@@ -82,16 +86,19 @@ export async function POST(request: NextRequest) {
       .single()
     if (error) throw error
 
-    await syncProjectPhotos(project.id, photos ?? [])
-    await syncProjectItems(project.id, connectedItems ?? [])
-    await syncCategories('project_categories', 'project_id', project.id, categories ?? [])
-    await syncFreeTags('project_tags', 'project_id', project.id, tags ?? [])
+    await syncProjectPhotos(supabase, project.id, photos ?? [])
+    await syncProjectItems(supabase, project.id, connectedItems ?? [])
+    await syncCategories(supabase, 'project_categories', 'project_id', project.id, categories ?? [])
+    await syncFreeTags(supabase, 'project_tags', 'project_id', project.id, tags ?? [])
 
-    const { data: full } = await supabaseAdmin
+    const { data: full } = await supabase
       .from('projects')
       .select(PROJECT_SELECT)
       .eq('id', project.id)
       .single()
+
+    revalidateEntity('project', slug)
+    await reindexEntity('project', project.id)
 
     return NextResponse.json(
       { success: true, data: full ? mapProject(full) : null, message: '프로젝트가 생성되었습니다.' },

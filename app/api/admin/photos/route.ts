@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
 
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
     const unconnected = searchParams.get('unconnected') === 'true'
@@ -20,7 +21,7 @@ export async function GET(request: NextRequest) {
       : 'created_at'
     const ascending = searchParams.get('dir') === 'asc'
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('photos')
       .select(PHOTO_SELECT, { count: 'exact' })
       .order(sortCol, { ascending })
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     // unconnected = photos with no photo_items link. Exclude connected ids at the DB level so
     // pagination + count stay correct.
     if (unconnected) {
-      const { data: connected } = await supabaseAdmin.from('photo_items').select('photo_id')
+      const { data: connected } = await supabase.from('photo_items').select('photo_id')
       const connectedIds = [...new Set((connected ?? []).map((r) => r.photo_id))]
       if (connectedIds.length) {
         query = query.not('id', 'in', `(${connectedIds.join(',')})`)

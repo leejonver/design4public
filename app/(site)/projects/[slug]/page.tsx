@@ -8,14 +8,19 @@ import { ProjectMasthead } from "@/components/site/project-masthead";
 import { Gallery } from "@/components/site/gallery";
 import { ItemCard } from "@/components/site/cards";
 import { ContactButton } from "@/components/site/contact-modal";
-import { createPageMetadata, compactText, truncateDescription } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import {
+  createPageMetadata, compactText, truncateDescription,
+  articleSchema, imageObjectSchema, breadcrumbSchema, jsonLdGraph,
+} from "@/lib/seo";
 
 export const revalidate = 3600;
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const project = await fetchProjectBySlug(params.slug);
+  const { slug } = await params;
+  const project = await fetchProjectBySlug(slug);
   if (!project) return {};
 
   const description = truncateDescription(
@@ -32,8 +37,28 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function ProjectDetailPage({ params }: Props) {
-  const project = await fetchProjectBySlug(params.slug);
+  const { slug } = await params;
+  const project = await fetchProjectBySlug(slug);
   if (!project) notFound();
+
+  const galleryUrls = project.gallery.map((g) => g.url);
+  const jsonLd = jsonLdGraph([
+    articleSchema({
+      headline: project.title,
+      description: project.description,
+      images: [project.coverImage, ...galleryUrls],
+      dateModified: project.updatedAt,
+      path: `/projects/${project.slug}`,
+    }),
+    ...project.gallery.map((g) =>
+      imageObjectSchema({ url: g.url, caption: g.title ?? g.alt, description: null })
+    ),
+    breadcrumbSchema([
+      { name: "홈", path: "/" },
+      { name: "프로젝트", path: "/projects" },
+      { name: project.title, path: `/projects/${project.slug}` },
+    ]),
+  ]);
 
   const meta = [...project.categories, project.year, project.location]
     .filter(Boolean)
@@ -53,6 +78,7 @@ export default async function ProjectDetailPage({ params }: Props) {
 
   return (
     <Container style={{ padding: "var(--sp-5) var(--gutter) var(--sp-9)" }}>
+      <JsonLd data={jsonLd} />
       <div style={{ marginBottom: "var(--sp-5)" }}>
         <Breadcrumb
           items={[

@@ -215,7 +215,7 @@ export default function ProjectsPage() {
       render: (project) => (
         <div className="flex items-center justify-end gap-1">
           <IconButton
-            render={<Link href={`/projects/${project.id}`} />}
+            render={<Link href={`/admin/projects/${project.id}`} />}
             aria-label="상세보기"
             size="sm"
             variant="ghost"
@@ -224,7 +224,7 @@ export default function ProjectsPage() {
             <ViewOnOutlineIcon size={16} />
           </IconButton>
           <IconButton
-            render={<Link href={`/projects/${project.id}/edit`} />}
+            render={<Link href={`/admin/projects/${project.id}/edit`} />}
             aria-label="편집"
             size="sm"
             variant="ghost"

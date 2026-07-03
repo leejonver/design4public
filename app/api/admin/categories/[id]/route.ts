@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapCategory } from '@/lib/dto'
-import type { CategoryType } from '@/lib/database.types'
+import type { CategoryType, TablesUpdate } from '@/lib/database.types'
+import { revalidateEntity } from '@/lib/revalidation'
 
 const CATEGORY_TYPES: readonly CategoryType[] = ['project', 'item']
 
@@ -10,13 +11,15 @@ function isCategoryType(type: string | null | undefined): type is CategoryType {
   return CATEGORY_TYPES.includes(type as CategoryType)
 }
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireUser()
-    const { data, error } = await supabaseAdmin
+    const supabase = await createServerSupabase()
+    const { data, error } = await supabase
       .from('categories')
       .select('*')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
     if (error || !data) {
       return NextResponse.json(
@@ -32,13 +35,15 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireRole('content_manager')
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { name, type } = body
 
-    const update: Record<string, unknown> = {}
+    const update: TablesUpdate<'categories'> = {}
     if (name !== undefined) {
       if (!name || name.trim().length === 0) {
         return NextResponse.json(
@@ -58,10 +63,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       update.type = type
     }
 
-    const { data: category, error } = await supabaseAdmin
+    const { data: category, error } = await supabase
       .from('categories')
       .update(update)
-      .eq('id', params.id)
+      .eq('id', id)
       .select('*')
       .single()
     if (error || !category) {
@@ -70,6 +75,8 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         { status: 404 },
       )
     }
+
+    revalidateEntity('category')
 
     return NextResponse.json({
       success: true,
@@ -86,12 +93,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireRole('content_manager')
+    const supabase = await createServerSupabase()
     // project_categories / item_categories links cascade on category delete (FK ON DELETE CASCADE).
-    const { error } = await supabaseAdmin.from('categories').delete().eq('id', params.id)
+    const { error } = await supabase.from('categories').delete().eq('id', id)
     if (error) throw error
+    revalidateEntity('category')
     return NextResponse.json({ success: true, message: '카테고리가 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

@@ -67,7 +67,16 @@ const projectRow = {
   project_items: [{ items: itemRow }, { items: null }],
   project_photos: [
     { is_main: false, order: 1, photos: { id: 'pp2', image_url: 'pp2.jpg', alt_text: 'a' } },
-    { is_main: true, order: 9, photos: { id: 'pp1', image_url: 'pp1.jpg', alt_text: 'b' } },
+    {
+      is_main: true,
+      order: 9,
+      photos: {
+        id: 'pp1',
+        image_url: 'pp1.jpg',
+        alt_text: 'b',
+        photo_items: [{ items: { id: 'tagged-item-1' } }, { items: null }],
+      },
+    },
   ],
   created_at: 'c',
   updated_at: 'u',
@@ -163,6 +172,14 @@ describe('mapProject', () => {
   it('orders project images main-first', () => {
     const project = mapProject(projectRow)
     expect(project.images.map((i) => i.id)).toEqual(['pp1', 'pp2'])
+  })
+
+  it('maps per-photo item tags to images[].itemIds, dropping null items', () => {
+    const project = mapProject(projectRow)
+    const main = project.images.find((i) => i.id === 'pp1')
+    expect(main?.itemIds).toEqual(['tagged-item-1'])
+    const other = project.images.find((i) => i.id === 'pp2')
+    expect(other?.itemIds).toBeUndefined()
   })
 })
 

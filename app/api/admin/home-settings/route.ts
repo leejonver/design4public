@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import type { HomeFeaturedItem } from '@/lib/admin-types'
+import { revalidateEntity } from '@/lib/revalidation'
 
 type EntityType = 'project' | 'item' | 'photo' | 'brand'
 const ENTITY_TYPES: EntityType[] = ['project', 'item', 'photo', 'brand']
@@ -9,12 +10,13 @@ const ENTITY_TYPES: EntityType[] = ['project', 'item', 'photo', 'brand']
 export async function GET() {
   try {
     await requireUser()
-    const { data: settings } = await supabaseAdmin
+    const supabase = await createServerSupabase()
+    const { data: settings } = await supabase
       .from('site_settings')
       .select('featured_project_id')
       .eq('id', true)
       .maybeSingle()
-    const { data: featured, error } = await supabaseAdmin
+    const { data: featured, error } = await supabase
       .from('home_featured')
       .select('entity_type, entity_id, order')
       .order('entity_type', { ascending: true })
@@ -42,20 +44,21 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     await requireRole('content_manager')
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const featuredProjectId: string | null = body.featuredProjectId ?? null
     const featured: { entityType: string; entityId: string }[] = Array.isArray(body.featured)
       ? body.featured
       : []
 
-    const { error: sErr } = await supabaseAdmin
+    const { error: sErr } = await supabase
       .from('site_settings')
       .update({ featured_project_id: featuredProjectId })
       .eq('id', true)
     if (sErr) throw sErr
 
     // replace the whole featured list, order = per-type index
-    await supabaseAdmin.from('home_featured').delete().neq('entity_id', '00000000-0000-0000-0000-000000000000')
+    await supabase.from('home_featured').delete().neq('entity_id', '00000000-0000-0000-0000-000000000000')
     const perType: Record<string, number> = {}
     const rows = featured
       .filter((f) => ENTITY_TYPES.includes(f.entityType as EntityType) && f.entityId)
@@ -65,9 +68,12 @@ export async function PUT(request: NextRequest) {
         return { entity_type: f.entityType as EntityType, entity_id: f.entityId, order }
       })
     if (rows.length) {
-      const { error: fErr } = await supabaseAdmin.from('home_featured').insert(rows)
+      const { error: fErr } = await supabase.from('home_featured').insert(rows)
       if (fErr) throw fErr
     }
+
+    // Both featured_project_id and the home_featured list only affect the home page.
+    revalidateEntity('home_featured')
 
     return NextResponse.json({ success: true, message: '홈 설정이 저장되었습니다.' })
   } catch (error) {

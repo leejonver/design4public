@@ -4,7 +4,8 @@ import { notFound } from "next/navigation";
 import { ExternalLink, Mail } from "lucide-react";
 import { fetchItemBySlug } from "@/lib/api";
 import type { ItemDetail } from "@/lib/types";
-import { createPageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import { createPageMetadata, productSchema, breadcrumbSchema, jsonLdGraph } from "@/lib/seo";
 import { Container, Overline, SpecSheet } from "@/components/site/primitives";
 import { Breadcrumb } from "@/components/site/page-chrome";
 import { StickyTitle } from "@/components/site/sticky-title";
@@ -15,25 +16,42 @@ import { ProjectCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const item: ItemDetail | null = await fetchItemBySlug(params.slug);
+  const { slug } = await params;
+  const item: ItemDetail | null = await fetchItemBySlug(slug);
   if (!item) return {};
   return createPageMetadata({
     title: item.name,
     description:
       item.description ??
       `${item.brandName ? `${item.brandName} ` : ""}${item.name} 오피스 가구 아이템 정보와 사양입니다.`,
-    path: `/items/${params.slug}`,
+    path: `/items/${slug}`,
     images: [item.image, ...item.gallery.map((g) => g.url)],
     type: "article",
   });
 }
 
 export default async function ItemDetailPage({ params }: Props) {
-  const item: ItemDetail | null = await fetchItemBySlug(params.slug);
+  const { slug } = await params;
+  const item: ItemDetail | null = await fetchItemBySlug(slug);
   if (!item) notFound();
+
+  const jsonLd = jsonLdGraph([
+    productSchema({
+      name: item.name,
+      description: item.description,
+      images: [item.image, ...item.gallery.map((g) => g.url)],
+      brand: item.brandName ?? item.brandNameEn,
+      path: `/items/${item.slug}`,
+    }),
+    breadcrumbSchema([
+      { name: "홈", path: "/" },
+      { name: "아이템", path: "/items" },
+      { name: item.name, path: `/items/${item.slug}` },
+    ]),
+  ]);
 
   const brandLabel = item.brandName ?? item.brandNameEn;
   const categoriesLabel = item.categories.join(" · ");
@@ -46,6 +64,7 @@ export default async function ItemDetailPage({ params }: Props) {
 
   return (
     <div>
+      <JsonLd data={jsonLd} />
       <StickyTitle
         title={item.name}
         meta={stickyMeta || undefined}

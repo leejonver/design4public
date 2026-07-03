@@ -1,13 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { ITEM_SELECT, mapItem } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { syncItemPhotos, syncCategories, syncFreeTags } from '@/lib/image-sync'
+import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity } from '@/lib/search/indexer'
 
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const brandId = searchParams.get('brandId')
@@ -23,7 +26,7 @@ export async function GET(request: NextRequest) {
       : 'created_at'
     const ascending = searchParams.get('dir') === 'asc'
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('items')
       .select(ITEM_SELECT, { count: 'exact' })
       .order(sortCol, { ascending })
@@ -54,6 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { name, description, mallUrl, brandId, images, categories, tags, status } = body
 
@@ -62,11 +66,11 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = await uniqueSlug(name, async (s) => {
-      const { data } = await supabaseAdmin.from('items').select('id').eq('slug', s).maybeSingle()
+      const { data } = await supabase.from('items').select('id').eq('slug', s).maybeSingle()
       return !!data
     })
 
-    const { data: item, error } = await supabaseAdmin
+    const { data: item, error } = await supabase
       .from('items')
       .insert({
         name,
@@ -80,15 +84,18 @@ export async function POST(request: NextRequest) {
       .single()
     if (error) throw error
 
-    await syncItemPhotos(item.id, images ?? [])
-    await syncCategories('item_categories', 'item_id', item.id, categories ?? [])
-    await syncFreeTags('item_tags', 'item_id', item.id, tags ?? [])
+    await syncItemPhotos(supabase, item.id, images ?? [])
+    await syncCategories(supabase, 'item_categories', 'item_id', item.id, categories ?? [])
+    await syncFreeTags(supabase, 'item_tags', 'item_id', item.id, tags ?? [])
 
-    const { data: full } = await supabaseAdmin
+    const { data: full } = await supabase
       .from('items')
       .select(ITEM_SELECT)
       .eq('id', item.id)
       .single()
+
+    revalidateEntity('item', slug)
+    await reindexEntity('item', item.id)
 
     return NextResponse.json(
       { success: true, data: full ? mapItem(full) : null, message: '아이템이 생성되었습니다.' },

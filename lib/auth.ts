@@ -25,7 +25,7 @@ export function hasRole(user: SessionUser | null, min: UserRole): boolean {
 
 /** Returns the approved, authenticated caller, or null. */
 export async function getCurrentUser(): Promise<SessionUser | null> {
-  const supabase = createServerSupabase()
+  const supabase = await createServerSupabase()
   const {
     data: { user },
   } = await supabase.auth.getUser()

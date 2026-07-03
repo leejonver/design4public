@@ -23,11 +23,30 @@ export function getSupabaseConfig() {
 
 export function getSupabaseClient() {
   const { url, key } = getSupabaseConfig();
-  
+
   return createClient<Database>(url, key, {
-    auth: { 
+    auth: {
       persistSession: false,
       autoRefreshToken: false,
+    },
+    // Tag every public read with its base table (`sb:<table>`) so mutations can
+    // purge the fetch Data Cache via revalidateTag. Cross-entity revalidation
+    // needs this: revalidatePath('/items/[slug]', 'page') does NOT invalidate the
+    // cached fetches of already-rendered concrete item pages in Next 14, so a
+    // project change could not otherwise refresh derived relations on item detail
+    // pages (see lib/revalidation.ts).
+    global: {
+      fetch: (input, init) => {
+        const url =
+          typeof input === 'string'
+            ? input
+            : input instanceof URL
+              ? input.href
+              : (input as Request).url;
+        const table = url.match(/\/rest\/v1\/([a-z_]+)/)?.[1];
+        const next = table ? { next: { tags: [`sb:${table}`] } } : {};
+        return fetch(input as RequestInfo, { ...init, ...next } as RequestInit);
+      },
     },
   });
 }

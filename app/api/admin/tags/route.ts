@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapTag } from '@/lib/dto'
+import { revalidateEntity } from '@/lib/revalidation'
 
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
     const limit = parseInt(searchParams.get('limit') || '200')
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('tags')
       .select('*', { count: 'exact' })
       .order('name', { ascending: true })
@@ -38,6 +40,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { name } = body
 
@@ -47,33 +50,35 @@ export async function POST(request: NextRequest) {
     const trimmed = name.trim()
 
     // find-or-create by unique name: return the existing tag if present.
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from('tags')
       .select('*')
       .eq('name', trimmed)
       .limit(1)
       .maybeSingle()
     if (existing) {
+      revalidateEntity('tag')
       return NextResponse.json(
         { success: true, data: mapTag(existing), message: '태그가 생성되었습니다.' },
         { status: 201 },
       )
     }
 
-    const { data: tag, error } = await supabaseAdmin
+    const { data: tag, error } = await supabase
       .from('tags')
       .insert({ name: trimmed })
       .select('*')
       .single()
     if (error) {
       // unique-name race: re-fetch the winner.
-      const { data: again } = await supabaseAdmin
+      const { data: again } = await supabase
         .from('tags')
         .select('*')
         .eq('name', trimmed)
         .limit(1)
         .maybeSingle()
       if (again) {
+        revalidateEntity('tag')
         return NextResponse.json(
           { success: true, data: mapTag(again), message: '태그가 생성되었습니다.' },
           { status: 201 },
@@ -82,6 +87,7 @@ export async function POST(request: NextRequest) {
       throw error
     }
 
+    revalidateEntity('tag')
     return NextResponse.json(
       { success: true, data: mapTag(tag), message: '태그가 생성되었습니다.' },
       { status: 201 },

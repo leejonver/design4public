@@ -36,6 +36,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
       {imgs.map((src, idx) => (
         <div key={idx} className="d4p-hero-slide" style={{ opacity: idx === i ? 1 : 0 }}>
           {src ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
             <img
               src={src}
               alt=""

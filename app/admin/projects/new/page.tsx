@@ -17,7 +17,7 @@ import {
 } from '@vapor-ui/core';
 import { ChevronLeftOutlineIcon } from '@vapor-ui/icons';
 import MainLayout from '@/components/admin/MainLayout';
-import { CategorySelect, EntityPicker, FreeTagSelect, PageHeader, PhotoUploader } from '@/components/admin/ui';
+import { CategorySelect, FreeTagSelect, PageHeader, PhotoUploader } from '@/components/admin/ui';
 import { api } from '@/lib/admin-api';
 import type { ImageData, ProjectStatus } from '@/lib/admin-types';
 
@@ -50,7 +50,6 @@ export default function NewProjectPage() {
 
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [connectedItems, setConnectedItems] = useState<string[]>([]);
   const [photos, setPhotos] = useState<ImageData[]>([]);
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -97,12 +96,12 @@ export default function NewProjectPage() {
         status,
         categories,
         tags,
-        connectedItems,
         photos: photos.map((p, index) => ({
           url: p.url,
           title: p.title,
           isMain: p.isMain,
           order: index,
+          itemIds: p.itemIds ?? [],
         })),
         inquiryUrl: inquiryUrl.trim(),
       };
@@ -263,23 +262,12 @@ export default function NewProjectPage() {
               </Text>
             </Card.Header>
             <Card.Body>
-              <PhotoUploader folder="projects" value={photos} onChange={setPhotos} />
+              <PhotoUploader folder="projects" value={photos} onChange={setPhotos} itemTagging />
               {errors.photos ? (
                 <Text typography="body3" className="mt-2 text-red-600">
                   {errors.photos}
                 </Text>
               ) : null}
-            </Card.Body>
-          </Card.Root>
-
-          <Card.Root>
-            <Card.Header>
-              <Text typography="heading5" render={<h4 />} className="text-gray-900">
-                연결 아이템
-              </Text>
-            </Card.Header>
-            <Card.Body>
-              <EntityPicker kind="item" value={connectedItems} onChange={setConnectedItems} />
             </Card.Body>
           </Card.Root>
         </div>
@@ -316,7 +304,7 @@ export default function NewProjectPage() {
                   value={status}
                   onValueChange={(value) => setStatus(value as ProjectStatus)}
                 >
-                  <Select.Trigger className="w-full" />
+                  <Select.Trigger className="w-full" data-testid="status-trigger" />
                   <Select.Popup>
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Item key={option.value} value={option.value}>
