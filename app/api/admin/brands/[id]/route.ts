@@ -4,6 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -88,6 +89,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (beforeUpdate?.slug && newSlug && beforeUpdate.slug !== newSlug) {
       revalidateEntity('brand', beforeUpdate.slug)
     }
+    await reindexEntity('brand', params.id)
 
     return NextResponse.json({
       success: true,
@@ -123,6 +125,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     // Detaching items cleared their brand — refresh item surfaces too.
     revalidateEntity('brand', existing?.slug)
     revalidateEntity('item')
+    await deleteFromIndex('brand', params.id)
     return NextResponse.json({ success: true, message: '브랜드가 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

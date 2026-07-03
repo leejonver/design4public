@@ -47,6 +47,11 @@ vi.mock('@/lib/supabase/admin', () => ({
   supabaseAdmin: { from: vi.fn() },
 }))
 
+vi.mock('@/lib/search/indexer', () => ({
+  reindexEntity: vi.fn().mockResolvedValue(undefined),
+  deleteFromIndex: vi.fn().mockResolvedValue(undefined),
+}))
+
 // 이미지/관계 동기화는 no-op.
 vi.mock('@/lib/image-sync', () => ({
   syncProjectPhotos: vi.fn().mockResolvedValue(undefined),

@@ -31,6 +31,11 @@ vi.mock('@/lib/auth', () => {
 
 vi.mock('@/lib/supabase/admin', () => ({ supabaseAdmin: { from: vi.fn() } }))
 
+vi.mock('@/lib/search/indexer', () => ({
+  reindexEntity: vi.fn().mockResolvedValue(undefined),
+  deleteFromIndex: vi.fn().mockResolvedValue(undefined),
+}))
+
 function jsonResponse(body: unknown, init?: ResponseInit): Response {
   return new Response(JSON.stringify(body), {
     status: init?.status ?? 200,

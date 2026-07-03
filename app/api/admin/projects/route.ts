@@ -5,6 +5,7 @@ import { PROJECT_SELECT, mapProject } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
 import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity } from '@/lib/search/indexer'
 
 export async function GET(request: NextRequest) {
   try {
@@ -95,6 +96,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     revalidateEntity('project', slug)
+    await reindexEntity('project', project.id)
 
     return NextResponse.json(
       { success: true, data: full ? mapProject(full) : null, message: '프로젝트가 생성되었습니다.' },

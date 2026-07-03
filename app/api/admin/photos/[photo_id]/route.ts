@@ -4,6 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
 import { syncPhotoItems, syncFreeTags } from '@/lib/image-sync'
 import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
 
 export async function GET(_request: NextRequest, { params }: { params: { photo_id: string } }) {
   try {
@@ -50,6 +51,7 @@ export async function PUT(request: NextRequest, { params }: { params: { photo_id
       .single()
 
     revalidateEntity('photo')
+    await reindexEntity('photo', params.photo_id)
 
     return NextResponse.json({
       success: true,
@@ -70,6 +72,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { phot
     const { error } = await supabaseAdmin.from('photos').delete().eq('id', params.photo_id)
     if (error) throw error
     revalidateEntity('photo')
+    await deleteFromIndex('photo', params.photo_id)
     return NextResponse.json({ success: true, message: '사진이 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

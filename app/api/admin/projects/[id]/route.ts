@@ -4,6 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PROJECT_SELECT, mapProject } from '@/lib/dto'
 import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
 import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
 
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
@@ -62,6 +63,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     // type has no declared FK relationship for projects, which makes Supabase's
     // type parser drop the top-level `*` columns from the inferred row shape.
     revalidateEntity('project', (full as { slug?: string } | null)?.slug)
+    await reindexEntity('project', params.id)
 
     return NextResponse.json({
       success: true,
@@ -88,6 +90,7 @@ export async function DELETE(_request: NextRequest, { params }: { params: { id: 
     const { error } = await supabaseAdmin.from('projects').delete().eq('id', params.id)
     if (error) throw error
     revalidateEntity('project', existing?.slug)
+    await deleteFromIndex('project', params.id)
     return NextResponse.json({ success: true, message: '프로젝트가 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

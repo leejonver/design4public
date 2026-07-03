@@ -5,6 +5,7 @@ import { ITEM_SELECT, mapItem } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { syncItemPhotos, syncCategories, syncFreeTags } from '@/lib/image-sync'
 import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity } from '@/lib/search/indexer'
 
 export async function GET(request: NextRequest) {
   try {
@@ -92,6 +93,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     revalidateEntity('item', slug)
+    await reindexEntity('item', item.id)
 
     return NextResponse.json(
       { success: true, data: full ? mapItem(full) : null, message: '아이템이 생성되었습니다.' },

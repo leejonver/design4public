@@ -31,6 +31,11 @@ vi.mock('@/lib/auth', () => {
 
 vi.mock('@/lib/supabase/admin', () => ({ supabaseAdmin: { from: vi.fn() } }))
 
+vi.mock('@/lib/search/indexer', () => ({
+  reindexEntity: vi.fn().mockResolvedValue(undefined),
+  deleteFromIndex: vi.fn().mockResolvedValue(undefined),
+}))
+
 vi.mock('@/lib/image-sync', () => ({
   syncProjectPhotos: vi.fn().mockResolvedValue(undefined),
   syncProjectItems: vi.fn().mockResolvedValue(undefined),

@@ -4,6 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { revalidateEntity } from '@/lib/revalidation'
+import { reindexEntity } from '@/lib/search/indexer'
 
 export async function GET(request: NextRequest) {
   try {
@@ -93,6 +94,7 @@ export async function POST(request: NextRequest) {
       .single()
 
     revalidateEntity('brand', slug)
+    await reindexEntity('brand', brand.id)
 
     return NextResponse.json(
       { success: true, data: full ? mapBrand(full) : null, message: '브랜드가 생성되었습니다.' },
