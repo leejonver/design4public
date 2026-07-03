@@ -36,6 +36,22 @@ function fromEnvFile(key) {
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
+// OpenAI fetches image_url server-side, so localhost / *.local URLs (local
+// Supabase storage) are unreachable — skip them to avoid billed dead calls.
+function isPubliclyFetchable(url) {
+  try {
+    const host = new URL(url).hostname
+    return !(
+      host === 'localhost' ||
+      host === '127.0.0.1' ||
+      host === '::1' ||
+      host.endsWith('.local')
+    )
+  } catch {
+    return false
+  }
+}
+
 // Single-photo caption with retry/backoff on 429/5xx. Returns null on give-up so
 // the row stays NULL and is retried on the next run (resumable).
 async function describe(imageUrl, apiKey) {
@@ -99,7 +115,12 @@ async function main() {
 
     let done = 0
     let filled = 0
+    let skippedLocal = 0
     for (const row of rows) {
+      if (row.image_url && !isPubliclyFetchable(row.image_url)) {
+        skippedLocal += 1
+        continue
+      }
       const caption = row.image_url ? await describe(row.image_url, apiKey) : null
       if (caption) {
         // Committed per-photo → a crash resumes from the first still-NULL row.
@@ -115,7 +136,7 @@ async function main() {
       }
       await sleep(200) // gentle pacing to stay under rate limits
     }
-    console.log('[captions] done. Now run: node scripts/backfill-search.mjs --all')
+    console.log(`[captions] done, ${skippedLocal} skipped (non-public image URL). Now run: node scripts/backfill-search.mjs --all`)
   } finally {
     await client.end()
   }
