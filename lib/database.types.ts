@@ -347,6 +347,8 @@ export type Database = {
       }
       photos: {
         Row: {
+          ai_caption: string | null
+          ai_caption_model: string | null
           alt_text: string | null
           created_at: string | null
           description: string | null
@@ -356,6 +358,8 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_caption?: string | null
+          ai_caption_model?: string | null
           alt_text?: string | null
           created_at?: string | null
           description?: string | null
@@ -365,6 +369,8 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_caption?: string | null
+          ai_caption_model?: string | null
           alt_text?: string | null
           created_at?: string | null
           description?: string | null
