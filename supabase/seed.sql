@@ -3,6 +3,7 @@
 -- here; global.setup.ts provisions them against the local auth admin API.
 
 truncate table
+  public.search_index,
   public.home_featured, public.site_settings,
   public.project_items, public.project_photos, public.project_categories, public.project_tags,
   public.photo_items, public.photo_tags,
@@ -91,3 +92,10 @@ insert into public.home_featured (entity_type, entity_id, "order") values
 
 insert into public.site_settings (id, featured_project_id) values
   (true, '66666666-0000-0000-0000-000000000001');
+
+-- Search index (M6): built from search_source so seeded rows always match
+-- seeded content. Embedding is NULL — the trigram branch drives E2E; the vector
+-- branch is validated separately by scripts/backfill-search.mjs at the gate.
+insert into public.search_index (entity_type, entity_id, slug, title, body, image_url, embedding)
+select entity_type, entity_id, slug, title, body, image_url, null
+from public.search_source;
