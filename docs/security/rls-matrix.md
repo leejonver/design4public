@@ -40,6 +40,19 @@ Legend: ✅ allowed · ❌ denied · `pub` = published-project gate · `self` = 
 | inquiries INSERT | ✅ (contact form) | ✅ | ✅ | ✅ all |
 | inquiries SELECT | ❌ | ✅ (unchanged from baseline) | ✅ | ✅ all |
 
+## Policy change log — migration `20260703140000_rls_hardening.sql`
+
+Every drop/create pair applied by the M8 hardening migration.
+
+### Task 2 — `has_role()` helper + profiles hardening
+| table | dropped | created | reason |
+|---|---|---|---|
+| (function) | — | `public.has_role(text)` SECURITY DEFINER | recursion-safe role check for profiles + content policies |
+| profiles | `authenticated_select_all` (SELECT) | `profiles_select_self_or_master` (SELECT) | any session could read every profile → self-or-master |
+| profiles | `authenticated_update_all` (UPDATE) | `profiles_update_master` (UPDATE) | any session could edit every profile → master-only |
+| profiles | `users_update_own` (UPDATE) | — | closes self-role-escalation vector (edit own role) |
+| profiles | — kept — | `users_select_own`, `users_insert_own`, `service_role_all` | unchanged from baseline |
+
 ## Known residual risks (documented, not fixed in M8)
 - `users_insert_own` lets a session insert its own profile row, but the
   `on_auth_user_created` trigger already inserts it first (PK conflict blocks a
