@@ -21,7 +21,6 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
-      "_cms-import/**",
       "scripts/**",
       "tests/e2e/**",
       "playwright-report/**",

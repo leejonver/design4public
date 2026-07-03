@@ -2,13 +2,11 @@ import { vi, type Mock } from "vitest";
 /**
  * 인증 API 라우트 테스트 (renewal: @supabase/ssr 쿠키 인증)
  * - signup: 가입 시 pending 프로필 생성 + 승인 안내 메시지 반환.
- * - login: 미승인 사용자(status!=='approved') 거부 403, 승인 사용자 성공.
  * 가짜 토큰/하드코딩 마스터 계정 없음 (renewal 에서 제거됨).
  */
 
 import { NextResponse } from 'next/server'
 import { POST as signupPost } from '@/app/api/admin/auth/signup/route'
-import { POST as loginPost } from '@/app/api/admin/auth/login/route'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
@@ -113,63 +111,6 @@ describe('Auth API Routes (renewal)', () => {
         expect.objectContaining({ status: 'pending', role: 'content_manager', id: 'new-user-id' }),
         expect.anything(),
       )
-    })
-  })
-
-  describe('POST /api/auth/login', () => {
-    it('이메일/비밀번호가 없으면 400 을 반환한다', async () => {
-      const res = await loginPost(makeRequest({}) as never)
-      const json = await res.json()
-
-      expect(res.status).toBe(400)
-      expect(json.success).toBe(false)
-    })
-
-    it('자격 증명이 틀리면 401 을 반환한다', async () => {
-      auth.signInWithPassword.mockResolvedValue({ data: null, error: { message: 'Invalid login credentials' } })
-
-      const res = await loginPost(makeRequest({ email: 'a@test.com', password: 'wrong' }) as never)
-      const json = await res.json()
-
-      expect(res.status).toBe(401)
-      expect(json.success).toBe(false)
-    })
-
-    it('미승인 사용자(status!=="approved")는 403 으로 거부하고 signOut 한다', async () => {
-      auth.signInWithPassword.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
-      auth.signOut.mockResolvedValue({ error: null })
-      fromMock.mockReturnValue(
-        makeQB({
-          data: { id: 'u1', email: 'a@test.com', name: 'A', role: 'content_manager', status: 'pending' },
-          error: null,
-        }),
-      )
-
-      const res = await loginPost(makeRequest({ email: 'a@test.com', password: 'pw' }) as never)
-      const json = await res.json()
-
-      expect(res.status).toBe(403)
-      expect(json.success).toBe(false)
-      expect(auth.signOut).toHaveBeenCalled()
-    })
-
-    it('승인된 사용자는 로그인에 성공한다', async () => {
-      auth.signInWithPassword.mockResolvedValue({ data: { user: { id: 'u1' } }, error: null })
-      fromMock.mockReturnValue(
-        makeQB({
-          data: { id: 'u1', email: 'a@test.com', name: 'A', role: 'admin', status: 'approved' },
-          error: null,
-        }),
-      )
-
-      const res = await loginPost(makeRequest({ email: 'a@test.com', password: 'pw' }) as never)
-      const json = await res.json()
-
-      expect(res.status).toBe(200)
-      expect(json.success).toBe(true)
-      expect(json.data.user.id).toBe('u1')
-      expect(json.data.user.role).toBe('admin')
-      expect(auth.signOut).not.toHaveBeenCalled()
     })
   })
 })

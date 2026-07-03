@@ -122,17 +122,6 @@ export async function apiUpload(file: File, folder?: string): Promise<ApiRespons
   }
 }
 
-// 인증 관련 API
-export const authApi = {
-  login: (email: string, password: string) =>
-    apiPost('/auth/login', { email, password }),
-  
-  signup: (name: string, email: string, password: string) =>
-    apiPost('/auth/signup', { name, email, password }),
-  
-  logout: () => apiPost('/auth/logout'),
-}
-
 // 프로젝트 관련 API
 export const projectsApi = {
   getList: (params?: { status?: string; search?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
@@ -241,7 +230,6 @@ export const api = {
   put: apiPut,
   delete: apiDelete,
   upload: apiUpload,
-  auth: authApi,
   projects: projectsApi,
   brands: brandsApi,
   items: itemsApi,
