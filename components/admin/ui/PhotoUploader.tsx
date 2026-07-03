@@ -10,12 +10,14 @@ import {
 } from '@vapor-ui/icons';
 import { api } from '@/lib/admin-api';
 import type { ImageData } from '@/lib/admin-types';
+import EntityPicker from './EntityPicker';
 
 export interface PhotoUploaderProps {
   value: ImageData[];
   onChange: (photos: ImageData[]) => void;
   folder: string;
   max?: number;
+  itemTagging?: boolean; // 프로젝트 전용: 사진별 아이템 태깅 (project→photo→item 파생 모델)
 }
 
 // 항상 order = 배열 인덱스로 맞추고, 사진이 있으면 정확히 하나만 대표(없으면 첫 번째)로 보정한다.
@@ -25,7 +27,7 @@ function normalize(photos: ImageData[]): ImageData[] {
   return photos.map((p, i) => ({ ...p, order: i, isMain: i === mainIndex }));
 }
 
-export default function PhotoUploader({ value, onChange, folder, max }: PhotoUploaderProps) {
+export default function PhotoUploader({ value, onChange, folder, max, itemTagging }: PhotoUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,6 +87,10 @@ export default function PhotoUploader({ value, onChange, folder, max }: PhotoUpl
     onChange(normalize(value.map((p, i) => (i === index ? { ...p, title } : p))));
   };
 
+  const updateItemIds = (index: number, itemIds: string[]) => {
+    onChange(normalize(value.map((p, i) => (i === index ? { ...p, itemIds } : p))));
+  };
+
   const setMain = (index: number) => {
     onChange(normalize(value.map((p, i) => ({ ...p, isMain: i === index }))));
   };
@@ -142,69 +148,84 @@ export default function PhotoUploader({ value, onChange, folder, max }: PhotoUpl
             <div
               key={photo.id}
               data-testid="uploaded-photo"
-              className="flex items-center gap-3 rounded-md border border-gray-200 p-2"
+              className="rounded-md border border-gray-200 p-2"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={photo.url}
-                alt={photo.alt}
-                className="h-16 w-16 flex-shrink-0 rounded-md object-cover"
-              />
-
-              <TextInput
-                className="flex-1"
-                placeholder="사진 제목 (선택)"
-                value={photo.title ?? ''}
-                onValueChange={(v) => updateTitle(index, v)}
-              />
-
-              <label className="flex cursor-pointer select-none items-center gap-1.5">
-                <Checkbox.Root
-                  checked={!!photo.isMain}
-                  onCheckedChange={(checked) => {
-                    if (checked) setMain(index);
-                  }}
-                  aria-label="대표 사진으로 설정"
+              <div className="flex items-center gap-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={photo.url}
+                  alt={photo.alt}
+                  className="h-16 w-16 flex-shrink-0 rounded-md object-cover"
                 />
-                <Text typography="body3" className="text-gray-600">
-                  대표
-                </Text>
-              </label>
 
-              <div className="flex flex-shrink-0 items-center gap-1">
-                <IconButton
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  colorPalette="secondary"
-                  aria-label="위로 이동"
-                  disabled={index === 0}
-                  onClick={() => move(index, -1)}
-                >
-                  <ChevronUpOutlineIcon size={16} />
-                </IconButton>
-                <IconButton
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  colorPalette="secondary"
-                  aria-label="아래로 이동"
-                  disabled={index === value.length - 1}
-                  onClick={() => move(index, 1)}
-                >
-                  <ChevronDownOutlineIcon size={16} />
-                </IconButton>
-                <IconButton
-                  type="button"
-                  size="sm"
-                  variant="ghost"
-                  colorPalette="danger"
-                  aria-label="사진 삭제"
-                  onClick={() => remove(index)}
-                >
-                  <TrashOutlineIcon size={16} />
-                </IconButton>
+                <TextInput
+                  className="flex-1"
+                  placeholder="사진 제목 (선택)"
+                  value={photo.title ?? ''}
+                  onValueChange={(v) => updateTitle(index, v)}
+                />
+
+                <label className="flex cursor-pointer select-none items-center gap-1.5">
+                  <Checkbox.Root
+                    checked={!!photo.isMain}
+                    onCheckedChange={(checked) => {
+                      if (checked) setMain(index);
+                    }}
+                    aria-label="대표 사진으로 설정"
+                  />
+                  <Text typography="body3" className="text-gray-600">
+                    대표
+                  </Text>
+                </label>
+
+                <div className="flex flex-shrink-0 items-center gap-1">
+                  <IconButton
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    colorPalette="secondary"
+                    aria-label="위로 이동"
+                    disabled={index === 0}
+                    onClick={() => move(index, -1)}
+                  >
+                    <ChevronUpOutlineIcon size={16} />
+                  </IconButton>
+                  <IconButton
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    colorPalette="secondary"
+                    aria-label="아래로 이동"
+                    disabled={index === value.length - 1}
+                    onClick={() => move(index, 1)}
+                  >
+                    <ChevronDownOutlineIcon size={16} />
+                  </IconButton>
+                  <IconButton
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    colorPalette="danger"
+                    aria-label="사진 삭제"
+                    onClick={() => remove(index)}
+                  >
+                    <TrashOutlineIcon size={16} />
+                  </IconButton>
+                </div>
               </div>
+
+              {itemTagging ? (
+                <div className="mt-2 border-t border-gray-100 pt-2" data-testid="photo-item-tagging">
+                  <Text typography="body3" className="mb-1 text-gray-500">
+                    이 사진에 사용된 아이템
+                  </Text>
+                  <EntityPicker
+                    kind="item"
+                    value={photo.itemIds ?? []}
+                    onChange={(ids) => updateItemIds(index, ids)}
+                  />
+                </div>
+              ) : null}
             </div>
           ))}
         </div>
