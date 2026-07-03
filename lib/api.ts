@@ -295,7 +295,7 @@ export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null
     .select(
       `id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,
        items(${ITEM_SUMMARY_SELECT},
-         photo_items(photos(project_photos(projects(${PROJECT_SUMMARY_SELECT})))),
+         derived_pi:photo_items(photos(project_photos(projects(${PROJECT_SUMMARY_SELECT})))),
          project_items(projects(${PROJECT_SUMMARY_SELECT})))`
     )
     .eq("slug", slug)
@@ -314,7 +314,7 @@ export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null
     .filter((p: Raw) => p && p.status === "published")
     .map(normalizeProjectSummary);
   const derivedProjects: ProjectSummary[] = rawItems
-    .flatMap((it: Raw) => it.photo_items ?? [])
+    .flatMap((it: Raw) => it.derived_pi ?? [])
     .flatMap((pi: Raw) => pi.photos?.project_photos ?? [])
     .map((pp: Raw) => pp.projects)
     .filter((p: Raw) => p && p.status === "published")

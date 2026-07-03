@@ -157,7 +157,7 @@ describe('fetchBrandBySlug — related projects union (orchestrator extension)',
               ...item('item-1'),
               brands: null,
               project_items: [{ projects: project('a') }],
-              photo_items: [
+              derived_pi: [
                 {
                   is_main: false,
                   order: 0,
@@ -175,7 +175,7 @@ describe('fetchBrandBySlug — related projects union (orchestrator extension)',
               ...item('item-2'),
               brands: null,
               project_items: [{ projects: project('b') }],
-              photo_items: [
+              derived_pi: [
                 {
                   is_main: false,
                   order: 0,
