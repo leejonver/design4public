@@ -88,7 +88,7 @@ describe('brands PUT revalidation wiring (rename)', () => {
       .mockReturnValueOnce(makeQB({ data: null, error: null })) // update
       .mockReturnValueOnce(makeQB({ data: { id: 'b1', slug: 'new-brand' }, error: null })) // final select
 
-    const res = await PUT(makeRequest({ nameKo: '뉴브랜드' }), { params: { id: 'b1' } })
+    const res = await PUT(makeRequest({ nameKo: '뉴브랜드' }), { params: Promise.resolve({ id: 'b1' }) })
     expect(res.status).toBe(200)
 
     const paths = revalidateMock.mock.calls.map((c) => c[0])
@@ -107,7 +107,7 @@ describe('brands PUT revalidation wiring (rename)', () => {
       .mockReturnValueOnce(makeQB({ data: null, error: null })) // update (status only)
       .mockReturnValueOnce(makeQB({ data: { id: 'b1', slug: 'same-brand' }, error: null })) // final select
 
-    const res = await PUT(makeRequest({ status: 'hidden' }), { params: { id: 'b1' } })
+    const res = await PUT(makeRequest({ status: 'hidden' }), { params: Promise.resolve({ id: 'b1' }) })
     expect(res.status).toBe(200)
 
     const ownDetailCalls = revalidateMock.mock.calls.filter((c) => c[0] === '/brands/same-brand')

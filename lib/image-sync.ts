@@ -133,7 +133,7 @@ export async function syncCategories(
   parentId: string,
   categoryIds: string[],
 ): Promise<void> {
-  await db.from(table).delete().eq(fk, parentId)
+  await db.from(table).delete().filter(fk, 'eq', parentId)
   if (!categoryIds?.length) return
   const rows = categoryIds.map((category_id) => ({ [fk]: parentId, category_id }))
   const { error } = await db.from(table).insert(rows as never)
@@ -173,7 +173,7 @@ export async function syncFreeTags(
   parentId: string,
   tagNames: string[],
 ): Promise<void> {
-  await db.from(table).delete().eq(fk, parentId)
+  await db.from(table).delete().filter(fk, 'eq', parentId)
   if (!tagNames?.length) return
   const unique = [...new Set(tagNames.map((t) => t.trim()).filter(Boolean))]
   const ids = (await Promise.all(unique.map((n) => ensureTagId(db, n)))).filter(Boolean) as string[]

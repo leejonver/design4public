@@ -411,8 +411,10 @@ export async function fetchCategories(type: "project" | "item"): Promise<Categor
 }
 
 async function count(table: "projects" | "items" | "brands" | "photos"): Promise<number> {
-  const q = supabase.from(table).select("id", { count: "exact", head: true });
-  const { count: c, error } = table === "projects" ? await q.eq("status", "published") : await q;
+  const { count: c, error } =
+    table === "projects"
+      ? await supabase.from("projects").select("id", { count: "exact", head: true }).eq("status", "published")
+      : await supabase.from(table).select("id", { count: "exact", head: true });
   if (error) return 0;
   return c ?? 0;
 }
