@@ -1,44 +1,19 @@
 // Design4Public CMS - TypeScript 타입 정의
 // 백엔드 API와의 일관성을 위해 추가/수정 시 주의 필요
 
-/**
- * 프로젝트 상태 열거형
- * - draft: 초안 (게시되지 않음)
- * - published: 게시됨 (공개 상태)
- * - hidden: 숨김 (비공개 상태)
- */
-export type ProjectStatus = 'draft' | 'published' | 'hidden';
-
-/**
- * 아이템 상태 열거형
- * - available: 구입가능
- * - discontinued: 단종
- * - hidden: 숨김
- */
-export type ItemStatus = 'available' | 'discontinued' | 'hidden';
-
-/**
- * 관리자 권한 열거형
- * - master: 마스터 (모든 권한)
- * - admin: 관리자 (대부분의 권한)
- * - content_manager: 콘텐츠매니저 (제한적 권한)
- */
-export type ManagerRole = 'master' | 'admin' | 'content_manager';
-
-/**
- * 관리자 승인 상태 열거형
- * - pending: 승인 대기
- * - approved: 승인됨
- * - rejected: 거부됨
- */
-export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
-
-/**
- * 카테고리 타입 열거형 (엔티티별 고정 분류)
- * - project: 프로젝트 카테고리
- * - item: 아이템 카테고리
- */
-export type CategoryType = 'project' | 'item';
+// Enum single source of truth. These unions are DB-derived (lib/database.types.ts,
+// kept in sync by scripts/postprocess-types.mjs); admin DTOs and the API routes
+// import the same definitions so a schema value can never drift between them.
+// `ManagerRole` is this repo's name for the DB `UserRole` (identical members).
+import type {
+  ProjectStatus,
+  ItemStatus,
+  ApprovalStatus,
+  CategoryType,
+  UserRole,
+} from './database.types';
+export type { ProjectStatus, ItemStatus, ApprovalStatus, CategoryType };
+export type ManagerRole = UserRole;
 
 /**
  * 이미지 데이터 인터페이스
