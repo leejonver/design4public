@@ -17,10 +17,12 @@ export function ProjectsView({
   projects,
   categories,
   count,
+  query,
 }: {
   projects: ProjectSummary[];
   categories: string[];
   count: number;
+  query?: string;
 }) {
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("최신순");
@@ -48,7 +50,11 @@ export function ProjectsView({
         breadcrumb={[{ label: "홈", href: "/" }, { label: "프로젝트" }]}
         title="PROJECTS"
         count={count}
-        lead="공공·업무 공간에 실제로 도입된 프로젝트를 둘러보세요."
+        lead={
+          query
+            ? `‘${query}’ 검색 결과 ${count}건`
+            : "공공·업무 공간에 실제로 도입된 프로젝트를 둘러보세요."
+        }
       />
       <FilterBar
         left={<FacetRow chips={chips} value={category} onChange={setCategory} />}

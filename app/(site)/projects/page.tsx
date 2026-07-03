@@ -2,15 +2,22 @@ import type { Metadata } from "next";
 import { fetchProjects, fetchCategories } from "@/lib/api";
 import { ProjectsView } from "./projects-view";
 
-export const revalidate = 3600;
+// Reading searchParams opts this route into dynamic rendering; search-filtered
+// listings should not be statically cached.
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "PROJECTS",
 };
 
-export default async function ProjectsPage() {
+export default async function ProjectsPage({
+  searchParams,
+}: {
+  searchParams: { q?: string };
+}) {
+  const q = searchParams?.q?.trim() || undefined;
   const [projects, categories] = await Promise.all([
-    fetchProjects(),
+    fetchProjects({ q }),
     fetchCategories("project"),
   ]);
 
@@ -19,6 +26,7 @@ export default async function ProjectsPage() {
       projects={projects}
       categories={categories.map((c) => c.name)}
       count={projects.length}
+      query={q}
     />
   );
 }
