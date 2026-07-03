@@ -12,8 +12,13 @@ test.describe('프로젝트 사진 아이템 태깅', () => {
   test('사진에 아이템을 태깅하면 파생 연결이 저장된다', async ({ page }) => {
     await page.goto(`/admin/projects/${GANGNAM_ID}/edit`)
 
-    // The photo rows are rendered; open the item picker on the 2nd photo row.
+    // Wait for the edit form to hydrate with loaded project data before
+    // interacting — photo rows render after the client-side fetch resolves.
+    await expect(page.getByPlaceholder('프로젝트명을 입력하세요')).toHaveValue(/.+/)
     const secondRow = page.getByTestId('uploaded-photo').nth(1)
+    await expect(secondRow).toBeVisible()
+
+    // The photo rows are rendered; open the item picker on the 2nd photo row.
     await secondRow.getByTestId('photo-item-tagging').getByRole('button', { name: '아이템 선택' }).click()
     await page.getByRole('button', { name: EAMES_NAME }).click()
     await page.getByRole('button', { name: '확인' }).click()
@@ -34,6 +39,8 @@ test.describe('프로젝트 사진 아이템 태깅', () => {
     // picker toggles, so re-tagging eames on a second run would instead remove
     // it. Untag the photo and save (the anchored wait guarantees the PUT lands).
     await page.goto(`/admin/projects/${GANGNAM_ID}/edit`)
+    await expect(page.getByPlaceholder('프로젝트명을 입력하세요')).toHaveValue(/.+/)
+    await expect(page.getByTestId('uploaded-photo').nth(1)).toBeVisible()
     await page
       .getByTestId('uploaded-photo')
       .nth(1)
