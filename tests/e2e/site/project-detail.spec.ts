@@ -23,4 +23,12 @@ test.describe('프로젝트 상세', () => {
     const res = await page.goto('/projects/draft-project')
     expect(res?.status()).toBe(404)
   })
+
+  test('직접 연결이 없어도 파생(사진→아이템) 관련 아이템이 표시된다', async ({ page }) => {
+    // pangyo-library has zero project_items; its main photo is tagged with aeron
+    // (seed derived row), so the union surfaces aeron as a related item.
+    await page.goto('/projects/pangyo-library')
+    await expect(page.getByRole('heading', { level: 2, name: '이 공간에 사용된 가구' })).toBeVisible()
+    await expect(page.locator('a.d4p-card[href="/items/aeron-chair"]')).toBeVisible()
+  })
 })
