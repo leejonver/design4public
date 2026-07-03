@@ -108,10 +108,3 @@ export type HomeData = {
   photos: PhotoFeedItem[];
   counts: Counts;
 };
-
-/* Lightweight index used by the header BrandSearch autocomplete. */
-export type SearchIndex = {
-  projects: { slug: string; title: string; year: number | null; location: string | null; categories: string[]; image: string | null }[];
-  items: { slug: string; name: string; brandName: string | null; categories: string[]; image: string | null }[];
-  brands: { slug: string; nameKo: string; nameEn: string | null; image: string | null }[];
-};

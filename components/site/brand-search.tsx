@@ -12,17 +12,9 @@ import {
   Store,
   Image as ImageIcon,
 } from "lucide-react";
-import type { SearchIndex } from "@/lib/types";
+import type { EntityType, SearchGroups, SearchHit } from "@/lib/search/query";
 
-type ProjectHit = SearchIndex["projects"][number];
-type ItemHit = SearchIndex["items"][number];
-type BrandHit = SearchIndex["brands"][number];
-
-type Option =
-  | { kind: "run"; label: string }
-  | { kind: "project"; data: ProjectHit }
-  | { kind: "item"; data: ItemHit }
-  | { kind: "brand"; data: BrandHit };
+type Option = { kind: "run"; label: string } | { kind: "hit"; data: SearchHit };
 
 const POPULAR = ["라운지 소파", "태스크 체어", "공공 프로젝트", "포커스 부스", "모듈 소파"];
 
@@ -33,9 +25,16 @@ const CATS = [
   { key: "photos", label: "포토", href: "/photos", Icon: ImageIcon },
 ] as const;
 
-function joinMeta(parts: (string | number | null | undefined)[]): string {
-  return parts.filter((p) => p !== null && p !== undefined && p !== "").join(" · ");
-}
+const SECTION_LABEL: Record<EntityType, string> = {
+  project: "프로젝트",
+  item: "아이템",
+  brand: "브랜드",
+  photo: "포토",
+};
+// Dropdown section order.
+const SECTION_ORDER: EntityType[] = ["project", "item", "brand", "photo"];
+
+const emptyGroups = (): SearchGroups => ({ project: [], item: [], brand: [], photo: [] });
 
 function Thumb({ img, title, square }: { img: string | null; title: string; square?: boolean }) {
   return (
@@ -64,17 +63,13 @@ function Thumb({ img, title, square }: { img: string | null; title: string; squa
 
 function ResultRow({
   img,
-  brand,
   title,
-  meta,
   active,
   onClick,
   square,
 }: {
   img: string | null;
-  brand?: string | null;
   title: string;
-  meta?: string;
   active?: boolean;
   onClick: () => void;
   square?: boolean;
@@ -88,20 +83,6 @@ function ResultRow({
     >
       <Thumb img={img} title={title} square={square} />
       <span style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
-        {brand && (
-          <span
-            style={{
-              display: "block",
-              fontSize: 10,
-              fontWeight: 700,
-              letterSpacing: "0.14em",
-              textTransform: "uppercase",
-              color: "var(--ink-400)",
-            }}
-          >
-            {brand}
-          </span>
-        )}
         <span
           style={{
             display: "block",
@@ -115,20 +96,6 @@ function ResultRow({
         >
           {title}
         </span>
-        {meta && (
-          <span
-            style={{
-              display: "block",
-              fontSize: 11.5,
-              color: "var(--ink-500)",
-              whiteSpace: "nowrap",
-              overflow: "hidden",
-              textOverflow: "ellipsis",
-            }}
-          >
-            {meta}
-          </span>
-        )}
       </span>
       <ArrowUpRight size={15} strokeWidth={1.5} style={{ color: "var(--ink-300)", flex: "none" }} />
     </button>
@@ -136,49 +103,61 @@ function ResultRow({
 }
 
 export function BrandSearch({
-  index,
   size = "md",
   placeholder = "프로젝트, 아이템, 브랜드 검색",
 }: {
-  index: SearchIndex;
   size?: "md" | "lg";
   placeholder?: string;
 }) {
-  const { projects, items, brands } = index;
   const router = useRouter();
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(false);
   const [focus, setFocus] = useState(false);
   const [hi, setHi] = useState(-1);
+  const [groups, setGroups] = useState<SearchGroups>(emptyGroups);
+  const [loading, setLoading] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const lg = size === "lg";
   const active = focus || !!q;
+  const ql = q.trim();
 
-  const ql = q.trim().toLowerCase();
-  const results = useMemo(() => {
-    if (!ql) return null;
-    const has = (s: string | null | undefined) => !!s && s.toLowerCase().includes(ql);
-    return {
-      projects: projects
-        .filter((p) => has(p.title) || has(p.location) || p.categories.some(has))
-        .slice(0, 3),
-      items: items
-        .filter((i) => has(i.name) || has(i.brandName) || i.categories.some(has))
-        .slice(0, 4),
-      brands: brands.filter((b) => has(b.nameKo) || has(b.nameEn)).slice(0, 3),
+  // Debounced fetch to /api/search. Aborts the in-flight request on each keystroke.
+  useEffect(() => {
+    if (!ql) {
+      setGroups(emptyGroups());
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(ql)}`, { signal: controller.signal });
+        const json = (await res.json()) as { groups: SearchGroups };
+        setGroups(json.groups ?? emptyGroups());
+      } catch {
+        // aborted or network error — leave prior results, drop the spinner
+      } finally {
+        setLoading(false);
+      }
+    }, 200);
+    return () => {
+      controller.abort();
+      clearTimeout(t);
     };
-  }, [ql, projects, items, brands]);
+  }, [ql]);
 
+  const totalHits = SECTION_ORDER.reduce((n, k) => n + groups[k].length, 0);
+
+  // Flat option list for keyboard nav: the "run" row first, then hits in section order.
   const options = useMemo<Option[]>(() => {
-    if (!ql || !results) return [];
-    const o: Option[] = [{ kind: "run", label: q }];
-    results.projects.forEach((p) => o.push({ kind: "project", data: p }));
-    results.items.forEach((i) => o.push({ kind: "item", data: i }));
-    results.brands.forEach((b) => o.push({ kind: "brand", data: b }));
+    if (!ql) return [];
+    const o: Option[] = [{ kind: "run", label: ql }];
+    for (const k of SECTION_ORDER) for (const hit of groups[k]) o.push({ kind: "hit", data: hit });
     return o;
-  }, [ql, results, q]);
+  }, [ql, groups]);
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -199,12 +178,10 @@ export function BrandSearch({
     setFocus(false);
     inputRef.current?.blur();
     if (!opt || opt.kind === "run") {
-      router.push(`/projects?q=${encodeURIComponent(q.trim())}`);
+      router.push(`/search?q=${encodeURIComponent(ql)}`);
       return;
     }
-    if (opt.kind === "project") router.push(`/projects/${opt.data.slug}`);
-    else if (opt.kind === "item") router.push(`/items/${opt.data.slug}`);
-    else if (opt.kind === "brand") router.push(`/brands/${opt.data.slug}`);
+    router.push(opt.data.href);
     setQ("");
   };
 
@@ -217,7 +194,7 @@ export function BrandSearch({
       setHi((h) => Math.max(h - 1, -1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      choose(hi >= 0 ? options[hi] : options[0] ?? { kind: "run", label: q });
+      choose(hi >= 0 ? options[hi] : options[0] ?? { kind: "run", label: ql });
     } else if (e.key === "Escape") {
       setOpen(false);
       inputRef.current?.blur();
@@ -283,7 +260,7 @@ export function BrandSearch({
         <button
           className="d4p-srch-go"
           onMouseDown={(e) => e.preventDefault()}
-          onClick={() => choose(options[0] ?? { kind: "run", label: q })}
+          onClick={() => choose(options[0] ?? { kind: "run", label: ql })}
           aria-label="검색"
           style={{
             width: lg ? 44 : 36,
@@ -343,70 +320,44 @@ export function BrandSearch({
             </>
           )}
 
-          {ql && results && (
+          {ql && (
             <>
               <button
                 className="d4p-srch-row"
                 data-active={hi < 0 || hi === 0 ? "1" : undefined}
                 onMouseDown={(e) => e.preventDefault()}
-                onClick={() => choose({ kind: "run", label: q })}
+                onClick={() => choose({ kind: "run", label: ql })}
               >
                 <span className="d4p-srch-catico">
                   <Search size={15} strokeWidth={1.5} />
                 </span>
                 <span style={{ flex: 1, textAlign: "left", fontSize: 13.5, color: "var(--ink-700)" }}>
-                  ‘<strong style={{ color: "var(--ink-900)" }}>{q}</strong>’ 전체 검색
+                  ‘<strong style={{ color: "var(--ink-900)" }}>{ql}</strong>’ 전체 검색
                 </span>
               </button>
 
-              {results.projects.length > 0 && <div className="d4p-srch-sec">프로젝트</div>}
-              {results.projects.map((p) => {
-                const idx = options.findIndex((o) => o.kind === "project" && o.data === p);
-                return (
-                  <ResultRow
-                    key={p.slug}
-                    img={p.image}
-                    title={p.title}
-                    meta={joinMeta([p.categories[0], p.year, p.location])}
-                    active={hi === idx}
-                    onClick={() => choose({ kind: "project", data: p })}
-                  />
-                );
-              })}
+              {SECTION_ORDER.map((sec) =>
+                groups[sec].length > 0 ? (
+                  <div key={sec}>
+                    <div className="d4p-srch-sec">{SECTION_LABEL[sec]}</div>
+                    {groups[sec].map((hit) => {
+                      const idx = options.findIndex((o) => o.kind === "hit" && o.data === hit);
+                      return (
+                        <ResultRow
+                          key={`${hit.entityType}-${hit.entityId}`}
+                          img={hit.imageUrl}
+                          title={hit.title}
+                          active={hi === idx}
+                          square={hit.entityType === "brand"}
+                          onClick={() => choose({ kind: "hit", data: hit })}
+                        />
+                      );
+                    })}
+                  </div>
+                ) : null,
+              )}
 
-              {results.items.length > 0 && <div className="d4p-srch-sec">아이템</div>}
-              {results.items.map((it) => {
-                const idx = options.findIndex((o) => o.kind === "item" && o.data === it);
-                return (
-                  <ResultRow
-                    key={it.slug}
-                    img={it.image}
-                    brand={it.brandName}
-                    title={it.name}
-                    meta={joinMeta(it.categories)}
-                    active={hi === idx}
-                    onClick={() => choose({ kind: "item", data: it })}
-                  />
-                );
-              })}
-
-              {results.brands.length > 0 && <div className="d4p-srch-sec">브랜드</div>}
-              {results.brands.map((b) => {
-                const idx = options.findIndex((o) => o.kind === "brand" && o.data === b);
-                return (
-                  <ResultRow
-                    key={b.slug}
-                    img={b.image}
-                    title={b.nameKo}
-                    meta={b.nameEn ?? undefined}
-                    active={hi === idx}
-                    square
-                    onClick={() => choose({ kind: "brand", data: b })}
-                  />
-                );
-              })}
-
-              {results.projects.length + results.items.length + results.brands.length === 0 && (
+              {!loading && totalHits === 0 && (
                 <div style={{ padding: "22px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 13.5 }}>
                   검색 결과가 없습니다.
                 </div>

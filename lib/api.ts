@@ -13,7 +13,6 @@ import type {
   PhotoLite,
   ProjectDetail,
   ProjectSummary,
-  SearchIndex,
 } from "./types";
 
 /* ============================================================
@@ -426,28 +425,6 @@ export async function fetchCounts(): Promise<Counts> {
     count("photos"),
   ]);
   return { projects, items, brands, photos };
-}
-
-export async function fetchSearchIndex(): Promise<SearchIndex> {
-  const [projects, items, brands] = await Promise.all([fetchProjects(), fetchItems(), fetchBrands()]);
-  return {
-    projects: projects.slice(0, 200).map((p) => ({
-      slug: p.slug,
-      title: p.title,
-      year: p.year,
-      location: p.location,
-      categories: p.categories,
-      image: p.coverImage,
-    })),
-    items: items.slice(0, 300).map((i) => ({
-      slug: i.slug,
-      name: i.name,
-      brandName: i.brandName,
-      categories: i.categories,
-      image: i.image,
-    })),
-    brands: brands.map((b) => ({ slug: b.slug, nameKo: b.nameKo, nameEn: b.nameEn, image: b.cover ?? b.logo })),
-  };
 }
 
 /* Home is curated from the admin config tables:

@@ -6,7 +6,6 @@ import { useEffect, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, Menu, X, ArrowUpRight } from "lucide-react";
-import type { SearchIndex } from "@/lib/types";
 import { BrandSearch } from "@/components/site/brand-search";
 import { ContactButton } from "@/components/site/contact-modal";
 
@@ -19,7 +18,7 @@ const NAV_ITEMS = [
 
 const SEARCH_PLACEHOLDER = "프로젝트, 아이템, 브랜드 검색";
 
-export function SiteHeader({ index }: { index: SearchIndex }) {
+export function SiteHeader() {
   const pathname = usePathname();
   const [isMobile, setIsMobile] = useState(false);
   const [y, setY] = useState(0);
@@ -119,7 +118,7 @@ export function SiteHeader({ index }: { index: SearchIndex }) {
             >
               <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                 <div style={{ flex: 1 }}>
-                  <BrandSearch index={index} size="lg" placeholder={SEARCH_PLACEHOLDER} />
+                  <BrandSearch size="lg" placeholder={SEARCH_PLACEHOLDER} />
                 </div>
                 <button onClick={() => setSearchOpen(false)} aria-label="닫기" style={iconBtn}>
                   <X size={20} strokeWidth={1.5} />
@@ -194,7 +193,7 @@ export function SiteHeader({ index }: { index: SearchIndex }) {
         <div style={{ flex: 1, display: "flex", alignItems: "center", height: "100%" }}>
           <div style={{ flex: 1, display: "flex", justifyContent: "center", padding: "0 24px" }}>
             <div style={{ width: "100%", maxWidth: 480 }}>
-              <BrandSearch index={index} placeholder={SEARCH_PLACEHOLDER} />
+              <BrandSearch placeholder={SEARCH_PLACEHOLDER} />
             </div>
           </div>
           <nav style={{ display: "flex", gap: 26, flex: "none" }}>

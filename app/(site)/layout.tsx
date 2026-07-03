@@ -12,7 +12,6 @@ import {
   organizationSchema,
   websiteSchema,
 } from "@/lib/seo";
-import { fetchSearchIndex } from "@/lib/api";
 
 export const metadata: Metadata = {
   title: {
@@ -37,12 +36,10 @@ export const metadata: Metadata = {
 };
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const index = await fetchSearchIndex();
-
   return (
     <ContactModalProvider>
       <JsonLd data={jsonLdGraph([organizationSchema(), websiteSchema()])} />
-      <SiteHeader index={index} />
+      <SiteHeader />
       <main style={{ minHeight: "60vh" }}>{children}</main>
       <SiteFooter />
     </ContactModalProvider>
