@@ -5,16 +5,17 @@ import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { revalidateEntity } from '@/lib/revalidation'
 import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
+import type { TablesUpdate } from '@/lib/database.types'
 
-export async function GET(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireUser()
     const supabase = await createServerSupabase()
     const { data, error } = await supabase
       .from('brands')
       .select(BRAND_SELECT)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
     if (error || !data) {
       return NextResponse.json({ success: false, error: '브랜드를 찾을 수 없습니다.' }, { status: 404 })
@@ -27,9 +28,9 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireRole('content_manager')
     const supabase = await createServerSupabase()
     const body = await request.json()
@@ -39,10 +40,10 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
     const { data: beforeUpdate } = await supabase
       .from('brands')
       .select('slug')
-      .eq('id', params.id)
+      .eq('id', id)
       .maybeSingle()
 
-    const update: Record<string, unknown> = {}
+    const update: TablesUpdate<'brands'> = {}
     if (nameKo !== undefined) update.name_ko = nameKo
     if (nameEn !== undefined) update.name_en = nameEn
     if (description !== undefined) update.description = description
@@ -56,7 +57,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
       const { data: existing } = await supabase
         .from('brands')
         .select('name_ko')
-        .eq('id', params.id)
+        .eq('id', id)
         .single()
       if (existing && existing.name_ko !== nameKo) {
         update.slug = await uniqueSlug(nameKo, async (s) => {
@@ -64,7 +65,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
             .from('brands')
             .select('id')
             .eq('slug', s)
-            .neq('id', params.id)
+            .neq('id', id)
             .maybeSingle()
           return !!data
         })
@@ -72,14 +73,14 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
     }
 
     if (Object.keys(update).length > 0) {
-      const { error } = await supabase.from('brands').update(update).eq('id', params.id)
+      const { error } = await supabase.from('brands').update(update).eq('id', id)
       if (error) throw error
     }
 
     const { data: full } = await supabase
       .from('brands')
       .select(BRAND_SELECT)
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     // BRAND_SELECT is a bare `*`, but the generated Database type's `Row` for
@@ -93,7 +94,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
     if (beforeUpdate?.slug && newSlug && beforeUpdate.slug !== newSlug) {
       revalidateEntity('brand', beforeUpdate.slug)
     }
-    await reindexEntity('brand', params.id)
+    await reindexEntity('brand', id)
 
     return NextResponse.json({
       success: true,
@@ -107,31 +108,31 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
   }
 }
 
-export async function DELETE(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireRole('content_manager')
     const supabase = await createServerSupabase()
     // Capture the slug before deletion so we can purge the brand's detail page.
     const { data: existing } = await supabase
       .from('brands')
       .select('slug')
-      .eq('id', params.id)
+      .eq('id', id)
       .maybeSingle()
     // §6-3: detach the brand's items first (items.brand_id -> NULL) before deleting the brand,
     // so the brand FK can never block the delete.
     const { error: detachError } = await supabase
       .from('items')
       .update({ brand_id: null })
-      .eq('brand_id', params.id)
+      .eq('brand_id', id)
     if (detachError) throw detachError
 
-    const { error } = await supabase.from('brands').delete().eq('id', params.id)
+    const { error } = await supabase.from('brands').delete().eq('id', id)
     if (error) throw error
     // Detaching items cleared their brand — refresh item surfaces too.
     revalidateEntity('brand', existing?.slug)
     revalidateEntity('item')
-    await deleteFromIndex('brand', params.id)
+    await deleteFromIndex('brand', id)
     return NextResponse.json({ success: true, message: '브랜드가 삭제되었습니다.' })
   } catch (error) {
     if (error instanceof Error && error.name === 'AuthError') return authErrorResponse(error)

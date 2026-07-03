@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 import { requireRole, authErrorResponse } from '@/lib/auth'
 import { mapManager } from '@/lib/dto'
+import type { TablesUpdate } from '@/lib/database.types'
 
 // Returns true if removing `target` from the master pool would leave zero approved masters.
 async function isLastMaster(targetRole: string, targetStatus: string): Promise<boolean> {
@@ -14,14 +15,14 @@ async function isLastMaster(targetRole: string, targetStatus: string): Promise<b
   return (count ?? 0) <= 1
 }
 
-export async function GET(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     await requireRole('master')
     const { data, error } = await supabaseAdmin
       .from('profiles')
       .select('id, email, name, role, status, last_login_at, created_at, updated_at')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
     if (error || !data) {
       return NextResponse.json({ success: false, error: '관리자를 찾을 수 없습니다.' }, { status: 404 })
@@ -34,15 +35,15 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ id: 
   }
 }
 
-export async function PUT(request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const caller = await requireRole('master')
     const body = await request.json()
     const { name, role, approvalStatus } = body
 
     // Self guard: a master cannot demote their own role away from 'master'. (§8)
-    if (params.id === caller.id && role !== undefined && role !== 'master') {
+    if (id === caller.id && role !== undefined && role !== 'master') {
       return NextResponse.json(
         { success: false, error: '본인 권한은 변경할 수 없습니다.' },
         { status: 403 },
@@ -52,7 +53,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
     const { data: target, error: fetchError } = await supabaseAdmin
       .from('profiles')
       .select('role, status')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
     if (fetchError || !target) {
       return NextResponse.json({ success: false, error: '관리자를 찾을 수 없습니다.' }, { status: 404 })
@@ -68,20 +69,20 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
       )
     }
 
-    const update: Record<string, unknown> = {}
+    const update: TablesUpdate<'profiles'> = {}
     if (name !== undefined) update.name = name
     if (role !== undefined) update.role = role
     if (approvalStatus !== undefined) update.status = approvalStatus
 
     if (Object.keys(update).length > 0) {
-      const { error } = await supabaseAdmin.from('profiles').update(update).eq('id', params.id)
+      const { error } = await supabaseAdmin.from('profiles').update(update).eq('id', id)
       if (error) throw error
     }
 
     const { data: full } = await supabaseAdmin
       .from('profiles')
       .select('id, email, name, role, status, last_login_at, created_at, updated_at')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
 
     return NextResponse.json({
@@ -96,13 +97,13 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
   }
 }
 
-export async function DELETE(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
-  const params = await props.params;
+export async function DELETE(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const caller = await requireRole('master')
 
     // Self guard: a master cannot delete their own account. (§8)
-    if (params.id === caller.id) {
+    if (id === caller.id) {
       return NextResponse.json(
         { success: false, error: '본인 계정은 삭제할 수 없습니다.' },
         { status: 403 },
@@ -112,7 +113,7 @@ export async function DELETE(_request: NextRequest, props: { params: Promise<{ i
     const { data: target, error: fetchError } = await supabaseAdmin
       .from('profiles')
       .select('role, status')
-      .eq('id', params.id)
+      .eq('id', id)
       .single()
     if (fetchError || !target) {
       return NextResponse.json({ success: false, error: '관리자를 찾을 수 없습니다.' }, { status: 404 })
@@ -126,12 +127,12 @@ export async function DELETE(_request: NextRequest, props: { params: Promise<{ i
       )
     }
 
-    const { error } = await supabaseAdmin.from('profiles').delete().eq('id', params.id)
+    const { error } = await supabaseAdmin.from('profiles').delete().eq('id', id)
     if (error) throw error
 
     // Optional auth user cleanup — never fail the request on its error.
     try {
-      await supabaseAdmin.auth.admin.deleteUser(params.id)
+      await supabaseAdmin.auth.admin.deleteUser(id)
     } catch (e) {
       console.error('Auth user deletion failed (non-fatal):', e)
     }
