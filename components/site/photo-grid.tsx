@@ -37,9 +37,16 @@ export function PhotosView({
         {list.map((ph, idx) => {
           const caption = ph.title ?? ph.alt ?? ph.projectTitle;
           return (
-            <button
+            <Link
               key={ph.id}
-              onClick={() => setActive(idx)}
+              href={`/photos/${ph.id}`}
+              onClick={(e) => {
+                // Plain left-click keeps the lightbox UX; modified clicks (cmd/ctrl/middle)
+                // fall through to the real /photos/[id] navigation.
+                if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+                e.preventDefault();
+                setActive(idx);
+              }}
               className="d4p-photo-tile d4p-masonry-item"
               data-testid="photo-tile"
               style={{ aspectRatio: idx % 7 === 6 ? "4 / 5" : "4 / 3" }}
@@ -65,7 +72,7 @@ export function PhotosView({
                 </div>
               )}
               {caption && <span className="d4p-photo-cap">{caption}</span>}
-            </button>
+            </Link>
           );
         })}
       </div>
@@ -225,6 +232,17 @@ function PhotoModal({
               <ArrowRight size={18} strokeWidth={1.5} style={{ color: "var(--ink-400)", flex: "none" }} />
             </Link>
           )}
+          <Link href={`/photos/${ph.id}`} className="d4p-side-link" onClick={onClose}>
+            <div>
+              <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-400)" }}>
+                사진
+              </span>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "var(--ink-900)", marginTop: 3 }}>
+                상세 페이지 열기
+              </div>
+            </div>
+            <ArrowRight size={18} strokeWidth={1.5} style={{ color: "var(--ink-400)", flex: "none" }} />
+          </Link>
         </aside>
       </div>
     </div>

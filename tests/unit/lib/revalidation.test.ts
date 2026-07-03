@@ -38,7 +38,7 @@ afterEach(() => {
 })
 
 describe('revalidateEntity mapping', () => {
-  it('project (with slug) → home, list, photos, sitemap, own detail, item+brand detail tags', () => {
+  it('project (with slug) → home, list, photos, sitemap, own detail, item+brand+photo detail tags', () => {
     revalidateEntity('project', 'my-project')
     expect(ops()).toEqual([
       ['path', '/'],
@@ -48,6 +48,7 @@ describe('revalidateEntity mapping', () => {
       ['path', '/projects/my-project'],
       ['tag', 'sb:items'],
       ['tag', 'sb:brands'],
+      ['tag', 'sb:photos'],
     ])
   })
 
@@ -61,10 +62,11 @@ describe('revalidateEntity mapping', () => {
       ['tag', 'sb:projects'],
       ['tag', 'sb:items'],
       ['tag', 'sb:brands'],
+      ['tag', 'sb:photos'],
     ])
   })
 
-  it('item (with slug) → home, list, sitemap, own detail, project+brand detail tags', () => {
+  it('item (with slug) → home, list, sitemap, own detail, project+brand+photo detail tags', () => {
     revalidateEntity('item', 'my-item')
     expect(ops()).toEqual([
       ['path', '/'],
@@ -73,6 +75,7 @@ describe('revalidateEntity mapping', () => {
       ['path', '/items/my-item'],
       ['tag', 'sb:projects'],
       ['tag', 'sb:brands'],
+      ['tag', 'sb:photos'],
     ])
   })
 
@@ -88,16 +91,18 @@ describe('revalidateEntity mapping', () => {
     ])
   })
 
-  it('photo → home, project+item lists, photos, all detail tags', () => {
+  it('photo → home, project+item lists, photos, sitemap, all detail tags', () => {
     revalidateEntity('photo')
     expect(ops()).toEqual([
       ['path', '/'],
       ['path', '/projects'],
       ['path', '/items'],
       ['path', '/photos'],
+      ['path', '/sitemap.xml'],
       ['tag', 'sb:projects'],
       ['tag', 'sb:items'],
       ['tag', 'sb:brands'],
+      ['tag', 'sb:photos'],
     ])
   })
 
@@ -111,6 +116,7 @@ describe('revalidateEntity mapping', () => {
       ['tag', 'sb:projects'],
       ['tag', 'sb:items'],
       ['tag', 'sb:brands'],
+      ['tag', 'sb:photos'],
     ])
   })
 

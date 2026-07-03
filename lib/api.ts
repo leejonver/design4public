@@ -8,6 +8,7 @@ import type {
   HomeData,
   ItemDetail,
   ItemSummary,
+  PhotoDetail,
   PhotoFeedItem,
   PhotoLite,
   ProjectDetail,
@@ -84,6 +85,7 @@ function normalizeProjectSummary(p: Raw): ProjectSummary {
     coverImage: coverFrom(p.project_photos),
     categories: categoryNames(p.project_categories),
     imageCount: (p.project_photos ?? []).length,
+    updatedAt: p.updated_at,
   };
 }
 
@@ -99,6 +101,7 @@ function normalizeItemSummary(it: Raw): ItemSummary {
     brandNameEn: it.brands?.name_en ?? null,
     brandSlug: it.brands?.slug ?? null,
     categories: categoryNames(it.item_categories),
+    updatedAt: it.updated_at,
   };
 }
 
@@ -114,6 +117,7 @@ function normalizeBrandSummary(b: Raw): BrandSummary {
     website: b.website_url ?? null,
     itemCount: (b.items ?? []).length,
     projectCount: 0,
+    updatedAt: b.updated_at,
   };
 }
 
@@ -127,7 +131,7 @@ const PROJECT_SUMMARY_SELECT = `
 `;
 
 const ITEM_SUMMARY_SELECT = `
-  id,slug,name,description,nara_url,status,brand_id,
+  id,slug,name,description,nara_url,status,brand_id,updated_at,
   brands(name_ko,name_en,slug),
   photo_items(is_main,order,photos(id,image_url,alt_text,title)),
   item_categories(categories(id,name))
@@ -282,7 +286,9 @@ export async function fetchItemBySlug(slug: string): Promise<ItemDetail | null> 
 export async function fetchBrands(): Promise<BrandSummary[]> {
   const { data, error } = await supabase
     .from("brands")
-    .select(`id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,status,items(id)`)
+    .select(
+      `id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,status,updated_at,items(id)`
+    )
     .order("name_ko", { ascending: true });
   if (error) throw error;
   return (data ?? []).map(normalizeBrandSummary);
@@ -293,7 +299,7 @@ export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null
   const { data, error } = await supabase
     .from("brands")
     .select(
-      `id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,
+      `id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,updated_at,
        items(${ITEM_SUMMARY_SELECT},
          derived_pi:photo_items(photos(project_photos(projects(${PROJECT_SUMMARY_SELECT})))),
          project_items(projects(${PROJECT_SUMMARY_SELECT})))`
@@ -342,6 +348,7 @@ function normalizePhotoFeed(row: Raw): PhotoFeedItem {
     projectCategories: categoryNames(proj?.project_categories),
     year: proj?.year ?? null,
     location: proj?.location ?? null,
+    updatedAt: row.updated_at,
   };
 }
 
@@ -349,7 +356,7 @@ export async function fetchPhotos(limit = 120): Promise<PhotoFeedItem[]> {
   const { data, error } = await supabase
     .from("photos")
     .select(
-      `id,image_url,alt_text,title,description,created_at,
+      `id,image_url,alt_text,title,description,created_at,updated_at,
        project_photos(order,projects(id,slug,title,year,location,status,project_categories(categories(name))))`
     )
     .order("created_at", { ascending: false })
@@ -359,6 +366,36 @@ export async function fetchPhotos(limit = 120): Promise<PhotoFeedItem[]> {
     .map(normalizePhotoFeed)
     // only show photos that belong to a published project
     .filter((p) => p.projectSlug != null);
+}
+
+export async function fetchPhotoById(id: string): Promise<PhotoDetail | null> {
+  const { data, error } = await supabase
+    .from("photos")
+    .select(
+      `id,image_url,alt_text,title,description,created_at,updated_at,
+       project_photos(order,projects(id,slug,title,year,location,status,project_categories(categories(name)))),
+       tagged:photo_items(is_main,order,items(${ITEM_SUMMARY_SELECT}))`
+    )
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+
+  // Public iff the photo belongs to a PUBLISHED project (mirrors fetchPhotos).
+  // Item-gallery-only photos get no indexable detail page.
+  const publishedLink = ((data as Raw).project_photos ?? []).find(
+    (pp: Raw) => pp.projects?.status === "published"
+  );
+  if (!publishedLink) return null;
+
+  const feed = normalizePhotoFeed({ ...data, project_photos: [publishedLink] });
+  const items: ItemSummary[] = [...((data as Raw).tagged ?? [])]
+    .sort((a: Raw, b: Raw) => Number(!!b.is_main) - Number(!!a.is_main) || ord(a.order) - ord(b.order))
+    .map((r: Raw) => r.items)
+    .filter(Boolean)
+    .map(normalizeItemSummary);
+
+  return { ...feed, items };
 }
 
 /* ============================================================

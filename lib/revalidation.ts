@@ -21,7 +21,8 @@ export type RevalidateEntity =
 // purge revalidates every detail page whose query hit that table — including
 // cross-entity derived relations. Detail pages MUST use tags: a dynamic-pattern
 // revalidatePath('/items/[slug]', 'page') does not invalidate the cached
-// fetches of already-rendered concrete item pages in Next 14.
+// fetches of already-rendered concrete item pages in Next 14. The photo
+// detail page (/photos/[id]) reads `photos` → tag `sb:photos`.
 type Target = { path: string; type?: 'page' } | { tag: string }
 
 const HOME: Target = { path: '/' }
@@ -33,6 +34,7 @@ const PHOTOS_LIST: Target = { path: '/photos' }
 const PROJECT_DETAILS: Target = { tag: 'sb:projects' }
 const ITEM_DETAILS: Target = { tag: 'sb:items' }
 const BRAND_DETAILS: Target = { tag: 'sb:brands' }
+const PHOTO_DETAILS: Target = { tag: 'sb:photos' }
 
 /**
  * The exact set of cache targets a mutation of `type` (optionally a specific
@@ -51,6 +53,7 @@ function targetsFor(type: RevalidateEntity, slug?: string): Target[] {
         slug ? { path: `/projects/${slug}` } : PROJECT_DETAILS,
         ITEM_DETAILS, // item detail lists related published projects
         BRAND_DETAILS, // brand detail lists projects across its items
+        PHOTO_DETAILS, // photo detail title + publish-gate (M5)
       ]
     case 'item':
       return [
@@ -60,6 +63,7 @@ function targetsFor(type: RevalidateEntity, slug?: string): Target[] {
         slug ? { path: `/items/${slug}` } : ITEM_DETAILS,
         PROJECT_DETAILS, // project detail lists connected items
         BRAND_DETAILS, // brand detail lists its items
+        PHOTO_DETAILS, // photo detail's "이 사진 속 가구" block (M5)
       ]
     case 'brand':
       return [
@@ -76,9 +80,11 @@ function targetsFor(type: RevalidateEntity, slug?: string): Target[] {
         PROJECTS_LIST, // project cover images
         ITEMS_LIST, // item images
         PHOTOS_LIST,
+        SITEMAP, // photo URLs now live in the sitemap (M5)
         PROJECT_DETAILS, // project galleries
         ITEM_DETAILS, // item galleries
         BRAND_DETAILS, // brand's items' images
+        PHOTO_DETAILS, // /photos/[id] bodies (M5)
       ]
     case 'category':
       return [
@@ -89,6 +95,7 @@ function targetsFor(type: RevalidateEntity, slug?: string): Target[] {
         PROJECT_DETAILS,
         ITEM_DETAILS,
         BRAND_DETAILS,
+        PHOTO_DETAILS, // project category badges on photo detail (M5)
       ]
     case 'site_settings':
     case 'home_featured':

@@ -123,6 +123,115 @@ export function breadcrumbSchema(items: Array<{ name: string; path: string }>) {
   };
 }
 
+/** Strip cache-busters and drop empties — JSON-LD image URLs should be canonical. */
+function schemaImages(images: Array<string | null | undefined>): string[] | undefined {
+  const urls = images
+    .map(stripCacheBuster)
+    .filter((u): u is string => Boolean(u));
+  return urls.length > 0 ? urls : undefined;
+}
+
+export function articleSchema({
+  headline,
+  description,
+  images = [],
+  datePublished,
+  dateModified,
+  path,
+}: {
+  headline: string;
+  description: string | null;
+  images?: Array<string | null | undefined>;
+  datePublished?: string;
+  dateModified?: string;
+  path: string;
+}) {
+  return {
+    "@type": "Article",
+    headline,
+    description: description ?? undefined,
+    image: schemaImages(images),
+    datePublished,
+    dateModified,
+    mainEntityOfPage: absoluteUrl(path),
+    inLanguage: "ko-KR",
+    author: { "@id": `${SITE_URL}/#organization` },
+    publisher: { "@id": `${SITE_URL}/#organization` },
+  };
+}
+
+export function productSchema({
+  name,
+  description,
+  images = [],
+  brand,
+  path,
+}: {
+  name: string;
+  description: string | null;
+  images?: Array<string | null | undefined>;
+  brand: string | null;
+  path: string;
+}) {
+  // No `offers` / `aggregateRating`: public-procurement reference pages, no price.
+  return {
+    "@type": "Product",
+    name,
+    description: description ?? undefined,
+    image: schemaImages(images),
+    brand: brand ? { "@type": "Brand", name: brand } : undefined,
+    url: absoluteUrl(path),
+  };
+}
+
+export function brandSchema({
+  name,
+  nameEn,
+  description,
+  logo,
+  website,
+  path,
+}: {
+  name: string;
+  nameEn: string | null;
+  description: string | null;
+  logo: string | null;
+  website: string | null;
+  path: string;
+}) {
+  return {
+    "@type": "Brand",
+    name,
+    alternateName: nameEn ?? undefined,
+    description: description ?? undefined,
+    logo: stripCacheBuster(logo),
+    url: absoluteUrl(path),
+    sameAs: website ? [website] : undefined,
+  };
+}
+
+export function imageObjectSchema({
+  url,
+  caption,
+  description,
+  representativeOfPage,
+}: {
+  url: string;
+  caption: string | null;
+  description?: string | null;
+  representativeOfPage?: boolean;
+}) {
+  const clean = stripCacheBuster(url)!;
+  return {
+    "@type": "ImageObject",
+    contentUrl: clean,
+    url: clean,
+    caption: caption ?? undefined,
+    description: description ?? undefined,
+    representativeOfPage: representativeOfPage || undefined,
+  };
+}
+
 export function jsonLdGraph(graph: unknown[]) {
   return {
     "@context": "https://schema.org",
