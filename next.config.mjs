@@ -12,6 +12,17 @@ const nextConfig = {
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     formats: ['image/webp'],
   },
+  async redirects() {
+    return [
+      // Legacy CMS host → unified admin (M7 cutover).
+      {
+        source: '/:path*',
+        has: [{ type: 'host', value: 'cms.design4public.com' }],
+        destination: 'https://www.design4public.com/admin',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;
