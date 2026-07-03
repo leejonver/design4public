@@ -41,6 +41,7 @@ export function PhotosView({
               key={ph.id}
               onClick={() => setActive(idx)}
               className="d4p-photo-tile d4p-masonry-item"
+              data-testid="photo-tile"
               style={{ aspectRatio: idx % 7 === 6 ? "4 / 5" : "4 / 3" }}
             >
               {ph.url ? (

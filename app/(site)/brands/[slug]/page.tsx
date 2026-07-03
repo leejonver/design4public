@@ -117,7 +117,7 @@ export default async function BrandDetailPage({ params }: Props) {
                 {brand.nameEn}
               </div>
             )}
-            <div
+            <h1
               style={{
                 fontFamily: "var(--font-sans)",
                 fontSize: "clamp(2rem,4vw,3rem)",
@@ -129,7 +129,7 @@ export default async function BrandDetailPage({ params }: Props) {
               }}
             >
               {brand.nameKo}
-            </div>
+            </h1>
           </div>
         </div>
 
