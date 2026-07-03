@@ -59,3 +59,29 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 ---
 
 **These guidelines are working if:** fewer unnecessary changes in diffs, fewer rewrites due to overcomplication, and clarifying questions come before implementation rather than after mistakes.
+
+---
+
+## Project Context (design4public unified repo)
+
+**Layout:** public site `app/(site)`, admin UI `app/admin` (client + @vapor-ui),
+admin API `app/api/admin` (RLS via user session, not service role). Auth is
+client-side in `components/admin/AuthContext.tsx` (`signInWithPassword`/`signOut`);
+signup posts to `/api/admin/auth/signup`. Search: `lib/search` (pgvector + trigram
+hybrid, OpenAI embeddings + GPT-4o-mini captions).
+
+**Types:** `lib/database.types.ts` is generated + post-processed —
+`npm run gen:types` runs `supabase gen types` then `scripts/postprocess-types.mjs`
+(narrows `profiles.role/status`, appends the 6 enum aliases). Run it against a
+fully-migrated local DB (`supabase db reset` first). `lib/admin-types.ts`
+re-exports those enums — do not redefine them.
+
+**Local stack + gate:** E2E runs only against local Supabase (Docker); it never
+touches production (`tests/e2e/global.setup.ts` hard-fails on a non-local host).
+After **every** `supabase db reset`, run `docker restart supabase_kong_design4public`
+before Playwright — reset restarts GoTrue but not Kong (stale upstream → 502).
+Run the full gate (tsc + lint + vitest + build + Playwright ×2) as **one agent
+stack**; a single green Playwright run is not sufficient evidence.
+
+**DB safety:** production DB is additive-migration-only; the sole destructive
+migration is gated separately (M11). See `docs/specs/2026-07-03-unified-repo-design.md`.

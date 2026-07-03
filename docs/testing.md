@@ -9,11 +9,17 @@ is not `127.0.0.1`/`localhost`.
 - Supabase CLI ≥ 2.98.2 (`supabase --version`)
 - `npm ci`
 - Chromium for Playwright: `npx playwright install chromium`
+- After `supabase db reset`, run `npm run gen:types` against the fully-migrated
+  DB so `lib/database.types.ts` includes real columns before
+  `scripts/postprocess-types.mjs` runs (chained automatically by `gen:types`).
 
 ## One-time / per-session
 ```bash
 supabase start          # boots Postgres(54322) + API(54321) + Storage
 supabase db reset       # applies supabase/migrations/* then supabase/seed.sql
+docker restart supabase_kong_design4public   # REQUIRED after every db reset:
+                        # reset restarts GoTrue but leaves Kong on the stale
+                        # upstream → 502 on all /auth/v1 until Kong is restarted.
 ```
 
 ## First live run
@@ -25,6 +31,9 @@ in order the first time (and any time the local stack is reset):
 ```bash
 supabase start
 supabase db reset
+docker restart supabase_kong_design4public   # REQUIRED after every db reset:
+                        # reset restarts GoTrue but leaves Kong on the stale
+                        # upstream → 502 on all /auth/v1 until Kong is restarted.
 npx playwright test --project=setup   # writes tests/e2e/.auth/master.json, manager.json
 ```
 

@@ -2,7 +2,7 @@
 // After the M8 RLS hardening, service-role is retained ONLY where the operation is
 // genuinely privileged and no RLS policy can (or should) cover it:
 //   - app/api/admin/upload/route.ts        — Storage upload (bypasses Storage RLS)
-//   - app/api/admin/auth/login|signup      — auth session + profile provisioning
+//   - app/api/admin/auth/signup            — auth session + profile provisioning
 //   - app/api/admin/managers/**            — cross-profile user mgmt + auth.admin.deleteUser
 //   - lib/search/indexer.ts                — reads search_source / writes search_index
 //                                            (both service_role-only grants)

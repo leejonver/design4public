@@ -45,6 +45,9 @@ jobs:
       - name: Apply migrations + seed
         run: supabase db reset
 
+      - name: Restart Kong (db reset leaves it pointed at the pre-reset auth container)
+        run: docker restart supabase_kong_design4public
+
       - name: Cache Playwright browsers
         uses: actions/cache@v4
         with:
