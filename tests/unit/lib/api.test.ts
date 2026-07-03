@@ -12,7 +12,7 @@ vi.mock('@/lib/supabase/public', () => ({
 }))
 
 import { supabase } from '@/lib/supabase/public'
-import { fetchProjectBySlug, fetchItemBySlug, fetchBrandBySlug } from '@/lib/api'
+import { fetchProjectBySlug, fetchItemBySlug, fetchBrandBySlug, fetchPhotoById } from '@/lib/api'
 
 type QBResult = { data: unknown; error: unknown }
 
@@ -61,9 +61,23 @@ function item(id: string) {
     nara_url: null,
     status: 'published',
     brand_id: null,
+    updated_at: null,
     brands: null,
     photo_items: [],
     item_categories: [],
+  }
+}
+
+function photo(id: string) {
+  return {
+    id,
+    image_url: `u-${id}`,
+    alt_text: null,
+    title: null,
+    description: null,
+    created_at: null,
+    updated_at: null,
+    project_photos: [],
   }
 }
 
@@ -198,5 +212,45 @@ describe('fetchBrandBySlug — related projects union (orchestrator extension)',
     const result = await fetchBrandBySlug('brand-1')
 
     expect(result?.projects.map((p) => p.id)).toEqual(['a', 'b', 'c'])
+  })
+})
+
+describe('fetchPhotoById', () => {
+  it('returns null when the photo has no published project link (item-gallery-only)', async () => {
+    fromMock.mockReturnValue(
+      makeQB({
+        data: {
+          ...photo('ph-1'),
+          project_photos: [{ order: 0, projects: { ...project('draft-1'), status: 'draft' } }],
+          tagged: [],
+        },
+        error: null,
+      })
+    )
+
+    const result = await fetchPhotoById('ph-1')
+
+    expect(result).toBeNull()
+  })
+
+  it('maps tagged photo_items to items, main-first then by order', async () => {
+    fromMock.mockReturnValue(
+      makeQB({
+        data: {
+          ...photo('ph-2'),
+          project_photos: [{ order: 0, projects: project('pub-1') }],
+          tagged: [
+            { is_main: false, order: 1, items: item('b') },
+            { is_main: true, order: 0, items: item('a') },
+          ],
+        },
+        error: null,
+      })
+    )
+
+    const result = await fetchPhotoById('ph-2')
+
+    expect(result?.projectSlug).toBe('p-pub-1')
+    expect(result?.items.map((i) => i.id)).toEqual(['a', 'b'])
   })
 })

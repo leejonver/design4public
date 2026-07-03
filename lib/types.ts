@@ -27,6 +27,7 @@ export type ProjectSummary = {
   coverImage: string | null;
   categories: string[];
   imageCount: number;
+  updatedAt: string;
 };
 
 export type BrandSummary = {
@@ -40,6 +41,7 @@ export type BrandSummary = {
   website: string | null;
   itemCount: number;
   projectCount: number;
+  updatedAt: string;
 };
 
 export type ItemSummary = {
@@ -53,6 +55,7 @@ export type ItemSummary = {
   brandNameEn: string | null;
   brandSlug: string | null;
   categories: string[];
+  updatedAt: string;
 };
 
 export type ProjectDetail = ProjectSummary & {
@@ -83,6 +86,7 @@ export type PhotoFeedItem = {
   projectCategories: string[];
   year: number | null;
   location: string | null;
+  updatedAt: string;
 };
 
 export type PhotoDetail = PhotoFeedItem & {
