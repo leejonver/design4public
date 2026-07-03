@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ id: 
   const params = await props.params;
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { data, error } = await supabase
       .from('brands')
       .select(BRAND_SELECT)
@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
   const params = await props.params;
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status } = body
 
@@ -111,7 +111,7 @@ export async function DELETE(_request: NextRequest, props: { params: Promise<{ i
   const params = await props.params;
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     // Capture the slug before deletion so we can purge the brand's detail page.
     const { data: existing } = await supabase
       .from('brands')

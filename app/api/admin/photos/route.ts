@@ -6,7 +6,7 @@ import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
     const unconnected = searchParams.get('unconnected') === 'true'

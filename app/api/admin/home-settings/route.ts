@@ -10,7 +10,7 @@ const ENTITY_TYPES: EntityType[] = ['project', 'item', 'photo', 'brand']
 export async function GET() {
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { data: settings } = await supabase
       .from('site_settings')
       .select('featured_project_id')
@@ -44,7 +44,7 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const featuredProjectId: string | null = body.featuredProjectId ?? null
     const featured: { entityType: string; entityId: string }[] = Array.isArray(body.featured)

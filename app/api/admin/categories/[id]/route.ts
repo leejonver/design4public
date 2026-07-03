@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ id: 
   const params = await props.params;
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { data, error } = await supabase
       .from('categories')
       .select('*')
@@ -39,7 +39,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ id: s
   const params = await props.params;
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { name, type } = body
 
@@ -97,7 +97,7 @@ export async function DELETE(_request: NextRequest, props: { params: Promise<{ i
   const params = await props.params;
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     // project_categories / item_categories links cascade on category delete (FK ON DELETE CASCADE).
     const { error } = await supabase.from('categories').delete().eq('id', params.id)
     if (error) throw error

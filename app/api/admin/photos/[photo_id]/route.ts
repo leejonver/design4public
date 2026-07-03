@@ -10,7 +10,7 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ phot
   const params = await props.params;
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { data, error } = await supabase
       .from('photos')
       .select(PHOTO_SELECT)
@@ -31,7 +31,7 @@ export async function PUT(request: NextRequest, props: { params: Promise<{ photo
   const params = await props.params;
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { imageUrl, altText, title, description, connectedItems, tags } = body
 
@@ -73,7 +73,7 @@ export async function DELETE(_request: NextRequest, props: { params: Promise<{ p
   const params = await props.params;
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     // photo_items / photo_tags / project_photos links cascade on photo delete (FK ON DELETE CASCADE).
     const { error } = await supabase.from('photos').delete().eq('id', params.photo_id)
     if (error) throw error

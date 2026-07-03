@@ -9,7 +9,7 @@ import { reindexEntity } from '@/lib/search/indexer'
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const search = searchParams.get('search')
@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status } = body
 

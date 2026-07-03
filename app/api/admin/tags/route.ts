@@ -7,7 +7,7 @@ import { revalidateEntity } from '@/lib/revalidation'
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
     const limit = parseInt(searchParams.get('limit') || '200')
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const body = await request.json()
     const { name } = body
 

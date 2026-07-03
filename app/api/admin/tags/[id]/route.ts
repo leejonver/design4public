@@ -8,7 +8,7 @@ export async function GET(_request: NextRequest, props: { params: Promise<{ id: 
   const params = await props.params;
   try {
     await requireUser()
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     const { data, error } = await supabase
       .from('tags')
       .select('*')
@@ -29,7 +29,7 @@ export async function DELETE(_request: NextRequest, props: { params: Promise<{ i
   const params = await props.params;
   try {
     await requireRole('content_manager')
-    const supabase = createServerSupabase()
+    const supabase = await createServerSupabase()
     // project_tags / item_tags / photo_tags links cascade on tag delete (FK ON DELETE CASCADE).
     const { error } = await supabase.from('tags').delete().eq('id', params.id)
     if (error) throw error
