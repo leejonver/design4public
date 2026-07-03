@@ -9,9 +9,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: true }, // search results pages are not indexable
 };
 
-export default async function SearchPage(props: { searchParams: Promise<{ q?: string }> }) {
-  const searchParams = await props.searchParams;
-  const q = (searchParams?.q ?? "").trim();
+export default async function SearchPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string }>;
+}) {
+  const { q: rawQ } = await searchParams;
+  const q = (rawQ ?? "").trim();
   const groups = q
     ? await hybridSearch(q)
     : { project: [], item: [], brand: [], photo: [] };
