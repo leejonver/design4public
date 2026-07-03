@@ -109,6 +109,7 @@ export default function PhotoUploader({ value, onChange, folder, max }: PhotoUpl
         accept="image/*"
         multiple
         className="hidden"
+        data-testid="photo-file-input"
         onChange={(e) => {
           if (e.target.files) handleFiles(e.target.files);
         }}
@@ -140,6 +141,7 @@ export default function PhotoUploader({ value, onChange, folder, max }: PhotoUpl
           {value.map((photo, index) => (
             <div
               key={photo.id}
+              data-testid="uploaded-photo"
               className="flex items-center gap-3 rounded-md border border-gray-200 p-2"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}

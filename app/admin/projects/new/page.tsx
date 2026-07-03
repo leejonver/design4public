@@ -316,7 +316,7 @@ export default function NewProjectPage() {
                   value={status}
                   onValueChange={(value) => setStatus(value as ProjectStatus)}
                 >
-                  <Select.Trigger className="w-full" />
+                  <Select.Trigger className="w-full" data-testid="status-trigger" />
                   <Select.Popup>
                     {STATUS_OPTIONS.map((option) => (
                       <Select.Item key={option.value} value={option.value}>
