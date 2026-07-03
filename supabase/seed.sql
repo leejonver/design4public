@@ -70,10 +70,15 @@ insert into public.project_items (project_id, item_id) values
   ('66666666-0000-0000-0000-000000000001', '44444444-0000-0000-0000-000000000001'),
   ('66666666-0000-0000-0000-000000000001', '44444444-0000-0000-0000-000000000002');
 
--- Photo ↔ item links (item galleries) -----------------------------------
+-- Photo ↔ item links -----------------------------------------------------
+--  * rows 1-2: item-gallery usage (photo not in any project_photos)
+--  * row 3: DERIVED model — a project photo (pangyo library main photo, id …004,
+--    in project_photos for project …002 which has NO direct project_items) tagged
+--    with the aeron item. Exercises the direct∪derived union on both detail pages.
 insert into public.photo_items (photo_id, item_id, is_main, "order") values
   ('55555555-0000-0000-0000-000000000003', '44444444-0000-0000-0000-000000000001', true, 0),
-  ('55555555-0000-0000-0000-000000000006', '44444444-0000-0000-0000-000000000002', true, 0);
+  ('55555555-0000-0000-0000-000000000006', '44444444-0000-0000-0000-000000000002', true, 0),
+  ('55555555-0000-0000-0000-000000000004', '44444444-0000-0000-0000-000000000001', false, 1);
 
 -- Home curation + featured project --------------------------------------
 insert into public.home_featured (entity_type, entity_id, "order") values
