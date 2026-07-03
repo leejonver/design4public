@@ -50,4 +50,12 @@ test.describe('통합 검색', () => {
     const json = await res.json()
     expect(json.groups).toEqual({ project: [], item: [], brand: [], photo: [] })
   })
+
+  test('AI 캡션으로 사진이 검색된다 (가죽 소파)', async ({ page }) => {
+    // '가죽 소파' appears ONLY in photo …001's ai_caption (not its title/alt/project),
+    // so a hit proves the caption flows into search_source → search_index → hybrid_search.
+    await page.goto('/search?q=가죽 소파')
+    await expect(page.getByRole('heading', { level: 2, name: /포토/ })).toBeVisible()
+    await expect(page.getByRole('link', { name: /강남 오피스 회의실/ })).toBeVisible()
+  })
 })

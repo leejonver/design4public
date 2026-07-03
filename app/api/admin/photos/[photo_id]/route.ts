@@ -4,7 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
 import { syncPhotoItems, syncFreeTags } from '@/lib/image-sync'
 import { revalidateEntity } from '@/lib/revalidation'
-import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
+import { deleteFromIndex, captionAndReindexPhoto } from '@/lib/search/indexer'
 import type { TablesUpdate } from '@/lib/database.types'
 
 export async function GET(_request: NextRequest, { params }: { params: Promise<{ photo_id: string }> }) {
@@ -56,7 +56,8 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       .single()
 
     revalidateEntity('photo')
-    await reindexEntity('photo', photo_id)
+    // Regenerate the caption when the image changed; otherwise fill only if missing.
+    await captionAndReindexPhoto(photo_id, { regenerate: imageUrl !== undefined })
 
     return NextResponse.json({
       success: true,
