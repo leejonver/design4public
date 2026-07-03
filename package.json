@@ -11,7 +11,8 @@
     "test": "vitest",
     "test:e2e": "playwright test",
     "gen:types": "supabase gen types typescript --local > lib/database.types.ts",
-    "backfill:search": "node scripts/backfill-search.mjs"
+    "backfill:search": "node scripts/backfill-search.mjs",
+    "backfill:captions": "node scripts/backfill-captions.mjs"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.0.4",
