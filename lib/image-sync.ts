@@ -10,10 +10,11 @@ export interface ImageInput {
   alt?: string | null
   title?: string | null
   isMain?: boolean
+  itemIds?: string[]
 }
 
 /** Accepts uploaded image descriptors (or bare URL strings) or existing photo ids. */
-export type PhotoRef = string | ImageInput | { photoId: string; isMain?: boolean }
+export type PhotoRef = string | ImageInput | { photoId: string; isMain?: boolean; itemIds?: string[] }
 
 /** Find-or-create a photo by URL; updates title/alt when provided (so per-photo titles persist). */
 async function ensurePhotoId(
@@ -47,18 +48,19 @@ async function ensurePhotoId(
 
 async function resolvePhotoIds(
   refs: PhotoRef[],
-): Promise<{ photoId: string; isMain: boolean }[]> {
-  const out: { photoId: string; isMain: boolean }[] = []
+): Promise<{ photoId: string; isMain: boolean; itemIds?: string[] }[]> {
+  const out: { photoId: string; isMain: boolean; itemIds?: string[] }[] = []
   for (let i = 0; i < refs.length; i += 1) {
     const ref = refs[i]
     if (typeof ref === 'string') {
       out.push({ photoId: await ensurePhotoId(ref), isMain: i === 0 })
     } else if ('photoId' in ref) {
-      out.push({ photoId: ref.photoId, isMain: ref.isMain ?? i === 0 })
+      out.push({ photoId: ref.photoId, isMain: ref.isMain ?? i === 0, itemIds: ref.itemIds })
     } else {
       out.push({
         photoId: await ensurePhotoId(ref.url, ref.alt, ref.title),
         isMain: ref.isMain ?? i === 0,
+        itemIds: ref.itemIds,
       })
     }
   }
@@ -87,6 +89,13 @@ export async function syncProjectPhotos(projectId: string, refs: PhotoRef[]): Pr
     .from('project_photos')
     .upsert(rows, { onConflict: 'project_id,photo_id' })
   if (error) throw error
+
+  // Derived project↔item model (spec §7-1): persist per-photo item tags.
+  // Only photos whose ref carried an explicit itemIds array are (re)synced —
+  // legacy callers omit the field, leaving existing photo_items untouched.
+  for (const r of resolved) {
+    if (r.itemIds !== undefined) await syncPhotoItems(r.photoId, r.itemIds)
+  }
 }
 
 /** Replaces an item's photo links with `refs` (order = array index). */
