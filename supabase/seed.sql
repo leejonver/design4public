@@ -24,8 +24,8 @@ insert into public.categories (id, name, type) values
 
 -- Free tags --------------------------------------------------------------
 insert into public.tags (id, name) values
-  ('t3333333-0000-0000-0000-000000000001', '모던'),
-  ('t3333333-0000-0000-0000-000000000002', '친환경');
+  ('a3333333-0000-0000-0000-000000000001', '모던'),
+  ('a3333333-0000-0000-0000-000000000002', '친환경');
 
 -- Items ------------------------------------------------------------------
 insert into public.items (id, name, slug, brand_id, status, description, nara_url) values
