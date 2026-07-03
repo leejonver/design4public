@@ -23,6 +23,7 @@ function CardFrame({
       style={{ aspectRatio: ratio, ...(background ? { background } : {}) }}
     >
       {src ? (
+        /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
         <img src={src} alt={alt} loading="lazy" />
       ) : (
         <div

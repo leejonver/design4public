@@ -118,6 +118,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
           {imgs.map((src, idx) => (
             <div key={idx} className="d4p-pmast-slide">
               {src ? (
+                /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
                 <img src={src} alt="" />
               ) : (
                 <div

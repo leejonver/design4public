@@ -52,6 +52,7 @@ export function PhotosView({
               style={{ aspectRatio: idx % 7 === 6 ? "4 / 5" : "4 / 3" }}
             >
               {ph.url ? (
+                /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
                 <img src={ph.url} alt={ph.alt ?? ""} loading="lazy" />
               ) : (
                 <div
@@ -126,6 +127,7 @@ function PhotoModal({
       <div className="d4p-photo-modal" onClick={(e) => e.stopPropagation()}>
         <div className="d4p-photo-stage">
           {ph.url ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
             <img src={ph.url} alt={ph.alt ?? ""} />
           ) : (
             <div

@@ -97,6 +97,7 @@ export default async function BrandDetailPage({ params }: Props) {
           }}
         >
           {brand.cover ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
             <img
               src={brand.cover}
               alt={brand.nameKo}

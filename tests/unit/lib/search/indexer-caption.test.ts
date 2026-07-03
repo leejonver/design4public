@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 // Declared via vi.hoisted() because vi.mock factories below are hoisted above
 // regular top-level statements and would otherwise close over these before
 // the `const` declarations run.
-const { photoRow, maybeSingle, update, upsert, from, describePhoto } = vi.hoisted(() => {
+const { photoRow, update, upsert, from, describePhoto } = vi.hoisted(() => {
   const photoRow = { image_url: 'https://img/1.jpg', ai_caption: null as string | null }
   const maybeSingle = vi.fn(async () => ({ data: photoRow, error: null }))
   const updateEq = vi.fn(async () => ({ error: null }))

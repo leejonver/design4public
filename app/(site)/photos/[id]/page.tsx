@@ -85,6 +85,7 @@ export default async function PhotoDetailPage({ params }: Props) {
 
       <div className="d4p-detail-split" style={{ alignItems: "start", gap: "var(--sp-8)" }}>
         <div className="d4p-photo-tile" style={{ aspectRatio: "4 / 3" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */}
           {photo.url && <img src={photo.url} alt={photo.alt ?? title} />}
         </div>
 

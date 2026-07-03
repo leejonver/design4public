@@ -40,6 +40,7 @@ function Thumb({ img, title, square }: { img: string | null; title: string; squa
   return (
     <span className="d4p-srch-thumb" style={{ borderRadius: square ? "var(--radius-pill)" : "var(--radius-sm)" }}>
       {img ? (
+        /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
         <img src={img} alt="" loading="lazy" />
       ) : (
         <span

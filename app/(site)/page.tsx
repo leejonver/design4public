@@ -80,6 +80,7 @@ export default async function HomePage() {
               className="d4p-photo-tile"
               style={{ aspectRatio: "1 / 1" }}
             >
+              {/* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */}
               <img src={ph.url} alt={ph.alt ?? ph.title ?? ""} loading="lazy" />
             </Link>
           ))}
