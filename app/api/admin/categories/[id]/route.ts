@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapCategory } from '@/lib/dto'
 import type { CategoryType } from '@/lib/database.types'
@@ -14,7 +14,8 @@ function isCategoryType(type: string | null | undefined): type is CategoryType {
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireUser()
-    const { data, error } = await supabaseAdmin
+    const supabase = createServerSupabase()
+    const { data, error } = await supabase
       .from('categories')
       .select('*')
       .eq('id', params.id)
@@ -36,6 +37,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     const body = await request.json()
     const { name, type } = body
 
@@ -59,7 +61,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       update.type = type
     }
 
-    const { data: category, error } = await supabaseAdmin
+    const { data: category, error } = await supabase
       .from('categories')
       .update(update)
       .eq('id', params.id)
@@ -92,8 +94,9 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     // project_categories / item_categories links cascade on category delete (FK ON DELETE CASCADE).
-    const { error } = await supabaseAdmin.from('categories').delete().eq('id', params.id)
+    const { error } = await supabase.from('categories').delete().eq('id', params.id)
     if (error) throw error
     revalidateEntity('category')
     return NextResponse.json({ success: true, message: '카테고리가 삭제되었습니다.' })

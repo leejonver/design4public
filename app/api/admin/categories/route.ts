@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapCategory } from '@/lib/dto'
 import type { CategoryType } from '@/lib/database.types'
@@ -14,6 +14,7 @@ function isCategoryType(type: string | null | undefined): type is CategoryType {
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
+    const supabase = createServerSupabase()
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const search = searchParams.get('search')
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
     // categories default to name asc; honor explicit dir, otherwise asc
     const ascending = dir ? dir === 'asc' : true
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('categories')
       .select('*', { count: 'exact' })
       .order(sortCol, { ascending })
@@ -67,6 +68,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     const body = await request.json()
     const { name, type } = body
 
@@ -83,7 +85,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: category, error } = await supabaseAdmin
+    const { data: category, error } = await supabase
       .from('categories')
       .insert({ name: name.trim(), type })
       .select('*')
