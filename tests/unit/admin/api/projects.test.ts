@@ -11,7 +11,7 @@ import type { NextRequest } from 'next/server'
 import type { SessionUser } from '@/lib/auth'
 import { GET, POST } from '@/app/api/admin/projects/route'
 import { requireUser, requireRole, AuthError } from '@/lib/auth'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 
 // auth: requireUser/requireRole 는 vi.fn, AuthError/authErrorResponse 는 실제 동작 유지.
 vi.mock('@/lib/auth', () => {
@@ -42,10 +42,11 @@ vi.mock('@/lib/auth', () => {
   }
 })
 
-// 서비스 롤 클라이언트: 체이너블 쿼리 빌더로 모킹.
-vi.mock('@/lib/supabase/admin', () => ({
-  supabaseAdmin: { from: vi.fn() },
-}))
+// RLS 쿠키 클라이언트: 체이너블 쿼리 빌더로 모킹 (M8: 라우트는 createServerSupabase 사용).
+vi.mock('@/lib/supabase/server', () => {
+  const from = vi.fn()
+  return { createServerSupabase: () => ({ from }) }
+})
 
 vi.mock('@/lib/search/indexer', () => ({
   reindexEntity: vi.fn().mockResolvedValue(undefined),
@@ -85,7 +86,7 @@ function makeQB(result: QBResult): Record<string, unknown> {
   return qb
 }
 
-const fromMock = supabaseAdmin.from as unknown as Mock
+const fromMock = (createServerSupabase() as unknown as { from: Mock }).from
 
 const fakeUser: SessionUser = {
   id: 'u1',
