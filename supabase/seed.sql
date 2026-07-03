@@ -40,13 +40,13 @@ insert into public.item_categories (item_id, category_id) values
   ('44444444-0000-0000-0000-000000000003', 'c2222222-0000-0000-0000-000000000004');
 
 -- Photos (image_url need not resolve; the site renders plain <img>, no next/image) --
-insert into public.photos (id, image_url, title, alt_text) values
-  ('55555555-0000-0000-0000-000000000001', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/office-1.jpg', '강남 오피스 회의실', '회의실 전경'),
-  ('55555555-0000-0000-0000-000000000002', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/office-2.jpg', '강남 오피스 라운지', '라운지'),
-  ('55555555-0000-0000-0000-000000000003', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/aeron.jpg', '아에론 체어 클로즈업', '아에론'),
-  ('55555555-0000-0000-0000-000000000004', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/library-1.jpg', '판교 도서관 열람실', '열람실'),
-  ('55555555-0000-0000-0000-000000000005', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/library-2.jpg', '판교 도서관 외관', '외관'),
-  ('55555555-0000-0000-0000-000000000006', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/eames.jpg', '이임스 라운지', '이임스');
+insert into public.photos (id, image_url, title, alt_text, ai_caption) values
+  ('55555555-0000-0000-0000-000000000001', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/office-1.jpg', '강남 오피스 회의실', '회의실 전경', '가죽 소파와 우드 마감이 어우러진 모던 라운지, 따뜻한 색감.'),
+  ('55555555-0000-0000-0000-000000000002', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/office-2.jpg', '강남 오피스 라운지', '라운지', null),
+  ('55555555-0000-0000-0000-000000000003', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/aeron.jpg', '아에론 체어 클로즈업', '아에론', null),
+  ('55555555-0000-0000-0000-000000000004', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/library-1.jpg', '판교 도서관 열람실', '열람실', null),
+  ('55555555-0000-0000-0000-000000000005', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/library-2.jpg', '판교 도서관 외관', '외관', null),
+  ('55555555-0000-0000-0000-000000000006', 'http://127.0.0.1:54321/storage/v1/object/public/images/seed/eames.jpg', '이임스 라운지', '이임스', null);
 
 -- Projects (published + draft mix) ---------------------------------------
 insert into public.projects (id, title, slug, status, year, area, location, client, description) values
