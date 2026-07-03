@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { ITEM_SELECT, mapItem } from '@/lib/dto'
 import { syncItemPhotos, syncCategories, syncFreeTags } from '@/lib/image-sync'
@@ -9,7 +9,8 @@ import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireUser()
-    const { data, error } = await supabaseAdmin
+    const supabase = createServerSupabase()
+    const { data, error } = await supabase
       .from('items')
       .select(ITEM_SELECT)
       .eq('id', params.id)
@@ -28,6 +29,7 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     const body = await request.json()
     const { name, description, mallUrl, brandId, images, categories, tags, status } = body
 
@@ -39,14 +41,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     if (status !== undefined) update.status = status
 
     if (Object.keys(update).length > 0) {
-      const { error } = await supabaseAdmin.from('items').update(update).eq('id', params.id)
+      const { error } = await supabase.from('items').update(update).eq('id', params.id)
       if (error) throw error
     }
-    if (images !== undefined) await syncItemPhotos(params.id, images)
-    if (categories !== undefined) await syncCategories('item_categories', 'item_id', params.id, categories ?? [])
-    if (tags !== undefined) await syncFreeTags('item_tags', 'item_id', params.id, tags ?? [])
+    if (images !== undefined) await syncItemPhotos(supabase, params.id, images)
+    if (categories !== undefined) await syncCategories(supabase, 'item_categories', 'item_id', params.id, categories ?? [])
+    if (tags !== undefined) await syncFreeTags(supabase, 'item_tags', 'item_id', params.id, tags ?? [])
 
-    const { data: full } = await supabaseAdmin
+    const { data: full } = await supabase
       .from('items')
       .select(ITEM_SELECT)
       .eq('id', params.id)
@@ -73,14 +75,15 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     // Capture the slug before deletion so we can purge the item's detail page.
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from('items')
       .select('slug')
       .eq('id', params.id)
       .maybeSingle()
     // photo_items / item_tags / project_items links cascade on item delete (FK ON DELETE CASCADE).
-    const { error } = await supabaseAdmin.from('items').delete().eq('id', params.id)
+    const { error } = await supabase.from('items').delete().eq('id', params.id)
     if (error) throw error
     revalidateEntity('item', existing?.slug)
     await deleteFromIndex('item', params.id)
