@@ -14,13 +14,21 @@ const E2E_ENV = {
 }
 
 const MASTER_STATE = path.resolve(__dirname, 'tests/e2e/.auth/master.json')
-const MANAGER_STATE = path.resolve(__dirname, 'tests/e2e/.auth/manager.json')
 
 export default defineConfig({
   testDir: './tests/e2e',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
+  // Against `next dev`, many workers hitting cold (not-yet-compiled) routes at
+  // once make the compiler queue requests until they time out — the residual
+  // flake source once auth/session issues are fixed. Cap concurrency so
+  // first-hit compiles stay fast; the suite still runs comfortably under 2min.
+  workers: 2,
   reporter: 'html',
+  // The suite runs against `next dev`, which compiles each route on its first
+  // hit. Give web-first assertions (e.g. toHaveURL after a nav click) headroom
+  // for that cold compile so the gate doesn't flake on the default 5s.
+  expect: { timeout: 10000 },
   use: {
     baseURL: 'http://127.0.0.1:3000',
     trace: 'on-first-retry',

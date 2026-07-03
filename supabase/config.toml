@@ -163,7 +163,12 @@ jwt_expiry = 3600
 # Path to JWT signing key. DO NOT commit your signing keys file to git.
 # signing_keys_path = "./signing_keys.json"
 # If disabled, the refresh token will never expire.
-enable_refresh_token_rotation = true
+# E2E: the harness reuses one stored session (master.json) across many parallel
+# and sequential test contexts. With rotation on, a stale refresh token from the
+# unchanging storageState file trips reuse-detection and revokes the whole
+# session family mid-run, surfacing as intermittent redirects to /admin/login.
+# Disabling rotation on the local test stack keeps the shared session stable.
+enable_refresh_token_rotation = false
 # Allows refresh tokens to be reused after expiry, up to the specified interval in seconds.
 # Requires enable_refresh_token_rotation = true.
 refresh_token_reuse_interval = 10

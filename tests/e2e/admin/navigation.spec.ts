@@ -4,6 +4,7 @@
  */
 
 import { test, expect } from '@playwright/test'
+import path from 'node:path'
 
 test.describe('사이드바 네비게이션', () => {
   test.beforeEach(async ({ page }) => {
@@ -45,8 +46,17 @@ test.describe('사이드바 네비게이션', () => {
     await expect(page).toHaveURL(/\/admin\/managers$/)
   })
 
-  test('로그아웃 버튼 클릭 시 로그인 페이지로 이동해야 합니다', async ({ page }) => {
+  test('로그아웃 버튼 클릭 시 로그인 페이지로 이동해야 합니다', async ({ browser }) => {
+    // The app's signOut is global scope, so run this in a dedicated session —
+    // logging out the shared master user would redirect the rest of the
+    // admin/integration suites to /admin/login.
+    const context = await browser.newContext({
+      storageState: path.resolve(__dirname, '../.auth/logout.json'),
+    })
+    const page = await context.newPage()
+    await page.goto('/admin/projects')
     await page.getByRole('button', { name: /로그아웃/ }).click()
     await expect(page).toHaveURL(/\/admin\/login$/, { timeout: 8000 })
+    await context.close()
   })
 })

@@ -43,12 +43,15 @@ async function provision(email: string, password: string, role: 'master' | 'cont
 setup('provision users and save auth state', async ({ browser }) => {
   await provision(process.env.E2E_MASTER_EMAIL!, process.env.E2E_MASTER_PASSWORD!, 'master')
   await provision(process.env.E2E_CM_EMAIL!, process.env.E2E_CM_PASSWORD!, 'content_manager')
+  // Dedicated session for the logout test only (see .env.test note).
+  await provision(process.env.E2E_LOGOUT_EMAIL!, process.env.E2E_LOGOUT_PASSWORD!, 'content_manager')
 
   // Log in through the real UI (client-side @supabase/ssr sets the session
   // cookies) and persist storageState for each role.
   for (const [email, password, file] of [
     [process.env.E2E_MASTER_EMAIL!, process.env.E2E_MASTER_PASSWORD!, 'tests/e2e/.auth/master.json'],
     [process.env.E2E_CM_EMAIL!, process.env.E2E_CM_PASSWORD!, 'tests/e2e/.auth/manager.json'],
+    [process.env.E2E_LOGOUT_EMAIL!, process.env.E2E_LOGOUT_PASSWORD!, 'tests/e2e/.auth/logout.json'],
   ] as const) {
     const context = await browser.newContext()
     const page = await context.newPage()
@@ -56,7 +59,9 @@ setup('provision users and save auth state', async ({ browser }) => {
     await page.getByPlaceholder('이메일 주소').fill(email)
     await page.getByPlaceholder('비밀번호').fill(password)
     await page.getByRole('button', { name: /로그인/ }).click()
-    await page.waitForURL(/\/admin\/projects/, { timeout: 15000 })
+    // Generous timeout: this is the first hit to the admin routes, so the Next
+    // dev server compiles /admin/login + /admin/projects on demand here.
+    await page.waitForURL(/\/admin\/projects/, { timeout: 30000 })
     await context.storageState({ path: path.resolve(__dirname, '..', '..', file) })
     await context.close()
   }

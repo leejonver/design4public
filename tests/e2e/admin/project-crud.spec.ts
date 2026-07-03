@@ -16,7 +16,7 @@ test.describe('프로젝트 CRUD', () => {
   test('사진 첨부와 함께 프로젝트를 생성한다', async ({ page }) => {
     await page.goto('/admin/projects/new')
     await page.getByPlaceholder('프로젝트명을 입력하세요').fill(title)
-    await page.getByPlaceholder('프로젝트에 대한 자세한 설명을 입력하세요').fill('E2E 설명')
+    await page.getByPlaceholder('프로젝트에 대한 자세한 설명을 입력하세요').fill('E2E 프로젝트 상세 설명입니다')
     await page.getByPlaceholder('서울시 강남구').fill('서울시 종로구')
     await page.getByPlaceholder('2024').fill('2025')
     await selectStatus(page, '게시')
@@ -39,9 +39,15 @@ test.describe('프로젝트 CRUD', () => {
     expect(proj, 'created project present').toBeTruthy()
 
     await page.goto(`/admin/projects/${proj.id}/edit`)
-    await page.getByPlaceholder('프로젝트에 대한 자세한 설명을 입력하세요').fill('수정된 설명')
+    // Wait for the form to hydrate before editing, so the async project load
+    // doesn't overwrite the typed value after fill().
+    await expect(page.getByPlaceholder('프로젝트명을 입력하세요')).toHaveValue(title)
+    await page.getByPlaceholder('프로젝트에 대한 자세한 설명을 입력하세요').fill('수정된 프로젝트 설명입니다')
     await page.getByRole('button', { name: '변경사항 저장' }).click()
-    await page.waitForURL(new RegExp(`/admin/projects/${proj.id}`))
+    // Anchor `$` so the wait resolves on the post-save redirect (view page),
+    // not the current /edit URL — otherwise the PUT can be aborted by an early
+    // navigation.
+    await page.waitForURL(new RegExp(`/admin/projects/${proj.id}$`))
   })
 
   test('프로젝트를 삭제한다', async ({ page }) => {

@@ -20,7 +20,9 @@ test.describe('홈', () => {
 
   test('홈 프로젝트 카드가 게시 프로젝트로 연결된다', async ({ page }) => {
     await page.goto('/')
-    await expect(page.locator('a.d4p-card[href="/projects/gangnam-office"]').first()).toBeVisible()
+    // The hero project (gangnam-office) is intentionally excluded from the card
+    // grid by fetchHomeData; pangyo-library is the published curation card.
+    await expect(page.locator('a.d4p-card[href="/projects/pangyo-library"]').first()).toBeVisible()
     // draft project must never surface publicly
     await expect(page.locator('a.d4p-card[href="/projects/draft-project"]')).toHaveCount(0)
   })

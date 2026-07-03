@@ -13,7 +13,7 @@ test('사진 업로드가 local storage와 photos 테이블에 반영된다', as
   const title = `E2E Upload ${Date.now()}`
   await page.goto('/admin/projects/new')
   await page.getByPlaceholder('프로젝트명을 입력하세요').fill(title)
-  await page.getByPlaceholder('프로젝트에 대한 자세한 설명을 입력하세요').fill('업로드 검증')
+  await page.getByPlaceholder('프로젝트에 대한 자세한 설명을 입력하세요').fill('사진 업로드 검증용 설명')
   await page.getByPlaceholder('서울시 강남구').fill('서울시 종로구')
   await page.getByTestId('photo-file-input').setInputFiles(path.resolve(__dirname, '../fixtures/sample.png'))
   await expect(page.getByTestId('uploaded-photo').first()).toBeVisible({ timeout: 15000 })
