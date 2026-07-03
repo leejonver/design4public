@@ -6,7 +6,7 @@ import { PUT } from '@/app/api/admin/brands/[id]/route'
 import { requireUser, requireRole } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 
 vi.mock('@/lib/auth', () => {
   class AuthError extends Error {

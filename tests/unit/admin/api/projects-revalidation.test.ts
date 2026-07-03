@@ -1,12 +1,12 @@
 import { vi, describe, it, expect, beforeEach, afterEach, type Mock } from 'vitest'
 import { NextResponse, type NextRequest } from 'next/server'
-import { revalidatePath } from 'next/cache'
+import { revalidatePath, revalidateTag } from 'next/cache'
 import type { SessionUser } from '@/lib/auth'
 import { POST } from '@/app/api/admin/projects/route'
 import { requireUser, requireRole } from '@/lib/auth'
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
-vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
+vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 
 vi.mock('@/lib/auth', () => {
   class AuthError extends Error {
@@ -57,6 +57,7 @@ function makeQB(result: QBResult): Record<string, unknown> {
 
 const fromMock = supabaseAdmin.from as unknown as Mock
 const revalidateMock = vi.mocked(revalidatePath)
+const revalidateTagMock = vi.mocked(revalidateTag)
 const fakeUser: SessionUser = { id: 'u1', email: 'a@b.c', name: 'admin', role: 'master', status: 'approved' }
 
 const projectRow = { id: 'p1', title: 'T', description: '', slug: 'test-project', status: 'published', project_tags: [], project_items: [], project_photos: [], created_at: '2024-01-01T00:00:00Z', updated_at: '2024-01-01T00:00:00Z' }
@@ -88,6 +89,7 @@ describe('projects POST revalidation wiring', () => {
     vi.restoreAllMocks()
     fromMock.mockReset()
     revalidateMock.mockReset()
+    revalidateTagMock.mockReset()
   })
 
   it('revalidates the project routes on a successful create', async () => {
@@ -100,8 +102,10 @@ describe('projects POST revalidation wiring', () => {
     expect(paths).toContain('/projects')
     expect(paths).toContain('/sitemap.xml')
     expect(paths.some((p) => p.startsWith('/projects/'))).toBe(true)
-    expect(revalidateMock).toHaveBeenCalledWith('/items/[slug]', 'page')
-    expect(revalidateMock).toHaveBeenCalledWith('/brands/[slug]', 'page')
+    // Cross-entity detail pages are purged by per-table tag (a dynamic-pattern
+    // revalidatePath does not invalidate already-cached concrete pages).
+    expect(revalidateTagMock).toHaveBeenCalledWith('sb:items')
+    expect(revalidateTagMock).toHaveBeenCalledWith('sb:brands')
   })
 
   it('still returns 201 when revalidatePath throws (mutation is primary)', async () => {

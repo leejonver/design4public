@@ -25,11 +25,30 @@ test('사진에 아이템 태깅 → 아이템 상세의 도입 프로젝트에 
   await page.getByRole('button', { name: EAMES_NAME }).click()
   await page.getByRole('button', { name: '확인' }).click()
   await page.getByRole('button', { name: '변경사항 저장' }).click()
-  await page.waitForURL(new RegExp(`/admin/projects/${PANGYO_ID}`))
+  // Anchor to the post-save redirect target (the view page). Without `$` the
+  // regex also matches the current /edit URL, so the wait would resolve before
+  // the PUT completes and the goto below would abort it (see revalidation.spec.ts).
+  await page.waitForURL(new RegExp(`/admin/projects/${PANGYO_ID}$`))
 
   // No manual revalidate/wait: the project PUT called revalidateEntity('project'),
   // which purges the /items/[slug] pattern. pangyo now shows on eames' detail.
   await page.goto(`/items/${EAMES_SLUG}`)
   await expect(page.getByRole('heading', { level: 2, name: '도입 프로젝트' })).toBeVisible()
   await expect(page.locator('a.d4p-card[href="/projects/pangyo-library"]')).toBeVisible()
+
+  // Restore the seed state so a rerun without db reset starts clean (the "before"
+  // assertion above requires eames to have no pangyo relation). Remove only the
+  // eames chip from the photo — its seeded aeron tag, which item-detail.spec relies
+  // on, must stay. The anchored wait guarantees the untag PUT lands before teardown.
+  await page.goto(`/admin/projects/${PANGYO_ID}/edit`)
+  await page
+    .getByTestId('uploaded-photo')
+    .first()
+    .getByTestId('photo-item-tagging')
+    .getByText(EAMES_NAME, { exact: true })
+    .locator('..')
+    .getByRole('button', { name: '선택 제거' })
+    .click()
+  await page.getByRole('button', { name: '변경사항 저장' }).click()
+  await page.waitForURL(new RegExp(`/admin/projects/${PANGYO_ID}$`))
 })

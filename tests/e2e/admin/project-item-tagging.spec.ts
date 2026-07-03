@@ -19,12 +19,28 @@ test.describe('프로젝트 사진 아이템 태깅', () => {
     await page.getByRole('button', { name: '확인' }).click()
 
     await page.getByRole('button', { name: '변경사항 저장' }).click()
-    await page.waitForURL(new RegExp(`/admin/projects/${GANGNAM_ID}`))
+    // Anchor to the post-save redirect target (the view page). Without `$` the
+    // regex also matches the current /edit URL, so the wait would resolve before
+    // the PUT completes and the API read below would race it (see revalidation.spec.ts).
+    await page.waitForURL(new RegExp(`/admin/projects/${GANGNAM_ID}$`))
 
     // Verify via the admin API that a project photo now carries the eames item tag.
     const res = await page.request.get(`/api/admin/projects/${GANGNAM_ID}`)
     const { data } = await res.json()
     const taggedItemIds = (data.images ?? []).flatMap((img: { itemIds?: string[] }) => img.itemIds ?? [])
     expect(taggedItemIds).toContain('44444444-0000-0000-0000-000000000002')
+
+    // Restore the seed state so a rerun without db reset starts clean: the item
+    // picker toggles, so re-tagging eames on a second run would instead remove
+    // it. Untag the photo and save (the anchored wait guarantees the PUT lands).
+    await page.goto(`/admin/projects/${GANGNAM_ID}/edit`)
+    await page
+      .getByTestId('uploaded-photo')
+      .nth(1)
+      .getByTestId('photo-item-tagging')
+      .getByRole('button', { name: '선택 제거' })
+      .click()
+    await page.getByRole('button', { name: '변경사항 저장' }).click()
+    await page.waitForURL(new RegExp(`/admin/projects/${GANGNAM_ID}$`))
   })
 })
