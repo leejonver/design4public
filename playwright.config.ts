@@ -5,7 +5,7 @@ import path from 'node:path'
 // Load the local-stack env BEFORE building config so webServer.env can forward
 // it to `next dev`. Shell/process env wins over Next's .env.local, so this
 // keeps the E2E server on the local Supabase regardless of a stray .env.local.
-loadEnv({ path: path.resolve(__dirname, '.env.test') })
+loadEnv({ path: path.resolve(__dirname, '.env.test'), quiet: true })
 
 const E2E_ENV = {
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL!,

@@ -56,24 +56,34 @@ function isPubliclyFetchable(url) {
 // the row stays NULL and is retried on the next run (resumable).
 async function describe(imageUrl, apiKey) {
   for (let attempt = 0; attempt < 4; attempt += 1) {
-    const res = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: PROMPT },
-              { type: 'image_url', image_url: { url: imageUrl, detail: 'low' } },
-            ],
-          },
-        ],
-        max_tokens: 300,
-        temperature: 0.2,
-      }),
-    })
+    let res
+    try {
+      res = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: MODEL,
+          messages: [
+            {
+              role: 'user',
+              content: [
+                { type: 'text', text: PROMPT },
+                { type: 'image_url', image_url: { url: imageUrl, detail: 'low' } },
+              ],
+            },
+          ],
+          max_tokens: 300,
+          temperature: 0.2,
+        }),
+      })
+    } catch (err) {
+      // Network blip (DNS/reset/timeout) — back off and retry the same photo
+      // instead of aborting the batch (row stays NULL, resumable next run).
+      const wait = 1000 * 2 ** attempt
+      console.warn(`[captions] fetch failed (${err.code ?? err.name}) — backoff ${wait}ms`)
+      await sleep(wait)
+      continue
+    }
     if (res.ok) {
       const json = await res.json()
       const text = json.choices?.[0]?.message?.content

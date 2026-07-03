@@ -26,17 +26,38 @@ function fromEnvFile(key) {
   }
 }
 
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
+
 async function embedBatch(texts, apiKey) {
   if (!apiKey) return texts.map(() => null)
   const input = texts.map((t) => (t ?? '').replace(/\s+/g, ' ').trim() || ' ')
-  const res = await fetch('https://api.openai.com/v1/embeddings', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-    body: JSON.stringify({ model: MODEL, input }),
-  })
-  if (!res.ok) throw new Error(`OpenAI ${res.status}: ${await res.text()}`)
-  const json = await res.json()
-  return texts.map((_, i) => json.data[i]?.embedding ?? null)
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    let res
+    try {
+      res = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: MODEL, input }),
+      })
+    } catch (err) {
+      const wait = 1000 * 2 ** attempt
+      console.warn(`[search] embed fetch failed (${err.code ?? err.name}) — backoff ${wait}ms`)
+      await sleep(wait)
+      continue
+    }
+    if (res.ok) {
+      const json = await res.json()
+      return texts.map((_, i) => json.data[i]?.embedding ?? null)
+    }
+    if (res.status === 429 || res.status >= 500) {
+      const wait = 1000 * 2 ** attempt
+      console.warn(`[search] ${res.status} — backoff ${wait}ms`)
+      await sleep(wait)
+      continue
+    }
+    throw new Error(`OpenAI ${res.status}: ${await res.text().catch(() => '')}`)
+  }
+  throw new Error('[search] embed failed after retries')
 }
 
 async function main() {
