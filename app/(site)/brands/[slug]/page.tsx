@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchBrandBySlug } from "@/lib/api";
 import type { BrandDetail } from "@/lib/types";
-import { createPageMetadata } from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import { createPageMetadata, brandSchema, breadcrumbSchema, jsonLdGraph } from "@/lib/seo";
 import { Container, Overline } from "@/components/site/primitives";
 import { Breadcrumb } from "@/components/site/page-chrome";
 import { StickyTitle } from "@/components/site/sticky-title";
@@ -40,6 +41,22 @@ export default async function BrandDetailPage({ params }: Props) {
   const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
   if (!brand) notFound();
 
+  const jsonLd = jsonLdGraph([
+    brandSchema({
+      name: brand.nameKo,
+      nameEn: brand.nameEn,
+      description: brand.description,
+      logo: brand.logo,
+      website: brand.website,
+      path: `/brands/${brand.slug}`,
+    }),
+    breadcrumbSchema([
+      { name: "홈", path: "/" },
+      { name: "브랜드", path: "/brands" },
+      { name: brand.nameKo, path: `/brands/${brand.slug}` },
+    ]),
+  ]);
+
   const stats: [number, string][] = [
     [brand.itemCount, "아이템"],
     [brand.projectCount, "프로젝트"],
@@ -47,6 +64,7 @@ export default async function BrandDetailPage({ params }: Props) {
 
   return (
     <div>
+      <JsonLd data={jsonLd} />
       <StickyTitle
         title={brand.nameKo}
         meta={brand.nameEn ?? undefined}
