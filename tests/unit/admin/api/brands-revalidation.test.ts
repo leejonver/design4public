@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache'
 import type { SessionUser } from '@/lib/auth'
 import { PUT } from '@/app/api/admin/brands/[id]/route'
 import { requireUser, requireRole } from '@/lib/auth'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn(), revalidateTag: vi.fn() }))
 
@@ -29,7 +29,10 @@ vi.mock('@/lib/auth', () => {
   return { AuthError, authErrorResponse, requireUser: vi.fn(), requireRole: vi.fn() }
 })
 
-vi.mock('@/lib/supabase/admin', () => ({ supabaseAdmin: { from: vi.fn() } }))
+vi.mock('@/lib/supabase/server', () => {
+  const from = vi.fn()
+  return { createServerSupabase: () => ({ from }) }
+})
 
 vi.mock('@/lib/search/indexer', () => ({
   reindexEntity: vi.fn().mockResolvedValue(undefined),
@@ -53,7 +56,7 @@ function makeQB(result: QBResult): Record<string, unknown> {
   return qb
 }
 
-const fromMock = supabaseAdmin.from as unknown as Mock
+const fromMock = (createServerSupabase() as unknown as { from: Mock }).from
 const revalidateMock = vi.mocked(revalidatePath)
 const fakeUser: SessionUser = { id: 'u1', email: 'a@b.c', name: 'admin', role: 'master', status: 'approved' }
 

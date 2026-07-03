@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
@@ -9,6 +9,7 @@ import { reindexEntity } from '@/lib/search/indexer'
 export async function GET(request: NextRequest) {
   try {
     await requireUser()
+    const supabase = createServerSupabase()
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const search = searchParams.get('search')
@@ -23,7 +24,7 @@ export async function GET(request: NextRequest) {
       : 'created_at'
     const ascending = searchParams.get('dir') === 'asc'
 
-    let query = supabaseAdmin
+    let query = supabase
       .from('brands')
       .select(BRAND_SELECT, { count: 'exact' })
       .order(sortCol, { ascending })
@@ -56,6 +57,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     const body = await request.json()
     const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status } = body
 
@@ -67,11 +69,11 @@ export async function POST(request: NextRequest) {
     }
 
     const slug = await uniqueSlug(nameKo, async (s) => {
-      const { data } = await supabaseAdmin.from('brands').select('id').eq('slug', s).maybeSingle()
+      const { data } = await supabase.from('brands').select('id').eq('slug', s).maybeSingle()
       return !!data
     })
 
-    const { data: brand, error } = await supabaseAdmin
+    const { data: brand, error } = await supabase
       .from('brands')
       .insert({
         name_ko: nameKo,
@@ -87,7 +89,7 @@ export async function POST(request: NextRequest) {
       .single()
     if (error) throw error
 
-    const { data: full } = await supabaseAdmin
+    const { data: full } = await supabase
       .from('brands')
       .select(BRAND_SELECT)
       .eq('id', brand.id)

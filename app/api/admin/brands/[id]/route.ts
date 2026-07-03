@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
@@ -9,7 +9,8 @@ import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireUser()
-    const { data, error } = await supabaseAdmin
+    const supabase = createServerSupabase()
+    const { data, error } = await supabase
       .from('brands')
       .select(BRAND_SELECT)
       .eq('id', params.id)
@@ -28,11 +29,12 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     const body = await request.json()
     const { nameKo, nameEn, description, logoImageUrl, coverImageUrl, websiteUrl, status } = body
 
     // Capture the pre-update slug so a rename can purge both the old and new detail pages.
-    const { data: beforeUpdate } = await supabaseAdmin
+    const { data: beforeUpdate } = await supabase
       .from('brands')
       .select('slug')
       .eq('id', params.id)
@@ -49,14 +51,14 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     // Regenerate slug only if name_ko actually changes; preserve existing slug otherwise.
     if (nameKo !== undefined) {
-      const { data: existing } = await supabaseAdmin
+      const { data: existing } = await supabase
         .from('brands')
         .select('name_ko')
         .eq('id', params.id)
         .single()
       if (existing && existing.name_ko !== nameKo) {
         update.slug = await uniqueSlug(nameKo, async (s) => {
-          const { data } = await supabaseAdmin
+          const { data } = await supabase
             .from('brands')
             .select('id')
             .eq('slug', s)
@@ -68,11 +70,11 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     }
 
     if (Object.keys(update).length > 0) {
-      const { error } = await supabaseAdmin.from('brands').update(update).eq('id', params.id)
+      const { error } = await supabase.from('brands').update(update).eq('id', params.id)
       if (error) throw error
     }
 
-    const { data: full } = await supabaseAdmin
+    const { data: full } = await supabase
       .from('brands')
       .select(BRAND_SELECT)
       .eq('id', params.id)
@@ -106,21 +108,22 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     // Capture the slug before deletion so we can purge the brand's detail page.
-    const { data: existing } = await supabaseAdmin
+    const { data: existing } = await supabase
       .from('brands')
       .select('slug')
       .eq('id', params.id)
       .maybeSingle()
     // §6-3: detach the brand's items first (items.brand_id -> NULL) before deleting the brand,
     // so the brand FK can never block the delete.
-    const { error: detachError } = await supabaseAdmin
+    const { error: detachError } = await supabase
       .from('items')
       .update({ brand_id: null })
       .eq('brand_id', params.id)
     if (detachError) throw detachError
 
-    const { error } = await supabaseAdmin.from('brands').delete().eq('id', params.id)
+    const { error } = await supabase.from('brands').delete().eq('id', params.id)
     if (error) throw error
     // Detaching items cleared their brand — refresh item surfaces too.
     revalidateEntity('brand', existing?.slug)

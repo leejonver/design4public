@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase/admin'
+import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapTag } from '@/lib/dto'
 import { revalidateEntity } from '@/lib/revalidation'
@@ -7,7 +7,8 @@ import { revalidateEntity } from '@/lib/revalidation'
 export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireUser()
-    const { data, error } = await supabaseAdmin
+    const supabase = createServerSupabase()
+    const { data, error } = await supabase
       .from('tags')
       .select('*')
       .eq('id', params.id)
@@ -26,8 +27,9 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
 export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
   try {
     await requireRole('content_manager')
+    const supabase = createServerSupabase()
     // project_tags / item_tags / photo_tags links cascade on tag delete (FK ON DELETE CASCADE).
-    const { error } = await supabaseAdmin.from('tags').delete().eq('id', params.id)
+    const { error } = await supabase.from('tags').delete().eq('id', params.id)
     if (error) throw error
     revalidateEntity('tag')
     return NextResponse.json({ success: true, message: '태그가 삭제되었습니다.' })
