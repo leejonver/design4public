@@ -18,13 +18,14 @@ import {
 
 export const revalidate = 3600;
 
-type Props = { params: { id: string } };
+type Props = { params: Promise<{ id: string }> };
 
 function photoTitle(p: { title: string | null; alt: string | null; projectTitle: string | null }) {
   return p.title ?? p.alt ?? p.projectTitle ?? "사진";
 }
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const photo = await fetchPhotoById(params.id);
   if (!photo) return {};
   const title = photoTitle(photo);
@@ -43,7 +44,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function PhotoDetailPage({ params }: Props) {
+export default async function PhotoDetailPage(props: Props) {
+  const params = await props.params;
   const photo = await fetchPhotoById(params.id);
   if (!photo) notFound();
 

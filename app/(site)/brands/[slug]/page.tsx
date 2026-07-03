@@ -13,9 +13,10 @@ import { ItemCard, ProjectCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
   if (!brand) return {};
   return createPageMetadata({
@@ -37,7 +38,8 @@ const sectionHeading: React.CSSProperties = {
   color: "var(--ink-900)",
 };
 
-export default async function BrandDetailPage({ params }: Props) {
+export default async function BrandDetailPage(props: Props) {
+  const params = await props.params;
   const brand: BrandDetail | null = await fetchBrandBySlug(params.slug);
   if (!brand) notFound();
 

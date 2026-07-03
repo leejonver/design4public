@@ -10,11 +10,12 @@ export const metadata: Metadata = {
   title: "PROJECTS",
 };
 
-export default async function ProjectsPage({
-  searchParams,
-}: {
-  searchParams: { q?: string };
-}) {
+export default async function ProjectsPage(
+  props: {
+    searchParams: Promise<{ q?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const q = searchParams?.q?.trim() || undefined;
   const [projects, categories] = await Promise.all([
     fetchProjects({ q }),

@@ -4,7 +4,8 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapTag } from '@/lib/dto'
 import { revalidateEntity } from '@/lib/revalidation'
 
-export async function GET(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     await requireUser()
     const supabase = createServerSupabase()
@@ -24,7 +25,8 @@ export async function GET(_request: NextRequest, { params }: { params: { id: str
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_request: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     await requireRole('content_manager')
     const supabase = createServerSupabase()

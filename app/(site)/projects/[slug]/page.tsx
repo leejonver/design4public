@@ -16,9 +16,10 @@ import {
 
 export const revalidate = 3600;
 
-type Props = { params: { slug: string } };
+type Props = { params: Promise<{ slug: string }> };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata(props: Props): Promise<Metadata> {
+  const params = await props.params;
   const project = await fetchProjectBySlug(params.slug);
   if (!project) return {};
 
@@ -35,7 +36,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   });
 }
 
-export default async function ProjectDetailPage({ params }: Props) {
+export default async function ProjectDetailPage(props: Props) {
+  const params = await props.params;
   const project = await fetchProjectBySlug(params.slug);
   if (!project) notFound();
 

@@ -6,7 +6,8 @@ import { syncPhotoItems, syncFreeTags } from '@/lib/image-sync'
 import { revalidateEntity } from '@/lib/revalidation'
 import { reindexEntity, deleteFromIndex } from '@/lib/search/indexer'
 
-export async function GET(_request: NextRequest, { params }: { params: { photo_id: string } }) {
+export async function GET(_request: NextRequest, props: { params: Promise<{ photo_id: string }> }) {
+  const params = await props.params;
   try {
     await requireUser()
     const supabase = createServerSupabase()
@@ -26,7 +27,8 @@ export async function GET(_request: NextRequest, { params }: { params: { photo_i
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { photo_id: string } }) {
+export async function PUT(request: NextRequest, props: { params: Promise<{ photo_id: string }> }) {
+  const params = await props.params;
   try {
     await requireRole('content_manager')
     const supabase = createServerSupabase()
@@ -67,7 +69,8 @@ export async function PUT(request: NextRequest, { params }: { params: { photo_id
   }
 }
 
-export async function DELETE(_request: NextRequest, { params }: { params: { photo_id: string } }) {
+export async function DELETE(_request: NextRequest, props: { params: Promise<{ photo_id: string }> }) {
+  const params = await props.params;
   try {
     await requireRole('content_manager')
     const supabase = createServerSupabase()
