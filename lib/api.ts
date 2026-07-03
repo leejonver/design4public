@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { supabase } from "./supabase/public";
 import type {
   BrandDetail,
   BrandSummary,
@@ -21,6 +21,9 @@ type RawPhoto = { id: string; image_url: string; alt_text: string | null; title:
 type RawProjectPhoto = { is_main: boolean | null; order: number | null; photos: RawPhoto | null };
 type RawPhotoItem = { is_main: boolean | null; order: number | null; photos: { image_url: string } | null };
 type RawCategoryJoin = { categories: { id?: string; name: string } | null };
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- dynamic PostgREST join shapes (see lib/dto.ts Row)
+type Raw = Record<string, any>;
 
 /* Next can hand a route param through still percent-encoded (non-ASCII slugs).
    Decode defensively so the DB lookup matches the stored slug. */
@@ -66,7 +69,7 @@ function categoryNames(rows: RawCategoryJoin[] | null | undefined): string[] {
   return (rows ?? []).map((r) => r.categories?.name).filter((n): n is string => Boolean(n));
 }
 
-function normalizeProjectSummary(p: any): ProjectSummary {
+function normalizeProjectSummary(p: Raw): ProjectSummary {
   return {
     id: p.id,
     slug: p.slug,
@@ -83,7 +86,7 @@ function normalizeProjectSummary(p: any): ProjectSummary {
   };
 }
 
-function normalizeItemSummary(it: any): ItemSummary {
+function normalizeItemSummary(it: Raw): ItemSummary {
   return {
     id: it.id,
     slug: it.slug,
@@ -98,7 +101,7 @@ function normalizeItemSummary(it: any): ItemSummary {
   };
 }
 
-function normalizeBrandSummary(b: any): BrandSummary {
+function normalizeBrandSummary(b: Raw): BrandSummary {
   return {
     id: b.id,
     slug: b.slug,
@@ -175,12 +178,12 @@ export async function fetchProjectBySlug(slug: string): Promise<ProjectDetail | 
   if (!data) return null;
 
   const summary = normalizeProjectSummary(data);
-  const items = ((data as any).project_items ?? [])
-    .map((pi: any) => pi.items)
+  const items = ((data as Raw).project_items ?? [])
+    .map((pi: Raw) => pi.items)
     .filter(Boolean)
     .map(normalizeItemSummary);
 
-  return { ...summary, gallery: galleryFrom((data as any).project_photos), items };
+  return { ...summary, gallery: galleryFrom((data as Raw).project_photos), items };
 }
 
 /* ============================================================
@@ -231,17 +234,17 @@ export async function fetchItemBySlug(slug: string): Promise<ItemDetail | null> 
   if (!data) return null;
 
   const summary = normalizeItemSummary(data);
-  const gallery: PhotoLite[] = [...((data as any).photo_items ?? [])]
-    .sort((a: any, b: any) => Number(!!b.is_main) - Number(!!a.is_main) || ord(a.order) - ord(b.order))
-    .filter((r: any) => r.photos?.image_url)
-    .map((r: any) => ({ id: r.photos.id, url: r.photos.image_url, alt: r.photos.alt_text, title: r.photos.title }));
+  const gallery: PhotoLite[] = [...((data as Raw).photo_items ?? [])]
+    .sort((a: Raw, b: Raw) => Number(!!b.is_main) - Number(!!a.is_main) || ord(a.order) - ord(b.order))
+    .filter((r: Raw) => r.photos?.image_url)
+    .map((r: Raw) => ({ id: r.photos.id, url: r.photos.image_url, alt: r.photos.alt_text, title: r.photos.title }));
 
-  const brandRaw = (data as any).brands;
+  const brandRaw = (data as Raw).brands;
   const brand: BrandSummary | null = brandRaw ? { ...normalizeBrandSummary({ ...brandRaw, items: [] }) } : null;
 
-  const projects = ((data as any).project_items ?? [])
-    .map((pi: any) => pi.projects)
-    .filter((p: any) => p && p.status === "published")
+  const projects = ((data as Raw).project_items ?? [])
+    .map((pi: Raw) => pi.projects)
+    .filter((p: Raw) => p && p.status === "published")
     .map(normalizeProjectSummary);
 
   return { ...summary, gallery, brand, projects };
@@ -273,7 +276,7 @@ export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null
   if (error) throw error;
   if (!data) return null;
 
-  const rawItems = (data as any).items ?? [];
+  const rawItems = (data as Raw).items ?? [];
   const items = rawItems.map(normalizeItemSummary);
 
   // distinct published projects across this brand's items
@@ -295,7 +298,7 @@ export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null
 /* ============================================================
    Photos
    ============================================================ */
-function normalizePhotoFeed(row: any): PhotoFeedItem {
+function normalizePhotoFeed(row: Raw): PhotoFeedItem {
   const proj = row.project_photos?.[0]?.projects ?? null;
   return {
     id: row.id,

@@ -1,0 +1,20 @@
+/* Vapor UI + Tailwind CSS v4 (CSS-first) — renewal_requirements.md §4
+ * Layer order: Tailwind utilities override Vapor utilities override Vapor component defaults.
+ * Vapor ships its own reset; Tailwind preflight is intentionally NOT imported. */
+@layer tw-theme, vapor, tw-utilities;
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import '@vapor-ui/core/styles.css';
+@import '@vapor-ui/core/tailwind.css';
+@import 'tailwindcss/theme.css' layer(tw-theme);
+@import 'tailwindcss/utilities.css' layer(tw-utilities);
+
+:root {
+  --font-pretendard: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font-pretendard);
+}

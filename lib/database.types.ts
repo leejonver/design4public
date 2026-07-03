@@ -198,19 +198,16 @@ export type Database = {
         Row: {
           id: string;
           name: string;
-          type: Database["public"]["Enums"]["category_type"];
           created_at: string;
         };
         Insert: {
           id?: string;
           name: string;
-          type: Database["public"]["Enums"]["category_type"];
           created_at?: string;
         };
         Update: {
           id?: string;
           name?: string;
-          type?: Database["public"]["Enums"]["category_type"];
           created_at?: string;
         };
         Relationships: [];
@@ -450,24 +447,30 @@ export type Database = {
         Row: {
           id: string;
           email: string;
-          role: string;
-          status: string;
+          name: string | null;
+          role: UserRole;
+          status: ApprovalStatus;
+          last_login_at: string | null;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id: string;
           email: string;
-          role?: string;
-          status?: string;
+          name?: string | null;
+          role?: UserRole;
+          status?: ApprovalStatus;
+          last_login_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           email?: string;
-          role?: string;
-          status?: string;
+          name?: string | null;
+          role?: UserRole;
+          status?: ApprovalStatus;
+          last_login_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -640,3 +643,12 @@ export const Constants = {
     },
   },
 } as const;
+
+/* --- Named enum aliases consumed by admin code (auth.ts, AuthContext).
+   TODO(post-M1): replace with Enums<'...'> derivations from Database. --- */
+export type UserRole = 'master' | 'admin' | 'content_manager'
+export type ApprovalStatus = 'pending' | 'approved' | 'rejected'
+export type ProjectStatus = 'draft' | 'published' | 'hidden'
+export type ItemStatus = 'available' | 'discontinued' | 'hidden'
+export type BrandStatus = 'visible' | 'hidden'
+export type CategoryType = 'project' | 'item'

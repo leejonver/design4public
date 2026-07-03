@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { Resend } from "resend";
-import { getSupabaseConfig } from "@/lib/supabase";
+import { getSupabaseConfig } from "@/lib/supabase/public";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 
