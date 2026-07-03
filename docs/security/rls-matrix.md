@@ -64,9 +64,37 @@ Every drop/create pair applied by the M8 hardening migration.
 | project_items | — | `project_items_select_staff` (SELECT, authenticated + has_role) | staff read draft joins via RLS client |
 | project_categories | — | `project_categories_select_staff` (SELECT, authenticated + has_role) | staff read draft joins via RLS client |
 
-Deferred to Task 4 (not in this migration): dropping `projects` "Authenticated users
-can view all projects" (still lets any authenticated session read drafts) and the
-content-write tightening. Until then the staff SELECT-all policies are additive.
+### Task 4 — content write policies require approved staff + projects DELETE
+Every baseline write policy gated only `auth.role() = 'authenticated'` (any signed-in
+session). Each is replaced with a `has_role('content_manager')` gate. Baseline
+read-only `authenticated` SELECT policies on `brands`/`categories`/`inquiries`/`items`
+are intentionally kept (they carry no write predicate).
+
+| table | dropped | created | reason |
+|---|---|---|---|
+| projects | `General users can create projects` (INSERT), `Users can update own projects` (UPDATE), `Admins and masters can update all projects` (UPDATE) | `projects_insert_staff` (INSERT), `projects_update_staff` (UPDATE) | any authenticated session could create/update projects → approved staff only |
+| projects | `Authenticated users can view all projects` (SELECT) | — (Task 3 `projects_select_staff` already covers staff draft reads) | any authenticated (incl. pending) session could read drafts |
+| projects | — (baseline had NO delete policy) | `projects_delete_staff` (DELETE) | RLS-client delete would silently affect 0 rows without this |
+| items | `Authenticated users can manage items` (ALL) | `items_write_staff` (ALL) | any-authenticated write → staff-only |
+| brands | `Authenticated users can manage brands` (ALL) | `brands_write_staff` (ALL) | any-authenticated write → staff-only |
+| categories | `Authenticated users can manage tags` (ALL) | `categories_write_staff` (ALL) | any-authenticated write → staff-only |
+| project_items | `Authenticated users can manage project items` (ALL) | `project_items_write_staff` (ALL) | any-authenticated write → staff-only |
+| project_categories | `Authenticated users can manage project tags` (ALL) | `project_categories_write_staff` (ALL) | any-authenticated write → staff-only |
+| photos | `photos_insert_authenticated` (INSERT), `photos_update_authenticated` (UPDATE), `photos_delete_authenticated` (DELETE) | `photos_write_staff` (ALL) | any-authenticated write → staff-only |
+| project_photos | `project_photos_insert_authenticated` (INSERT), `project_photos_update_authenticated` (UPDATE), `project_photos_delete_authenticated` (DELETE) | `project_photos_write_staff` (ALL) | any-authenticated write → staff-only |
+| photo_items | `photo_items_insert_authenticated` (INSERT), `photo_items_update_authenticated` (UPDATE), `photo_items_delete_authenticated` (DELETE) | `photo_items_write_staff` (ALL) | any-authenticated write → staff-only |
+| tags | `tags_insert_authenticated` (INSERT), `tags_update_authenticated` (UPDATE), `tags_delete_authenticated` (DELETE) | `tags_write_staff` (ALL) | any-authenticated write → staff-only |
+| item_tags | `item_tags_insert_auth` (INSERT), `item_tags_update_auth` (UPDATE), `item_tags_delete_auth` (DELETE) | `item_tags_write_staff` (ALL) | any-authenticated write → staff-only |
+| project_tags | `project_tags_insert_auth` (INSERT), `project_tags_update_auth` (UPDATE), `project_tags_delete_auth` (DELETE) | `project_tags_write_staff` (ALL) | any-authenticated write → staff-only |
+| photo_tags | `photo_tags_insert_auth` (INSERT), `photo_tags_update_auth` (UPDATE), `photo_tags_delete_auth` (DELETE) | `photo_tags_write_staff` (ALL) | any-authenticated write → staff-only |
+| item_categories | `Allow all for authenticated` (ALL) | `item_categories_write_staff` (ALL) | any-authenticated write → staff-only (anon read policy `Allow read for anon` kept) |
+| home_featured | `home_featured_write_auth` (ALL) | `home_featured_write_staff` (ALL) | any-authenticated write → staff-only |
+| site_settings | `site_settings_write_auth` (ALL) | `site_settings_write_staff` (ALL) | any-authenticated write → staff-only |
+
+Validated live (SET ROLE + JWT-claims simulation, all in rolled-back transactions):
+approved content_manager can INSERT every content table + UPDATE/DELETE projects +
+UPDATE site_settings; a pending (authenticated, non-approved) session and anon are
+denied every write (INSERT → `42501 row-level security`, UPDATE/DELETE → 0 rows).
 
 ## Known residual risks (documented, not fixed in M8)
 - `users_insert_own` lets a session insert its own profile row, but the
