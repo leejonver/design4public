@@ -1,4 +1,5 @@
 import { supabase } from "./supabase/public";
+import { unionById } from "./relations";
 import type {
   BrandDetail,
   BrandSummary,
@@ -132,6 +133,15 @@ const ITEM_SUMMARY_SELECT = `
   item_categories(categories(id,name))
 `;
 
+/* Project detail select: like the summary, but project photos also carry the
+   items tagged on them (derived project→photo→item model). galleryFrom/coverFrom
+   ignore the extra nested photo_items. */
+const PROJECT_DETAIL_SELECT = `
+  id,slug,title,description,year,area,location,client,inquiry_url,status,updated_at,
+  project_photos(is_main,order,photos(id,image_url,alt_text,title,photo_items(items(${ITEM_SUMMARY_SELECT})))),
+  project_categories(categories(id,name))
+`;
+
 /* ============================================================
    Projects
    ============================================================ */
@@ -168,7 +178,7 @@ export async function fetchProjectBySlug(slug: string): Promise<ProjectDetail | 
   const { data, error } = await supabase
     .from("projects")
     .select(
-      `${PROJECT_SUMMARY_SELECT},
+      `${PROJECT_DETAIL_SELECT},
        project_items(items(${ITEM_SUMMARY_SELECT}))`
     )
     .eq("slug", slug)
@@ -178,10 +188,20 @@ export async function fetchProjectBySlug(slug: string): Promise<ProjectDetail | 
   if (!data) return null;
 
   const summary = normalizeProjectSummary(data);
-  const items = ((data as Raw).project_items ?? [])
+
+  // Direct links (legacy project_items) ∪ derived links (this project's photos'
+  // tagged items). Union keeps direct first, dedupes by id — no regression while
+  // content is being retagged (spec §7-1 stage 2).
+  const direct: ItemSummary[] = ((data as Raw).project_items ?? [])
     .map((pi: Raw) => pi.items)
     .filter(Boolean)
     .map(normalizeItemSummary);
+  const derived: ItemSummary[] = ((data as Raw).project_photos ?? [])
+    .flatMap((pp: Raw) => pp.photos?.photo_items ?? [])
+    .map((pi: Raw) => pi.items)
+    .filter(Boolean)
+    .map(normalizeItemSummary);
+  const items = unionById(direct, derived);
 
   return { ...summary, gallery: galleryFrom((data as Raw).project_photos), items };
 }
@@ -223,7 +243,7 @@ export async function fetchItemBySlug(slug: string): Promise<ItemDetail | null> 
     .select(
       `id,slug,name,description,nara_url,status,brand_id,
        brands(id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url),
-       photo_items(is_main,order,photos(id,image_url,alt_text,title)),
+       photo_items(is_main,order,photos(id,image_url,alt_text,title,project_photos(projects(${PROJECT_SUMMARY_SELECT})))),
        item_categories(categories(id,name)),
        project_items(projects(${PROJECT_SUMMARY_SELECT}))`
     )
@@ -242,10 +262,16 @@ export async function fetchItemBySlug(slug: string): Promise<ItemDetail | null> 
   const brandRaw = (data as Raw).brands;
   const brand: BrandSummary | null = brandRaw ? { ...normalizeBrandSummary({ ...brandRaw, items: [] }) } : null;
 
-  const projects = ((data as Raw).project_items ?? [])
+  const directProjects: ProjectSummary[] = ((data as Raw).project_items ?? [])
     .map((pi: Raw) => pi.projects)
     .filter((p: Raw) => p && p.status === "published")
     .map(normalizeProjectSummary);
+  const derivedProjects: ProjectSummary[] = ((data as Raw).photo_items ?? [])
+    .flatMap((pi: Raw) => pi.photos?.project_photos ?? [])
+    .map((pp: Raw) => pp.projects)
+    .filter((p: Raw) => p && p.status === "published")
+    .map(normalizeProjectSummary);
+  const projects = unionById(directProjects, derivedProjects);
 
   return { ...summary, gallery, brand, projects };
 }
@@ -269,6 +295,7 @@ export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null
     .select(
       `id,slug,name_ko,name_en,description,logo_image_url,cover_image_url,website_url,
        items(${ITEM_SUMMARY_SELECT},
+         photo_items(photos(project_photos(projects(${PROJECT_SUMMARY_SELECT})))),
          project_items(projects(${PROJECT_SUMMARY_SELECT})))`
     )
     .eq("slug", slug)
@@ -279,17 +306,20 @@ export async function fetchBrandBySlug(slug: string): Promise<BrandDetail | null
   const rawItems = (data as Raw).items ?? [];
   const items = rawItems.map(normalizeItemSummary);
 
-  // distinct published projects across this brand's items
-  const projMap = new Map<string, ProjectSummary>();
-  for (const it of rawItems) {
-    for (const pi of it.project_items ?? []) {
-      const proj = pi.projects;
-      if (proj && proj.status === "published" && !projMap.has(proj.id)) {
-        projMap.set(proj.id, normalizeProjectSummary(proj));
-      }
-    }
-  }
-  const projects = [...projMap.values()].sort((a, b) => ord(b.year) - ord(a.year));
+  // Direct links (legacy project_items) ∪ derived links (each item's photos'
+  // tagged projects) across this brand's items, published-only, deduped by id.
+  const directProjects: ProjectSummary[] = rawItems
+    .flatMap((it: Raw) => it.project_items ?? [])
+    .map((pi: Raw) => pi.projects)
+    .filter((p: Raw) => p && p.status === "published")
+    .map(normalizeProjectSummary);
+  const derivedProjects: ProjectSummary[] = rawItems
+    .flatMap((it: Raw) => it.photo_items ?? [])
+    .flatMap((pi: Raw) => pi.photos?.project_photos ?? [])
+    .map((pp: Raw) => pp.projects)
+    .filter((p: Raw) => p && p.status === "published")
+    .map(normalizeProjectSummary);
+  const projects = unionById(directProjects, derivedProjects).sort((a, b) => ord(b.year) - ord(a.year));
 
   const summary = normalizeBrandSummary({ ...data, items: rawItems });
   return { ...summary, itemCount: items.length, projectCount: projects.length, items, projects };
