@@ -1,19 +1,29 @@
-# QA Checklist
+# QA Checklist (pre-deploy / cutover)
 
-## Automated Tests
-- [x] `npm run test` (Vitest) – Projects, Brands 페이지 및 상세 페이지 데이터 로드/렌더링 검증
+Run against a preview deploy (or local stack). Check each before promoting.
 
-## Manual Smoke Tests
-- [x] `/projects`: 필터 컴포넌트 표시, 프로젝트 카드 렌더링, 상세 페이지 이동
-- [x] `/brands`: 브랜드 카드 목록 확인, 브랜드 상세 페이지 진입 및 연관 프로젝트 노출 확인
-- [x] `/items`: 아이템 카드 목록 확인, 아이템 상세 페이지 내 브랜드/프로젝트 링크 정상 동작
-- [x] `/photos`: 사진 모자이크 레이아웃 로드, 프로젝트 상세 이동 동작
+## Admin CMS (`/admin`, authenticated)
+- [ ] Login (`signInWithPassword`) + logout; unauthenticated `/admin/*` redirects to `/admin/login`.
+- [ ] Projects / Items / Brands / Managers / Categories / Photos: list loads, search filters, create + edit + delete round-trip.
+- [ ] Photo upload (drag-drop → Supabase Storage `images` bucket) + set is_main.
 
-## 성능 확인 (개발 환경 기준)
-- 첫 화면 LCP < 2.1s, CLS ≈ 0.00 (Chrome DevTools Performance Capture)
-- 페이지 전환 시 Supabase API 요청 정상 완료, 콘솔 에러 없음
+## Public site
+- [ ] Home, `/projects`, `/items`, `/brands`, `/photos` render; cards link to detail pages.
+- [ ] Detail pages (project/item/brand/photo) render galleries, specs, breadcrumbs.
+- [ ] Item detail hero + item thumbnail cards are square (1:1); other imagery keeps its ratio.
 
-## 빌드 검증
-- [x] `npm run build`
+## Search
+- [ ] Korean query returns relevant results; English query returns results.
+- [ ] Search page is `noindex` (view-source: `<meta name="robots" content="noindex">`).
 
+## Revalidation
+- [ ] Edit a project title in admin → the public detail page reflects it without redeploy.
 
+## SEO / infra
+- [ ] Canonical + og:url use `https://www.design4public.com` (no redirect hop).
+- [ ] `/robots.txt` disallows `/api/` and `/admin/`; `/admin` responds `noindex`.
+- [ ] `/sitemap.xml` loc URLs are percent-encoded (no raw Korean bytes).
+- [ ] JSON-LD present on home + detail pages and validates (no broken `</script>`).
+
+## RLS
+- [ ] Anonymous REST read of `profiles`/`inquiries` is denied (see `docs/security/rls-matrix.md`); related anon-access regressions (draft project/photo visibility, cross-user profile writes) are covered by `tests/e2e/security/rls-rest.spec.ts`.

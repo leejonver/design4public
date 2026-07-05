@@ -69,6 +69,10 @@ admin API `app/api/admin` (RLS via user session, not service role). Auth is
 client-side in `components/admin/AuthContext.tsx` (`signInWithPassword`/`signOut`);
 signup posts to `/api/admin/auth/signup`. Search: `lib/search` (pgvector + trigram
 hybrid, OpenAI embeddings + GPT-4o-mini captions).
+OpenAI calls in `lib/search` **never throw** — a caption/embedding failure or a
+non-public image URL degrades to `null`/skip and never breaks the calling admin
+route or a backfill row (so an OpenAI outage can't 500 an edit or abort a batch).
+Preserve this when touching `lib/search/*` or the backfill scripts.
 
 **Types:** `lib/database.types.ts` is generated + post-processed —
 `npm run gen:types` runs `supabase gen types` then `scripts/postprocess-types.mjs`
@@ -84,4 +88,8 @@ Run the full gate (tsc + lint + vitest + build + Playwright ×2) as **one agent
 stack**; a single green Playwright run is not sufficient evidence.
 
 **DB safety:** production DB is additive-migration-only; the sole destructive
-migration is gated separately (M11). See `docs/specs/2026-07-03-unified-repo-design.md`.
+migration is gated separately (M11). **Live migrations are `supabase/migrations/`
+only.** The root `migrations/` directory (31 numbered SQL files) is a frozen
+pre-supabase-CLI historical record — **do not apply it**; `scripts/run-migration.mjs`
+and `scripts/backup-before-020.mjs` operate on that legacy set for archival reasons.
+See `docs/specs/2026-07-03-unified-repo-design.md`.

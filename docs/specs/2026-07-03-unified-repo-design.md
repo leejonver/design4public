@@ -1,7 +1,7 @@
 # design4public 통합 설계 (Unified Repo Design)
 
 날짜: 2026-07-03
-상태: 초안 — 사용자 승인 대기
+상태: 구현 완료 (M1–M13), 프로덕션 반영됨 (design4public.com)
 
 ## 1. 목표 / 비목표
 
@@ -30,7 +30,7 @@
 | E2E | 로컬 Supabase (Docker, supabase CLI) |
 | 레포 | `leejonver/design4public` 재사용, CMS는 git subtree로 히스토리 보존 병합 |
 | Tailwind | v4로 통일 (CMS가 이미 v4 + vapor-ui 레이어; 프론트 v3.4 → v4 마이그레이션) |
-| Next/React | 14.2.x / 18.3.x 로 정렬 (프론트 14.2.5 → 14.2.32) |
+| Next/React | Next 15.5.x / React 19 (M9에서 업그레이드 완료 — package.json 기준) |
 
 ## 3. 디렉토리 구조 (통합 후)
 
