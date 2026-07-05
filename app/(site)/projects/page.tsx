@@ -1,24 +1,19 @@
 import type { Metadata } from "next";
 import { fetchProjects, fetchCategories } from "@/lib/api";
+import { createPageMetadata } from "@/lib/seo";
 import { ProjectsView } from "./projects-view";
 
-// Reading searchParams opts this route into dynamic rendering; search-filtered
-// listings should not be statically cached.
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
-export const metadata: Metadata = {
-  title: "PROJECTS",
-};
+export const metadata: Metadata = createPageMetadata({
+  title: "프로젝트 · 공공조달 가구 납품사례",
+  description: "공공기관·공공공간에 납품된 가구 프로젝트 사례를 브랜드·연도·카테고리별로 살펴봅니다.",
+  path: "/projects",
+});
 
-export default async function ProjectsPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ q?: string }>;
-}) {
-  const { q: rawQ } = await searchParams;
-  const q = rawQ?.trim() || undefined;
+export default async function ProjectsPage() {
   const [projects, categories] = await Promise.all([
-    fetchProjects({ q }),
+    fetchProjects(),
     fetchCategories("project"),
   ]);
 
@@ -27,7 +22,6 @@ export default async function ProjectsPage({
       projects={projects}
       categories={categories.map((c) => c.name)}
       count={projects.length}
-      query={q}
     />
   );
 }

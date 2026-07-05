@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabase } from '@/lib/supabase/server'
 import { requireUser, authErrorResponse } from '@/lib/auth'
 import { PHOTO_SELECT, mapPhoto } from '@/lib/dto'
+import { orIlike } from '@/lib/pg-filter'
+import { parseListQuery } from '@/lib/list-query'
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,27 +12,19 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
     const unconnected = searchParams.get('unconnected') === 'true'
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '20')
-    const offset = (page - 1) * limit
-
-    const SORTABLE = ['created_at', 'title'] as const
-    const sortParam = searchParams.get('sort')
-    const sortCol = SORTABLE.includes(sortParam as (typeof SORTABLE)[number])
-      ? (sortParam as (typeof SORTABLE)[number])
-      : 'created_at'
-    const ascending = searchParams.get('dir') === 'asc'
+    const { page, limit, offset, sortCol, ascending } = parseListQuery(searchParams, {
+      sortable: ['created_at', 'title'],
+      defaultSort: 'created_at',
+      defaultLimit: 20,
+    })
 
     let query = supabase
       .from('photos')
       .select(PHOTO_SELECT, { count: 'exact' })
       .order(sortCol, { ascending })
 
-    if (search) {
-      query = query.or(
-        `title.ilike.%${search}%,alt_text.ilike.%${search}%,description.ilike.%${search}%`,
-      )
-    }
+    const orFilter = orIlike(['title', 'alt_text', 'description'], search ?? '')
+    if (orFilter) query = query.or(orFilter)
 
     // unconnected = photos with no photo_items link. Exclude connected ids at the DB level so
     // pagination + count stay correct.

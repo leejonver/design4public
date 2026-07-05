@@ -6,6 +6,8 @@ import { uniqueSlug } from '@/lib/slug'
 import { syncProjectPhotos, syncProjectItems, syncCategories, syncFreeTags } from '@/lib/image-sync'
 import { revalidateEntity } from '@/lib/revalidation'
 import { reindexEntity } from '@/lib/search/indexer'
+import { orIlike } from '@/lib/pg-filter'
+import { parseListQuery } from '@/lib/list-query'
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,16 +16,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const search = searchParams.get('search')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const offset = (page - 1) * limit
-
-    const SORTABLE = ['created_at', 'title', 'year'] as const
-    const sortParam = searchParams.get('sort')
-    const sortCol = SORTABLE.includes(sortParam as (typeof SORTABLE)[number])
-      ? (sortParam as (typeof SORTABLE)[number])
-      : 'created_at'
-    const ascending = searchParams.get('dir') === 'asc'
+    const { page, limit, offset, sortCol, ascending } = parseListQuery(searchParams, {
+      sortable: ['created_at', 'title', 'year'],
+      defaultSort: 'created_at',
+      defaultLimit: 10,
+    })
 
     let query = supabase
       .from('projects')
@@ -32,7 +29,8 @@ export async function GET(request: NextRequest) {
 
     if (status && status !== 'all')
       query = query.eq('status', status as 'draft' | 'published' | 'hidden')
-    if (search) query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`)
+    const orFilter = orIlike(['title', 'description'], search ?? '')
+    if (orFilter) query = query.or(orFilter)
     query = query.range(offset, offset + limit - 1)
 
     const { data, error, count } = await query

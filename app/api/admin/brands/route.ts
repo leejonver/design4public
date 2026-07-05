@@ -5,6 +5,8 @@ import { BRAND_SELECT, mapBrand } from '@/lib/dto'
 import { uniqueSlug } from '@/lib/slug'
 import { revalidateEntity } from '@/lib/revalidation'
 import { reindexEntity } from '@/lib/search/indexer'
+import { orIlike } from '@/lib/pg-filter'
+import { parseListQuery } from '@/lib/list-query'
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,16 +15,11 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const status = searchParams.get('status')
     const search = searchParams.get('search')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '10')
-    const offset = (page - 1) * limit
-
-    const SORTABLE = ['created_at', 'name_ko'] as const
-    const sortParam = searchParams.get('sort')
-    const sortCol = SORTABLE.includes(sortParam as (typeof SORTABLE)[number])
-      ? (sortParam as (typeof SORTABLE)[number])
-      : 'created_at'
-    const ascending = searchParams.get('dir') === 'asc'
+    const { page, limit, offset, sortCol, ascending } = parseListQuery(searchParams, {
+      sortable: ['created_at', 'name_ko'],
+      defaultSort: 'created_at',
+      defaultLimit: 10,
+    })
 
     let query = supabase
       .from('brands')
@@ -30,11 +27,8 @@ export async function GET(request: NextRequest) {
       .order(sortCol, { ascending })
 
     if (status && status !== 'all') query = query.eq('status', status as 'visible' | 'hidden')
-    if (search) {
-      query = query.or(
-        `name_ko.ilike.%${search}%,name_en.ilike.%${search}%,description.ilike.%${search}%`,
-      )
-    }
+    const orFilter = orIlike(['name_ko', 'name_en', 'description'], search ?? '')
+    if (orFilter) query = query.or(orFilter)
     query = query.range(offset, offset + limit - 1)
 
     const { data, error, count } = await query
