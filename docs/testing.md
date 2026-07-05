@@ -69,6 +69,15 @@ redirect the server at a remote DB.
 output. Silence them by exporting `DOTENV_CONFIG_QUIET=true` in your shell (or CI env)
 before running `npx playwright test`.
 
+## Reading emails in tests (Inbucket)
+`invite.spec.ts` verifies the invite flow end to end by polling Inbucket's REST API
+instead of a UI mailbox: `GET {INBUCKET}/api/v1/mailbox/{localpart}` (localpart is the
+part of the test email before `@`) returns the mailbox's message list, sorted here by
+`date` to find the newest entry; a second `GET .../mailbox/{localpart}/{id}` fetches
+that message's body (`html` falling back to `text`), from which the accept link is
+extracted with a regex on the first `href="https?://..."` (or bare URL) match. The poll
+retries every 500ms up to 20 times to absorb Inbucket delivery lag.
+
 ## Seed data (assert against these)
 - Published projects: `gangnam-office` (featured), `pangyo-library`
 - Draft (never public): `draft-project`

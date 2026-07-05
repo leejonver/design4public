@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Mail } from "lucide-react";
 import { Overline } from "@/components/site/primitives";
@@ -14,17 +14,10 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
     : [project.coverImage];
 
   const [i, setI] = useState(0);
-  const [hover, setHover] = useState(false);
   const go = useCallback(
     (d: number) => setI((v) => (v + d + imgs.length) % imgs.length),
     [imgs.length],
   );
-
-  useEffect(() => {
-    if (hover || imgs.length < 2) return;
-    const t = setInterval(() => setI((v) => (v + 1) % imgs.length), 6000);
-    return () => clearInterval(t);
-  }, [hover, imgs.length]);
 
   const overline = [...project.categories, project.year].filter(Boolean).join(" · ");
   const area = project.area != null ? `${project.area.toLocaleString()}㎡` : null;
@@ -110,11 +103,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
         </div>
       </div>
 
-      <div
-        className="d4p-pmast-media"
-        onMouseEnter={() => setHover(true)}
-        onMouseLeave={() => setHover(false)}
-      >
+      <div className="d4p-pmast-media">
         <div className="d4p-pmast-track" style={{ transform: `translateX(-${i * 100}%)` }}>
           {imgs.map((src, idx) => (
             <div key={idx} className="d4p-pmast-slide">

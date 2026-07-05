@@ -15,7 +15,6 @@ interface AuthContextType {
   user: AuthUser | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
-  signup: (name: string, email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   isMaster: boolean
   isAdmin: boolean
@@ -72,18 +71,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(profile)
   }
 
-  const signup = async (name: string, email: string, password: string) => {
-    const res = await fetch('/api/admin/auth/signup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
-    })
-    const body = await res.json().catch(() => ({}))
-    if (!res.ok || !body.success) {
-      throw new Error(body.error || '회원가입에 실패했습니다.')
-    }
-  }
-
   const logout = async () => {
     await supabase.auth.signOut()
     setUser(null)
@@ -93,7 +80,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     loading,
     login,
-    signup,
     logout,
     isMaster,
     isAdmin,

@@ -338,6 +338,7 @@ export default function CategoriesPage() {
                   maxLength={20}
                   onKeyDown={(event) => {
                     if (event.key === 'Enter') {
+                      if (event.nativeEvent.isComposing || event.keyCode === 229) return;
                       event.preventDefault();
                       handleSave();
                     }

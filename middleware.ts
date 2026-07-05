@@ -4,7 +4,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 
-const PUBLIC_PATHS = ['/admin/login', '/admin/signup']
+const PUBLIC_PATHS = ['/admin/login', '/admin/invite/accept']
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request })
@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
   if (!user && !isPublic) {
     return NextResponse.redirect(new URL('/admin/login', request.url))
   }
-  if (user && isPublic) {
+  if (user && isPublic && !path.startsWith('/admin/invite/accept')) {
     return NextResponse.redirect(new URL('/admin/projects', request.url))
   }
 

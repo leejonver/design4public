@@ -94,6 +94,7 @@ export default function FreeTagSelect({ value, onChange }: FreeTagSelectProps) {
           className="flex-1"
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ',') {
+              if (e.nativeEvent.isComposing || e.keyCode === 229) return;
               e.preventDefault();
               addName(draft);
             }

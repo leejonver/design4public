@@ -141,6 +141,7 @@ export default function CategorySelect({ type, value, onChange }: CategorySelect
               className="flex-1"
               onKeyDown={(e) => {
                 if (e.key === 'Enter') {
+                  if (e.nativeEvent.isComposing || e.keyCode === 229) return;
                   e.preventDefault();
                   createCategory();
                 }

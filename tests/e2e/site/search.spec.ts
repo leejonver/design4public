@@ -58,4 +58,26 @@ test.describe('통합 검색', () => {
     await expect(page.getByRole('heading', { level: 2, name: /포토/ })).toBeVisible()
     await expect(page.getByRole('link', { name: /강남 오피스 회의실/ })).toBeVisible()
   })
+
+  test('헤더 검색: IME 조합 중 Enter는 무시된다 (한글 중복 방지)', async ({ page }) => {
+    await page.goto('/')
+    const input = page.getByPlaceholder('프로젝트, 아이템, 브랜드 검색').first()
+    await input.click()
+    await input.fill('라운지')
+    // Enter dispatched WHILE composing must not navigate.
+    await input.evaluate((el) =>
+      el.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: true }),
+      ),
+    )
+    await expect(page).toHaveURL(/\/$/)
+    // A normal (non-composing) Enter navigates with the value intact — no dup char.
+    await input.evaluate((el) =>
+      el.dispatchEvent(
+        new KeyboardEvent('keydown', { key: 'Enter', bubbles: true, cancelable: true, isComposing: false }),
+      ),
+    )
+    await page.waitForURL(/\/search\?q=/)
+    expect(new URL(page.url()).searchParams.get('q')).toBe('라운지')
+  })
 })

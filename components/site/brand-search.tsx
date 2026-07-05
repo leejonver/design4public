@@ -194,6 +194,7 @@ export function BrandSearch({
       e.preventDefault();
       setHi((h) => Math.max(h - 1, -1));
     } else if (e.key === "Enter") {
+      if (e.nativeEvent.isComposing || e.keyCode === 229) return;
       e.preventDefault();
       choose(hi >= 0 ? options[hi] : options[0] ?? { kind: "run", label: ql });
     } else if (e.key === "Escape") {

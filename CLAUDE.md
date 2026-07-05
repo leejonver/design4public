@@ -67,7 +67,12 @@ Strong success criteria let you loop independently. Weak criteria ("make it work
 **Layout:** public site `app/(site)`, admin UI `app/admin` (client + @vapor-ui),
 admin API `app/api/admin` (RLS via user session, not service role). Auth is
 client-side in `components/admin/AuthContext.tsx` (`signInWithPassword`/`signOut`);
-signup posts to `/api/admin/auth/signup`. Search: `lib/search` (pgvector + trigram
+Managers are provisioned by **master-issued email invites**: `POST /api/admin/managers/invite`
+(service role, `inviteUserByEmail`) creates a `pending` profile with the chosen role; the invitee
+opens the invite link at `/admin/invite/accept`, sets a password, and `POST /api/admin/invite/accept`
+flips their own row `pending → approved`. There is **no public signup**. `profiles.status`:
+`pending` = invited/not-accepted, `approved` = active member, `rejected` = retained (unused).
+Search: `lib/search` (pgvector + trigram
 hybrid, OpenAI embeddings + GPT-4o-mini captions).
 OpenAI calls in `lib/search` **never throw** — a caption/embedding failure or a
 non-public image URL degrades to `null`/skip and never breaks the calling admin

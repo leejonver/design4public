@@ -40,6 +40,12 @@ Legend: ✅ allowed · ❌ denied · `pub` = published-project gate · `self` = 
 | inquiries INSERT | ✅ (contact form) | ✅ | ✅ | ✅ all |
 | inquiries SELECT | ❌ | ✅ (unchanged from baseline) | ✅ | ✅ all |
 
+**`profiles.status` transitions (M14 invite flow):** the `pending → approved`
+transition on invite acceptance is performed by `POST /api/admin/invite/accept`
+with the **service-role** client — RLS `profiles_update_master` forbids a
+self-update of `status` — scoped to the caller's own row and only from `pending`.
+Master-driven role/status changes continue through `PUT /api/admin/managers/[id]`.
+
 ## Policy change log — migration `20260703140000_rls_hardening.sql`
 
 Every drop/create pair applied by the M8 hardening migration.
