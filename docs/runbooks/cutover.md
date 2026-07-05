@@ -39,3 +39,23 @@ Promote the preview to production. Point `design4public.com` at it. Redirect
 ## 7. Archive
 Archive the legacy `d4p-cms` repo once the admin surface is confirmed live on
 `/admin`.
+
+## M14 — invite flow cutover (Supabase dashboard, manual)
+
+Before the invite flow works in production, in the Supabase project dashboard:
+1. **Auth → URL Configuration → Redirect URLs:** add `https://www.design4public.com/**`
+   (and confirm **Site URL** = `https://www.design4public.com`). Without this, the invite
+   link's `redirect_to` is rejected and the accept page never receives a session.
+2. **Auth → Email Templates → "Invite user":** confirm the template's action link uses
+   `{{ .ConfirmationURL }}`; optionally localize the copy to Korean.
+3. **Auth → SMTP (deliverability):** the default Supabase mailer is shared + rate-limited and
+   may not reliably deliver to external domains. For anything beyond occasional internal invites,
+   configure custom SMTP (Resend is already an approved vendor here). Decide per volume; do not
+   assume deliverability silently.
+4. **(Optional, defense-in-depth)** Auth → Providers → Email: leave sign-ups enabled (invites need
+   it) but note the public `/admin/signup` route is gone; invites are the only entry path.
+5. **Auth → Passwords:** set minimum length to **8** and require **letters and digits**. Local
+   `supabase/config.toml` has enforced this server-side since commit `29187e2`
+   (`minimum_password_length = 8`, `password_requirements = "letters_digits"`); the production
+   dashboard must match, or prod will silently accept 6-character passwords the UI copy
+   (`비밀번호 (최소 8자)`) claims to forbid.

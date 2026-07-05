@@ -4,6 +4,7 @@ Run against a preview deploy (or local stack). Check each before promoting.
 
 ## Admin CMS (`/admin`, authenticated)
 - [ ] Login (`signInWithPassword`) + logout; unauthenticated `/admin/*` redirects to `/admin/login`.
+- [ ] Invite a manager (email + role) → invite email arrives → accept link sets password → invitee is active and can log in. Resend + revoke work. No public `/admin/signup` route exists.
 - [ ] Projects / Items / Brands / Managers / Categories / Photos: list loads, search filters, create + edit + delete round-trip.
 - [ ] Photo upload (drag-drop → Supabase Storage `images` bucket) + set is_main.
 
@@ -11,6 +12,9 @@ Run against a preview deploy (or local stack). Check each before promoting.
 - [ ] Home, `/projects`, `/items`, `/brands`, `/photos` render; cards link to detail pages.
 - [ ] Detail pages (project/item/brand/photo) render galleries, specs, breadcrumbs.
 - [ ] Item detail hero + item thumbnail cards are square (1:1); other imagery keeps its ratio.
+- [ ] Project detail hero does NOT auto-advance; prev/next arrows work. Home hero still auto-advances.
+- [ ] Header wordmark matches the footer wordmark size.
+- [ ] Korean search: type 라운지, press Enter → `/search?q=라운지` (no 라운지지 duplication).
 
 ## Search
 - [ ] Korean query returns relevant results; English query returns results.
