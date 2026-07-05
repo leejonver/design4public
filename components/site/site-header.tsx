@@ -102,7 +102,7 @@ export function SiteHeader() {
               <Search size={18} strokeWidth={1.5} />
             </button>
             <div style={{ flex: 1, display: "flex", justifyContent: "center", minWidth: 0 }}>
-              <Logo size={14} />
+              <Logo size={15.5} />
             </div>
             <button onClick={() => setMenuOpen(true)} aria-label="메뉴" style={iconBtn}>
               <Menu size={20} strokeWidth={1.5} />
@@ -189,7 +189,7 @@ export function SiteHeader() {
   return (
     <header style={headerStyle}>
       <div style={{ ...barInner, gap: 24 }}>
-        <Logo size={16} />
+        <Logo size={17.5} />
         <div style={{ flex: 1, display: "flex", alignItems: "center", height: "100%" }}>
           <div style={{ flex: 1, display: "flex", justifyContent: "center", padding: "0 24px" }}>
             <div style={{ width: "100%", maxWidth: 480 }}>

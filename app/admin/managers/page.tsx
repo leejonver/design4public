@@ -268,7 +268,10 @@ export default function ManagersPage() {
                 aria-label="이름 편집"
                 className="w-40"
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') saveEditName(m.id);
+                  if (e.key === 'Enter') {
+                    if (e.nativeEvent.isComposing || e.keyCode === 229) return;
+                    saveEditName(m.id);
+                  }
                   if (e.key === 'Escape') cancelEditName();
                 }}
               />
