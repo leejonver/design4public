@@ -9,7 +9,7 @@ import { createPageMetadata } from "@/lib/seo";
 export const revalidate = 3600;
 
 export const metadata: Metadata = createPageMetadata({
-  title: "PHOTOS",
+  title: "포토 · 공공공간 가구 사진",
   description: "프로젝트에서 촬영된 공간·가구 사진을 한눈에 둘러보세요.",
   path: "/photos",
 });

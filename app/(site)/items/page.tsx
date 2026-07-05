@@ -7,7 +7,7 @@ import { ItemsView } from "./items-view";
 export const revalidate = 3600;
 
 export const metadata: Metadata = createPageMetadata({
-  title: "ITEMS",
+  title: "아이템 · 오피스·공공가구 제품",
   description: "브랜드별 오피스 가구 아이템을 사양과 함께 살펴보세요.",
   path: "/items",
 });

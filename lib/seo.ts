@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-export const SITE_URL = "https://design4public.com";
+export const SITE_URL = "https://www.design4public.com";
 export const SITE_NAME = "design4public";
 export const SITE_DESCRIPTION =
   "공공조달 가구 납품사례와 제품, 브랜드 정보를 탐색하는 design4public 콘텐츠 사이트입니다.";

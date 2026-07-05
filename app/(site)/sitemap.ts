@@ -13,26 +13,33 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchPhotos(),
   ]);
 
-  const staticPaths = ["/", "/projects", "/items", "/brands", "/photos", "/privacy", "/terms"];
-  const staticRoutes: MetadataRoute.Sitemap = staticPaths.map((path) => ({
-    url: `${SITE_URL}${path === "/" ? "" : path}`,
-    lastModified: now,
-  }));
+  const legalPaths = ["/privacy", "/terms"];
+  const otherStaticPaths = ["/", "/projects", "/items", "/brands", "/photos"];
+  const staticRoutes: MetadataRoute.Sitemap = [
+    ...otherStaticPaths.map((path) => ({
+      url: `${SITE_URL}${path === "/" ? "" : path}`,
+      lastModified: now,
+    })),
+    ...legalPaths.map((path) => ({
+      url: `${SITE_URL}${path}`,
+      lastModified: new Date("2026-07-05"),
+    })),
+  ];
 
   const projectRoutes: MetadataRoute.Sitemap = projects.map((p) => ({
-    url: `${SITE_URL}/projects/${p.slug}`,
+    url: `${SITE_URL}/projects/${encodeURI(p.slug)}`,
     lastModified: new Date(p.updatedAt),
   }));
   const itemRoutes: MetadataRoute.Sitemap = items.map((i) => ({
-    url: `${SITE_URL}/items/${i.slug}`,
+    url: `${SITE_URL}/items/${encodeURI(i.slug)}`,
     lastModified: new Date(i.updatedAt),
   }));
   const brandRoutes: MetadataRoute.Sitemap = brands.map((b) => ({
-    url: `${SITE_URL}/brands/${b.slug}`,
+    url: `${SITE_URL}/brands/${encodeURI(b.slug)}`,
     lastModified: new Date(b.updatedAt),
   }));
   const photoRoutes: MetadataRoute.Sitemap = photos.map((ph) => ({
-    url: `${SITE_URL}/photos/${ph.id}`,
+    url: `${SITE_URL}/photos/${encodeURI(ph.id)}`,
     lastModified: new Date(ph.updatedAt),
   }));
 

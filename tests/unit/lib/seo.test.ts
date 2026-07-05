@@ -22,7 +22,7 @@ describe("JSON-LD schema helpers", () => {
     expect(node.inLanguage).toBe("ko-KR");
     // cache-buster stripped
     expect(node.image).toEqual(["https://cdn/x.jpg"]);
-    expect(node.mainEntityOfPage).toBe("https://design4public.com/projects/gangnam-office");
+    expect(node.mainEntityOfPage).toBe("https://www.design4public.com/projects/gangnam-office");
     expect((node.publisher as { "@id": string })["@id"]).toContain("#organization");
   });
 
