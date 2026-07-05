@@ -38,7 +38,7 @@ test.describe('통합 검색', () => {
     await expect(page.getByRole('link', { name: /강남 오피스 리노베이션/ })).toBeVisible()
   })
 
-  test('/projects?q= 서버 필터가 동작한다', async ({ page }) => {
+  test('/projects?q= 필터가 동작한다', async ({ page }) => {
     await page.goto('/projects?q=강남')
     await expect(page.locator('a.d4p-card[href="/projects/gangnam-office"]')).toBeVisible()
     await expect(page.locator('a.d4p-card[href="/projects/pangyo-library"]')).toHaveCount(0)
