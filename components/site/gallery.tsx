@@ -3,6 +3,7 @@
 /* DESIGN4PUBLIC — detail media: DetailHero slideshow + masonry Gallery with lightbox */
 
 import { useCallback, useEffect, useState } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import type { PhotoLite } from "@/lib/types";
 
@@ -51,11 +52,13 @@ export function DetailHero({
         >
           {images.map((img, i) => (
             <div className="d4p-detailhero-slide" key={img.id}>
-              {/* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */}
-              <img
+              <Image
                 src={img.url}
                 alt={img.alt ?? img.title ?? ""}
-                loading={i === 0 ? undefined : "lazy"}
+                fill
+                sizes="(max-width:860px) 100vw, 60vw"
+                style={{ objectFit: "cover" }}
+                priority={i === 0}
               />
             </div>
           ))}
@@ -73,8 +76,7 @@ export function DetailHero({
               onClick={() => setActive(i)}
               aria-label={`이미지 ${i + 1}`}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */}
-              <img src={img.url} alt="" loading="lazy" />
+              <Image src={img.url} alt="" fill sizes="60px" style={{ objectFit: "cover" }} />
             </button>
           ))}
         </div>
@@ -133,7 +135,7 @@ export function Gallery({
             onClick={() => setOpen(i)}
             aria-label={img.title ?? img.alt ?? `사진 ${i + 1}`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */}
+            {/* eslint-disable-next-line @next/next/no-img-element -- masonry tile has no determinate-size ancestor (height comes from this image's own intrinsic aspect ratio); next/image `fill` would collapse the tile to 0 height. */}
             <img src={img.url} alt={img.alt ?? img.title ?? ""} loading="lazy" />
             {img.title && <span className="d4p-photo-cap">{img.title}</span>}
           </button>

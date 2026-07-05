@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { fetchHomeData } from "@/lib/api";
@@ -6,6 +7,9 @@ import { FeaturedHero } from "@/components/site/featured-hero";
 import { ProjectCard, ItemCard, BrandCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
+
+const LATEST_PHOTOS_SIZES =
+  "(max-width:560px) 100vw, (max-width:860px) 50vw, (max-width:1080px) 33vw, 25vw";
 
 const moreLink: CSSProperties = {
   fontFamily: "var(--font-sans)",
@@ -80,8 +84,13 @@ export default async function HomePage() {
               className="d4p-photo-tile"
               style={{ aspectRatio: "1 / 1" }}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */}
-              <img src={ph.url} alt={ph.alt ?? ph.title ?? ""} loading="lazy" />
+              <Image
+                src={ph.url}
+                alt={ph.alt ?? ph.title ?? ""}
+                fill
+                sizes={LATEST_PHOTOS_SIZES}
+                style={{ objectFit: "cover" }}
+              />
             </Link>
           ))}
         </div>

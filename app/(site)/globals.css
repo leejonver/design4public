@@ -807,6 +807,7 @@ img {
 .d4p-srch-thumb {
   width: 42px;
   height: 42px;
+  position: relative;
   flex: none;
   overflow: hidden;
   background: var(--sunken);
@@ -1012,6 +1013,7 @@ img {
   flex: 0 0 100%;
   height: 100%;
   min-height: inherit;
+  position: relative;
   overflow: hidden;
 }
 .d4p-pmast-slide img {
@@ -1116,6 +1118,7 @@ img {
 }
 .d4p-detailhero-slide {
   flex: 0 0 100%;
+  position: relative;
 }
 .d4p-detailhero-slide img {
   width: 100%;

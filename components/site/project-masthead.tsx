@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Mail } from "lucide-react";
 import { Overline } from "@/components/site/primitives";
 import { ButtonLink } from "@/components/site/ui";
@@ -118,8 +119,14 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
           {imgs.map((src, idx) => (
             <div key={idx} className="d4p-pmast-slide">
               {src ? (
-                /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-                <img src={src} alt="" />
+                <Image
+                  src={src}
+                  alt=""
+                  fill
+                  sizes="(max-width:860px) 100vw, 60vw"
+                  style={{ objectFit: "cover" }}
+                  priority={idx === 0}
+                />
               ) : (
                 <div
                   style={{

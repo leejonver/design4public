@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { fetchBrandBySlug } from "@/lib/api";
 import type { BrandDetail } from "@/lib/types";
@@ -97,12 +98,13 @@ export default async function BrandDetailPage({ params }: Props) {
           }}
         >
           {brand.cover ? (
-            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-            <img
+            <Image
               src={brand.cover}
               alt={brand.nameKo}
-              loading="lazy"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              fill
+              sizes="100vw"
+              priority
+              style={{ objectFit: "cover" }}
             />
           ) : (
             <div

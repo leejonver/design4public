@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { EntityType, SearchGroups } from "@/lib/search/query";
 import { Container } from "@/components/site/primitives";
@@ -45,8 +46,13 @@ export function SearchResults({ query, groups }: { query: string; groups: Search
                         style={{ borderRadius: hit.entityType === "brand" ? "var(--radius-pill)" : "var(--radius-sm)" }}
                       >
                         {hit.imageUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-                          <img src={hit.imageUrl} alt="" loading="lazy" />
+                          <Image
+                            src={hit.imageUrl}
+                            alt=""
+                            fill
+                            sizes="42px"
+                            style={{ objectFit: "cover" }}
+                          />
                         ) : (
                           <span
                             style={{

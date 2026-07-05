@@ -1,5 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ProjectSummary, ItemSummary, BrandSummary } from "@/lib/types";
+
+const CARD_FRAME_SIZES =
+  "(max-width:560px) 100vw, (max-width:860px) 50vw, (max-width:1080px) 33vw, 25vw";
 
 function CardFrame({
   ratio,
@@ -23,8 +27,13 @@ function CardFrame({
       style={{ aspectRatio: ratio, ...(background ? { background } : {}) }}
     >
       {src ? (
-        /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-        <img src={src} alt={alt} loading="lazy" />
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={CARD_FRAME_SIZES}
+          style={{ objectFit: "cover" }}
+        />
       ) : (
         <div
           style={{

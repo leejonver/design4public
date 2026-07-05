@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight, X } from "lucide-react";
 import { FilterChip } from "@/components/site/ui";
 import { Overline, Badge } from "@/components/site/primitives";
 import type { PhotoFeedItem } from "@/lib/types";
+
+const MASONRY_SIZES =
+  "(max-width:460px) 100vw, (max-width:720px) 50vw, (max-width:1080px) 33vw, (max-width:1500px) 25vw, (max-width:1980px) 20vw, 16vw";
 
 export function PhotosView({
   photos,
@@ -52,8 +56,13 @@ export function PhotosView({
               style={{ aspectRatio: idx % 7 === 6 ? "4 / 5" : "4 / 3" }}
             >
               {ph.url ? (
-                /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-                <img src={ph.url} alt={ph.alt ?? ""} loading="lazy" />
+                <Image
+                  src={ph.url}
+                  alt={ph.alt ?? ""}
+                  fill
+                  sizes={MASONRY_SIZES}
+                  style={{ objectFit: "cover" }}
+                />
               ) : (
                 <div
                   style={{
@@ -127,8 +136,13 @@ function PhotoModal({
       <div className="d4p-photo-modal" onClick={(e) => e.stopPropagation()}>
         <div className="d4p-photo-stage">
           {ph.url ? (
-            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-            <img src={ph.url} alt={ph.alt ?? ""} />
+            <Image
+              src={ph.url}
+              alt={ph.alt ?? ""}
+              fill
+              sizes="(max-width:860px) 92vw, 820px"
+              style={{ objectFit: "contain" }}
+            />
           ) : (
             <div
               style={{
