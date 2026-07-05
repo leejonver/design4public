@@ -14,17 +14,17 @@ import {
 import { ProjectCard } from "@/components/site/cards";
 import type { ProjectSummary } from "@/lib/types";
 
-function ProjectsViewInner({
+function ProjectsListView({
   projects,
   categories,
   count,
+  query,
 }: {
   projects: ProjectSummary[];
   categories: string[];
   count: number;
+  query?: string;
 }) {
-  const searchParams = useSearchParams();
-  const query = searchParams.get("q")?.trim() || undefined;
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState("최신순");
   const [view, setView] = useState<"grid" | "list">("grid");
@@ -91,13 +91,23 @@ function ProjectsViewInner({
   );
 }
 
+function ProjectsViewInner(props: {
+  projects: ProjectSummary[];
+  categories: string[];
+  count: number;
+}) {
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q")?.trim() || undefined;
+  return <ProjectsListView {...props} query={query} />;
+}
+
 export function ProjectsView(props: {
   projects: ProjectSummary[];
   categories: string[];
   count: number;
 }) {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<ProjectsListView {...props} />}>
       <ProjectsViewInner {...props} />
     </Suspense>
   );
