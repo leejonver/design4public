@@ -211,7 +211,9 @@ export const managersApi = {
     apiGet('/managers', params),
   
   getById: (id: string) => apiGet(`/managers/${id}`),
-  
+
+  invite: (data: { email: string; role: string; name?: string }) => apiPost('/managers/invite', data),
+
   update: (id: string, data: unknown) => apiPut(`/managers/${id}`, data),
   
   delete: (id: string) => apiDelete(`/managers/${id}`),
