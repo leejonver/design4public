@@ -15,7 +15,9 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 export async function POST(request: NextRequest) {
   try {
     await requireRole('master')
-    const { email, role, name } = await request.json()
+    const body = await request.json()
+    const email = String(body.email ?? '').trim().toLowerCase()
+    const { role, name } = body
 
     if (!email || !EMAIL_RE.test(email)) {
       return NextResponse.json({ success: false, error: '올바른 이메일을 입력해주세요.' }, { status: 400 })
@@ -36,7 +38,11 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: '이미 활성화된 계정입니다.' }, { status: 409 })
       }
       // Pending invite → clear the auth user so inviteUserByEmail can re-issue.
-      await supabaseAdmin.auth.admin.deleteUser(existing.id)
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(existing.id)
+      if (deleteError) {
+        console.error('invite resend deleteUser error:', deleteError)
+        return NextResponse.json({ success: false, error: '초대에 실패했습니다.' }, { status: 500 })
+      }
     }
 
     const redirectTo = `${new URL(request.url).origin}/admin/invite/accept`

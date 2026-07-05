@@ -93,4 +93,23 @@ describe('POST /api/admin/managers/invite', () => {
     expect(res.status).toBe(409)
     expect(invite).not.toHaveBeenCalled()
   })
+
+  it('pending 이메일이면 기존 auth 유저를 삭제하고 재초대한다', async () => {
+    const lookupQB = makeQB({ data: { id: 'stale-id', status: 'pending' }, error: null })
+    const upsertQB = makeQB({ data: null, error: null })
+    const readQB = makeQB({
+      data: { id: 'stale-id', email: 'pending@d4p.test', name: null, role: 'admin', status: 'pending', last_login_at: null, created_at: 'now', updated_at: 'now' },
+      error: null,
+    })
+    fromMock.mockReturnValueOnce(lookupQB).mockReturnValueOnce(upsertQB).mockReturnValueOnce(readQB)
+    deleteUser.mockResolvedValue({ error: null })
+    invite.mockResolvedValue({ data: { user: { id: 'stale-id' } }, error: null })
+
+    const res = await invitePost(req({ email: 'pending@d4p.test', role: 'admin' }) as never)
+    expect(res.status).toBe(200)
+    expect(deleteUser).toHaveBeenCalledWith('stale-id')
+    expect(invite).toHaveBeenCalledWith('pending@d4p.test', {
+      redirectTo: 'http://127.0.0.1:3000/admin/invite/accept',
+    })
+  })
 })
