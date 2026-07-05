@@ -28,7 +28,7 @@ export function SiteFooter() {
         <Link
           href="/"
           className="d4p-logotype"
-          style={{ fontSize: 16.5, color: "var(--white)", flex: "none" }}
+          style={{ fontSize: 17.5, color: "var(--white)", flex: "none" }}
         >
           DESIGN<span style={{ color: "var(--sage-400)" }}>4</span>PUBLIC
         </Link>
