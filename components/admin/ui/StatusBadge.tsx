@@ -25,8 +25,8 @@ const STATUS_MAP: Record<StatusBadgeProps['kind'], Record<string, StatusEntry>> 
     hidden: { label: '숨김', colorPalette: 'hint' },
   },
   approval: {
-    pending: { label: '대기', colorPalette: 'warning' },
-    approved: { label: '승인', colorPalette: 'success' },
+    pending: { label: '초대됨', colorPalette: 'warning' },
+    approved: { label: '활성', colorPalette: 'success' },
     rejected: { label: '거부', colorPalette: 'danger' },
   },
 };

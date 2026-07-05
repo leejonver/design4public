@@ -3,12 +3,13 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { Badge, Button, Callout, Card, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
+import { Badge, Button, Callout, Card, Dialog, Field, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
 import {
   CloseOutlineIcon,
   ConfirmOutlineIcon,
   EditOutlineIcon,
   GroupOutlineIcon,
+  MailOutlineIcon,
 } from '@vapor-ui/icons';
 import MainLayout from '@/components/admin/MainLayout';
 import {
@@ -46,9 +47,8 @@ const ROLE_FILTER_OPTIONS: Option[] = [{ value: 'all', label: '모든 권한' },
 
 const STATUS_FILTER_OPTIONS: Option[] = [
   { value: 'all', label: '모든 상태' },
-  { value: 'approved', label: '승인됨' },
-  { value: 'pending', label: '승인대기' },
-  { value: 'rejected', label: '거부됨' },
+  { value: 'approved', label: '활성' },
+  { value: 'pending', label: '초대됨' },
 ];
 
 const SORT_OPTIONS: Option[] = [
@@ -121,6 +121,54 @@ export default function ManagersPage() {
 
   const [deleteTarget, setDeleteTarget] = useState<Manager | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteRole, setInviteRole] = useState<ManagerRole>('content_manager');
+  const [inviting, setInviting] = useState(false);
+
+  const submitInvite = async () => {
+    const email = inviteEmail.trim();
+    if (!email) {
+      setFeedback({ type: 'danger', text: '이메일을 입력해주세요.' });
+      return;
+    }
+    setInviting(true);
+    try {
+      const res = await api.managers.invite({
+        email,
+        role: inviteRole,
+        name: inviteName.trim() || undefined,
+      });
+      if (res.success) {
+        setFeedback({ type: 'success', text: '초대 메일을 발송했습니다.' });
+        setInviteOpen(false);
+        setInviteEmail('');
+        setInviteName('');
+        setInviteRole('content_manager');
+        fetchManagers();
+      } else {
+        setFeedback({ type: 'danger', text: res.error || '초대에 실패했습니다.' });
+      }
+    } catch (e) {
+      setFeedback({
+        type: 'danger',
+        text: e instanceof Error ? e.message : '초대 중 오류가 발생했습니다.',
+      });
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const resendInvite = async (m: Manager) => {
+    const res = await api.managers.invite({ email: m.email, role: m.role });
+    setFeedback(
+      res.success
+        ? { type: 'success', text: '초대 메일을 다시 발송했습니다.' }
+        : { type: 'danger', text: res.error || '재전송에 실패했습니다.' },
+    );
+  };
 
   const fetchManagers = useCallback(async () => {
     setLoading(true);
@@ -201,13 +249,6 @@ export default function ManagersPage() {
 
   const handleRoleChange = (id: string, role: ManagerRole) =>
     applyUpdate(id, { role }, '권한이 변경되었습니다.');
-
-  const handleApproval = (id: string, approvalStatus: ApprovalStatus) =>
-    applyUpdate(
-      id,
-      { approvalStatus },
-      approvalStatus === 'approved' ? '승인되었습니다.' : '거부되었습니다.',
-    );
 
   const startEditName = (m: Manager) => {
     setEditingId(m.id);
@@ -372,29 +413,19 @@ export default function ManagersPage() {
     {
       key: 'actions',
       header: '작업',
-      width: 'w-44',
+      width: 'w-52',
       nowrap: true,
       render: (m) => (
         <div className="flex flex-wrap items-center gap-2">
           {m.approvalStatus === 'pending' && (
-            <>
-              <Button
-                size="sm"
-                variant="fill"
-                colorPalette="success"
-                onClick={() => handleApproval(m.id, 'approved')}
-              >
-                승인
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                colorPalette="danger"
-                onClick={() => handleApproval(m.id, 'rejected')}
-              >
-                거부
-              </Button>
-            </>
+            <Button
+              size="sm"
+              variant="outline"
+              colorPalette="primary"
+              onClick={() => resendInvite(m)}
+            >
+              초대 재전송
+            </Button>
           )}
           {m.id !== user?.id && (
             <Button
@@ -403,7 +434,7 @@ export default function ManagersPage() {
               colorPalette="danger"
               onClick={() => setDeleteTarget(m)}
             >
-              삭제
+              {m.approvalStatus === 'pending' ? '초대 취소' : '삭제'}
             </Button>
           )}
         </div>
@@ -439,13 +470,15 @@ export default function ManagersPage() {
 
   return (
     <MainLayout>
-      <PageHeader title="관리자 관리" description="시스템 관리자들의 권한을 승인하고 관리합니다." />
-
-      <Callout.Root colorPalette="primary" className="mb-4">
-        <Text typography="body2" render={<p />}>
-          신규 가입자는 이메일 인증 후 관리자 승인이 필요합니다. 승인 대기 중인 계정을 검토하여 승인 또는 거부해 주세요.
-        </Text>
-      </Callout.Root>
+      <PageHeader
+        title="관리자 관리"
+        description="관리자를 초대하고 역할을 관리합니다."
+        action={
+          <Button colorPalette="primary" onClick={() => setInviteOpen(true)}>
+            <MailOutlineIcon size={16} /> 관리자 초대
+          </Button>
+        }
+      />
 
       {feedback && (
         <Callout.Root
@@ -527,18 +560,70 @@ export default function ManagersPage() {
 
       <ConfirmDialog
         open={!!deleteTarget}
-        title="관리자 삭제"
+        title={deleteTarget?.approvalStatus === 'pending' ? '초대 취소' : '관리자 삭제'}
         description={
           deleteTarget
-            ? `"${deleteTarget.name || deleteTarget.email}" 관리자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
+            ? deleteTarget.approvalStatus === 'pending'
+              ? `"${deleteTarget.email}" 초대를 취소하시겠습니까?`
+              : `"${deleteTarget.name || deleteTarget.email}" 관리자를 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`
             : undefined
         }
-        confirmText="삭제"
+        confirmText={deleteTarget?.approvalStatus === 'pending' ? '초대 취소' : '삭제'}
         danger
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      <Dialog.Root
+        open={inviteOpen}
+        onOpenChange={(next) => {
+          if (!next) setInviteOpen(false);
+        }}
+      >
+        <Dialog.Popup>
+          <Dialog.Title>관리자 초대</Dialog.Title>
+          <Dialog.Body>
+            <div className="flex flex-col gap-4 py-2">
+              <Field.Root>
+                <Field.Label>이메일</Field.Label>
+                <TextInput
+                  type="email"
+                  value={inviteEmail}
+                  onValueChange={setInviteEmail}
+                  placeholder="초대할 이메일 주소"
+                />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label>이름 (선택)</Field.Label>
+                <TextInput value={inviteName} onValueChange={setInviteName} placeholder="이름" />
+              </Field.Root>
+              <Field.Root>
+                <Field.Label>역할</Field.Label>
+                <SelectField
+                  value={inviteRole}
+                  onValueChange={(v) => setInviteRole(v as ManagerRole)}
+                  options={ROLE_OPTIONS}
+                  ariaLabel="역할 선택"
+                />
+              </Field.Root>
+            </div>
+          </Dialog.Body>
+          <Dialog.Footer>
+            <Button
+              variant="outline"
+              colorPalette="secondary"
+              onClick={() => setInviteOpen(false)}
+              disabled={inviting}
+            >
+              취소
+            </Button>
+            <Button variant="fill" colorPalette="primary" onClick={submitInvite} disabled={inviting}>
+              {inviting ? <Spinner size="md" /> : '초대 보내기'}
+            </Button>
+          </Dialog.Footer>
+        </Dialog.Popup>
+      </Dialog.Root>
     </MainLayout>
   );
 }
