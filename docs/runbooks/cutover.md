@@ -57,8 +57,10 @@ Before the invite flow works in production, in the Supabase project dashboard:
    may not reliably deliver to external domains. For anything beyond occasional internal invites,
    configure custom SMTP (Resend is already an approved vendor here). Decide per volume; do not
    assume deliverability silently.
-4. **(Optional, defense-in-depth)** Auth → Providers → Email: leave sign-ups enabled (invites need
-   it) but note the public `/admin/signup` route is gone; invites are the only entry path.
+4. **Auth → Providers → Email:** disable public sign-ups. `inviteUserByEmail` is a service-role
+   admin endpoint and is not gated by this setting, so invites keep working; disabling it closes
+   off anonymous self-registration (the public `/admin/signup` route is already gone, so invites
+   are the only entry path either way).
 5. **Auth → Passwords:** set minimum length to **8** and require **letters and digits**. Local
    `supabase/config.toml` has enforced this server-side since commit `29187e2`
    (`minimum_password_length = 8`, `password_requirements = "letters_digits"`); the production

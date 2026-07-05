@@ -41,7 +41,9 @@ describe('POST /api/admin/invite/accept', () => {
   })
 
   it('pending 프로필을 approved 로 승격한다', async () => {
-    ;(await getAuth()).getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+    ;(await getAuth()).getUser.mockResolvedValue({
+      data: { user: { id: 'u1', invited_at: '2026-07-01T00:00:00Z' } },
+    })
     const selectQB = makeQB({ data: { id: 'u1', status: 'pending' }, error: null })
     const updateQB = makeQB({ data: null, error: null })
     fromMock.mockReturnValueOnce(selectQB).mockReturnValueOnce(updateQB)
@@ -51,5 +53,18 @@ describe('POST /api/admin/invite/accept', () => {
     expect(res.status).toBe(200)
     expect(json.success).toBe(true)
     expect(updateQB.update as Mock).toHaveBeenCalledWith({ status: 'approved' })
+  })
+
+  it('초대되지 않은(invited_at 없는) 계정은 403, update 호출 안 됨', async () => {
+    ;(await getAuth()).getUser.mockResolvedValue({ data: { user: { id: 'u1' } } })
+    const selectQB = makeQB({ data: { id: 'u1', status: 'pending' }, error: null })
+    const updateQB = makeQB({ data: null, error: null })
+    fromMock.mockReturnValueOnce(selectQB).mockReturnValueOnce(updateQB)
+
+    const res = await acceptPost()
+    const json = await res.json()
+    expect(res.status).toBe(403)
+    expect(json.success).toBe(false)
+    expect(updateQB.update as Mock).not.toHaveBeenCalled()
   })
 })

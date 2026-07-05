@@ -28,6 +28,13 @@ export async function POST() {
     }
 
     if (profile.status === 'pending') {
+      // inviteUserByEmail sets invited_at on the auth user; a self-registered
+      // account never has it. Without this check, anyone who lands here with
+      // a pending profile (e.g. one created for an unrelated reason) could
+      // self-approve without ever having been invited.
+      if (!user.invited_at) {
+        return NextResponse.json({ success: false, error: '초대된 계정이 아닙니다.' }, { status: 403 })
+      }
       const { error } = await supabaseAdmin
         .from('profiles')
         .update({ status: 'approved' })
