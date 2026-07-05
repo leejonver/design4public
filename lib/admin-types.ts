@@ -273,16 +273,6 @@ export interface LoginFormData {
 }
 
 /**
- * 회원가입 폼 데이터
- */
-export interface SignupFormData {
-  name: string; // 이름 (비워두고 가입 가능)
-  email: string; // 이메일 주소 (유일값)
-  password: string; // 비밀번호
-  confirmPassword: string; // 비밀번호 확인
-}
-
-/**
  * 기본 응답 타입
  * 성공/실패 여부와 메시지만 포함
  */

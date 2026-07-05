@@ -9,7 +9,7 @@ import { Button, Callout, Card, Field, Spinner, Text, TextInput } from '@vapor-u
 import { LockOutlineIcon } from '@vapor-ui/icons';
 import { supabase } from '@/lib/supabase/browser';
 
-const PASSWORD_RE = /^(?=.*[a-zA-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/;
+const PASSWORD_RE = /^(?=.*[a-zA-Z])(?=.*\d)[A-Za-z\d]/;
 
 type Phase = 'verifying' | 'ready' | 'invalid' | 'saving';
 
@@ -54,6 +54,9 @@ export default function InviteAcceptPage() {
           refresh_token: refreshToken,
         });
         if (!sErr && active) {
+          // Tokens live in the URL fragment; drop them from the address bar
+          // now that the session cookie is established.
+          window.history.replaceState(null, '', window.location.pathname);
           setPhase('ready');
           return;
         }
@@ -70,7 +73,7 @@ export default function InviteAcceptPage() {
     if (!password) next.password = '비밀번호를 입력해주세요.';
     else if (password.length < 8) next.password = '비밀번호는 8자 이상이어야 합니다.';
     else if (!PASSWORD_RE.test(password))
-      next.password = '비밀번호는 영문, 숫자, 특수문자를 포함해야 합니다.';
+      next.password = '비밀번호는 영문, 숫자를 포함해야 합니다.';
     if (!confirm) next.confirm = '비밀번호 확인을 입력해주세요.';
     else if (password !== confirm) next.confirm = '비밀번호가 일치하지 않습니다.';
     setFieldErrors(next);
