@@ -47,7 +47,12 @@ Before the invite flow works in production, in the Supabase project dashboard:
    (and confirm **Site URL** = `https://www.design4public.com`). Without this, the invite
    link's `redirect_to` is rejected and the accept page never receives a session.
 2. **Auth → Email Templates → "Invite user":** confirm the template's action link uses
-   `{{ .ConfirmationURL }}`; optionally localize the copy to Korean.
+   `{{ .ConfirmationURL }}`; optionally localize the copy to Korean. GoTrue delivers the
+   session as implicit-flow tokens in the link's URL fragment. The `@supabase/ssr` browser
+   client defaults to the PKCE flow and does **not** auto-consume those fragment tokens, so
+   the accept page reads `access_token`/`refresh_token` from the fragment and calls
+   `setSession` explicitly (the `token_hash` → `verifyOtp` branch is a fallback). No custom
+   template is required.
 3. **Auth → SMTP (deliverability):** the default Supabase mailer is shared + rate-limited and
    may not reliably deliver to external domains. For anything beyond occasional internal invites,
    configure custom SMTP (Resend is already an approved vendor here). Decide per volume; do not
