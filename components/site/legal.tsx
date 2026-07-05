@@ -56,7 +56,7 @@ export function LegalPage({ kind }: { kind: Kind }) {
         <div
           style={{
             fontFamily: "var(--font-sans)",
-            fontSize: 12.5,
+            fontSize: 14,
             color: "var(--ink-400)",
             marginBottom: "var(--sp-6)",
           }}
@@ -69,7 +69,7 @@ export function LegalPage({ kind }: { kind: Kind }) {
               style={{
                 fontFamily: "var(--font-sans)",
                 fontWeight: 700,
-                fontSize: 16,
+                fontSize: 17.5,
                 color: "var(--ink-900)",
                 margin: 0,
               }}
@@ -79,7 +79,7 @@ export function LegalPage({ kind }: { kind: Kind }) {
             <p
               style={{
                 fontFamily: "var(--font-sans)",
-                fontSize: 15,
+                fontSize: 16.5,
                 lineHeight: 1.75,
                 color: "var(--ink-600)",
                 margin: "12px 0 0",
@@ -98,7 +98,7 @@ export function LegalPage({ kind }: { kind: Kind }) {
         >
           <Link
             href={`/${other}`}
-            style={{ fontFamily: "var(--font-sans)", fontSize: 13.5, color: "var(--ink-700)" }}
+            style={{ fontFamily: "var(--font-sans)", fontSize: 15, color: "var(--ink-700)" }}
           >
             {otherLabel}
           </Link>

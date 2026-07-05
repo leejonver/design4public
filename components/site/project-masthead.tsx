@@ -44,7 +44,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
           <div
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 14.5,
+              fontSize: 16,
               color: "var(--ink-500)",
               marginTop: 10,
             }}
@@ -66,7 +66,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
               <div
                 style={{
                   fontFamily: "var(--font-sans)",
-                  fontSize: 10.5,
+                  fontSize: 12,
                   fontWeight: 700,
                   letterSpacing: "0.14em",
                   textTransform: "uppercase",
@@ -78,7 +78,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
               <div
                 style={{
                   fontFamily: "var(--font-sans)",
-                  fontSize: 14,
+                  fontSize: 15.5,
                   fontWeight: 600,
                   color: "var(--ink-900)",
                   marginTop: 4,
@@ -139,7 +139,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
                     color: "var(--ink-400)",
                     fontFamily: "var(--font-display)",
                     fontWeight: 600,
-                    fontSize: "2rem",
+                    fontSize: "2.1875rem",
                   }}
                 >
                   {project.title.charAt(0) || "DESIGN4PUBLIC"}

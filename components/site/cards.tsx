@@ -46,7 +46,7 @@ function CardFrame({
             color: "var(--ink-400)",
             fontFamily: "var(--font-display)",
             fontWeight: 600,
-            fontSize: isWordmark ? "0.95rem" : "1.7rem",
+            fontSize: isWordmark ? "1rem" : "1.8125rem",
             letterSpacing: isWordmark ? "0.08em" : "-0.01em",
             textTransform: isWordmark ? "uppercase" : "none",
             textAlign: "center",
@@ -121,7 +121,7 @@ export function BrandCard({ brand }: { brand: BrandSummary }) {
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "1.4rem",
+                fontSize: "1.5rem",
                 lineHeight: 1.2,
                 color: "#fff",
                 letterSpacing: "-0.01em",

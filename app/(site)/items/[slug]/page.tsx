@@ -103,7 +103,7 @@ export default async function ItemDetailPage({ params }: Props) {
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "clamp(1.7rem,2.4vw,2.1rem)",
+                fontSize: "clamp(1.8125rem,2.4vw,2.25rem)",
                 letterSpacing: "-0.02em",
                 color: "var(--ink-900)",
                 margin: "12px 0 0",
@@ -115,7 +115,7 @@ export default async function ItemDetailPage({ params }: Props) {
               <p
                 style={{
                   fontFamily: "var(--font-sans)",
-                  fontSize: 15,
+                  fontSize: 16.5,
                   color: "var(--ink-500)",
                   margin: "10px 0 0",
                 }}
@@ -158,7 +158,7 @@ export default async function ItemDetailPage({ params }: Props) {
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: 20,
+                fontSize: 22,
                 margin: "8px 0 22px",
                 color: "var(--ink-900)",
               }}

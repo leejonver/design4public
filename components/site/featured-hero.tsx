@@ -60,7 +60,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
                 color: "var(--ink-400)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "2rem",
+                fontSize: "2.1875rem",
               }}
             >
               {project.title.charAt(0) || "DESIGN4PUBLIC"}
@@ -81,7 +81,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
         <div
           style={{
             fontFamily: "var(--font-sans)",
-            fontSize: 12,
+            fontSize: 13.5,
             fontWeight: 700,
             letterSpacing: "0.16em",
             textTransform: "uppercase",
@@ -95,7 +95,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
           <div
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 15,
+              fontSize: 16.5,
               color: "rgba(255,255,255,.8)",
               marginTop: 10,
             }}

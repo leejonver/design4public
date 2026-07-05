@@ -31,7 +31,7 @@ export function DetailHero({
           style={{
             fontFamily: "var(--font-display)",
             fontWeight: 600,
-            fontSize: "0.95rem",
+            fontSize: "1rem",
             letterSpacing: "0.08em",
             textTransform: "uppercase",
             color: "var(--ink-400)",

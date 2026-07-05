@@ -13,7 +13,7 @@ const LATEST_PHOTOS_SIZES =
 
 const moreLink: CSSProperties = {
   fontFamily: "var(--font-sans)",
-  fontSize: 12,
+  fontSize: 13.5,
   fontWeight: 700,
   letterSpacing: "0.1em",
   textTransform: "uppercase",
@@ -38,7 +38,7 @@ function SectionHead({ overline, title, href }: { overline: string; title: strin
           style={{
             fontFamily: "var(--font-display)",
             fontWeight: 600,
-            fontSize: "clamp(1.4rem,2.2vw,1.7rem)",
+            fontSize: "clamp(1.5rem,2.2vw,1.8125rem)",
             marginTop: 8,
             color: "var(--ink-900)",
           }}

@@ -147,7 +147,7 @@ export function SiteHeader() {
                     style={{
                       fontFamily: "var(--font-display)",
                       fontWeight: 600,
-                      fontSize: 30,
+                      fontSize: 32,
                       color: isActive(n.href) ? "var(--ink-900)" : "var(--ink-700)",
                       padding: "14px 0",
                       borderBottom: "1px solid var(--border-hair)",
@@ -205,7 +205,7 @@ export function SiteHeader() {
                   href={n.href}
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: 12,
+                    fontSize: 13.5,
                     fontWeight: 700,
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
@@ -247,7 +247,7 @@ const iconBtn: CSSProperties = {
 };
 const mLink: CSSProperties = {
   fontFamily: "var(--font-sans)",
-  fontSize: 13.5,
+  fontSize: 15,
   color: "var(--ink-500)",
 };
 const overlay: CSSProperties = {

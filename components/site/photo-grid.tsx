@@ -75,7 +75,7 @@ export function PhotosView({
                     color: "var(--ink-400)",
                     fontFamily: "var(--font-display)",
                     fontWeight: 600,
-                    fontSize: "1.7rem",
+                    fontSize: "1.8125rem",
                   }}
                 >
                   {(caption ?? "DESIGN4PUBLIC").charAt(0)}
@@ -154,7 +154,7 @@ function PhotoModal({
                 color: "rgba(255,255,255,.5)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "2rem",
+                fontSize: "2.1875rem",
               }}
             >
               {(title || "DESIGN4PUBLIC").charAt(0)}
@@ -211,7 +211,7 @@ function PhotoModal({
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 600,
-              fontSize: 22,
+              fontSize: 24,
               color: "var(--ink-900)",
               margin: "14px 0 0",
             }}
@@ -229,14 +229,14 @@ function PhotoModal({
             <Link href={`/projects/${ph.projectSlug}`} className="d4p-side-link" onClick={onClose}>
               <div>
                 <span
-                  style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-400)" }}
+                  style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-400)" }}
                 >
                   프로젝트
                 </span>
                 <div
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: 14.5,
+                    fontSize: 16,
                     fontWeight: 600,
                     color: "var(--ink-900)",
                     marginTop: 3,
@@ -250,10 +250,10 @@ function PhotoModal({
           )}
           <Link href={`/photos/${ph.id}`} className="d4p-side-link" onClick={onClose}>
             <div>
-              <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-400)" }}>
+              <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-400)" }}>
                 사진
               </span>
-              <div style={{ fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "var(--ink-900)", marginTop: 3 }}>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--ink-900)", marginTop: 3 }}>
                 상세 페이지 열기
               </div>
             </div>

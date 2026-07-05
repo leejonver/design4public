@@ -22,9 +22,9 @@ const VARIANTS: Record<Variant, { background: string; color: string; hover: stri
 };
 
 const SIZES: Record<Size, { padding: string; fontSize: number }> = {
-  sm: { padding: "8px 14px", fontSize: 13 },
-  md: { padding: "11px 18px", fontSize: 14 },
-  lg: { padding: "14px 22px", fontSize: 15 },
+  sm: { padding: "8px 14px", fontSize: 14.5 },
+  md: { padding: "11px 18px", fontSize: 15.5 },
+  lg: { padding: "14px 22px", fontSize: 16.5 },
 };
 
 function buttonStyle(
@@ -209,7 +209,7 @@ export function FilterChip({
       onClick={onClick}
       style={{
         fontFamily: "var(--font-sans)",
-        fontSize: 13,
+        fontSize: 14.5,
         padding: "7px 14px",
         borderRadius: "var(--radius-pill)",
         border: "1px solid transparent",
@@ -254,7 +254,7 @@ export function Input({
           style={{
             display: "block",
             fontFamily: "var(--font-sans)",
-            fontSize: 10.5,
+            fontSize: 12,
             fontWeight: 700,
             letterSpacing: ".16em",
             textTransform: "uppercase",
@@ -280,7 +280,7 @@ export function Input({
           border: `1px solid ${focused ? "var(--ink-900)" : "var(--border-line)"}`,
           borderRadius: "var(--radius-sm)",
           padding: "11px 13px",
-          fontSize: 14.5,
+          fontSize: 16,
           fontFamily: "var(--font-sans)",
           color: "var(--ink-900)",
           outline: "none",

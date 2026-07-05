@@ -7,7 +7,7 @@ import { Container } from "@/components/site/primitives";
 
 const link: CSSProperties = {
   fontFamily: "var(--font-sans)",
-  fontSize: 13,
+  fontSize: 14.5,
   color: "rgba(255,255,255,.78)",
 };
 const hair = "1px solid rgba(255,255,255,.12)";
@@ -28,7 +28,7 @@ export function SiteFooter() {
         <Link
           href="/"
           className="d4p-logotype"
-          style={{ fontSize: 15, color: "var(--white)", flex: "none" }}
+          style={{ fontSize: 16.5, color: "var(--white)", flex: "none" }}
         >
           DESIGN<span style={{ color: "var(--sage-400)" }}>4</span>PUBLIC
         </Link>
@@ -44,7 +44,7 @@ export function SiteFooter() {
           <p
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 13,
+              fontSize: 14.5,
               lineHeight: 1.6,
               color: "rgba(255,255,255,.52)",
               margin: 0,
@@ -94,7 +94,7 @@ export function SiteFooter() {
           }}
         >
           <span
-            style={{ fontFamily: "var(--font-sans)", fontSize: 12, color: "rgba(255,255,255,.4)" }}
+            style={{ fontFamily: "var(--font-sans)", fontSize: 13.5, color: "rgba(255,255,255,.4)" }}
           >
             © 2026 DESIGN4PUBLIC. All rights reserved.
           </span>

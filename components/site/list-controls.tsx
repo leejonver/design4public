@@ -18,7 +18,7 @@ export function SortMenu({ value, onChange, options }: { value: string; onChange
     <div style={{ position: "relative" }} ref={ref}>
       <button onClick={() => setOpen((o) => !o)} style={{
         display: "inline-flex", alignItems: "center", gap: 7, cursor: "pointer",
-        fontFamily: "var(--font-sans)", fontSize: 13.5, color: "var(--ink-800)",
+        fontFamily: "var(--font-sans)", fontSize: 15, color: "var(--ink-800)",
         background: "transparent", border: "none", padding: "6px 2px", whiteSpace: "nowrap",
       }}>
         <span style={{ color: "var(--ink-500)" }}>정렬</span>
@@ -30,7 +30,7 @@ export function SortMenu({ value, onChange, options }: { value: string; onChange
           {options.map((s) => (
             <button key={s} onClick={() => { onChange(s); setOpen(false); }} style={{
               display: "block", width: "100%", textAlign: "left", cursor: "pointer",
-              fontFamily: "var(--font-sans)", fontSize: 13.5, padding: "9px 11px",
+              fontFamily: "var(--font-sans)", fontSize: 15, padding: "9px 11px",
               background: s === value ? "var(--ink-50)" : "transparent", border: "none",
               borderRadius: 6, color: "var(--ink-800)", fontWeight: s === value ? 600 : 400,
             }}>{s}</button>
