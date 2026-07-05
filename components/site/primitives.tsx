@@ -54,7 +54,7 @@ export function Badge({ children }: { children: ReactNode }) {
         display: "inline-block",
         background: "var(--ink-50)",
         color: "var(--ink-700)",
-        fontSize: 11,
+        fontSize: 12.5,
         borderRadius: "var(--radius-pill)",
         padding: "5px 11px",
         lineHeight: 1,

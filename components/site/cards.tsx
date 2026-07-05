@@ -1,5 +1,9 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { ProjectSummary, ItemSummary, BrandSummary } from "@/lib/types";
+
+const CARD_FRAME_SIZES =
+  "(max-width:560px) 100vw, (max-width:860px) 50vw, (max-width:1080px) 33vw, 25vw";
 
 function CardFrame({
   ratio,
@@ -23,8 +27,13 @@ function CardFrame({
       style={{ aspectRatio: ratio, ...(background ? { background } : {}) }}
     >
       {src ? (
-        /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-        <img src={src} alt={alt} loading="lazy" />
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes={CARD_FRAME_SIZES}
+          style={{ objectFit: "cover" }}
+        />
       ) : (
         <div
           style={{
@@ -37,7 +46,7 @@ function CardFrame({
             color: "var(--ink-400)",
             fontFamily: "var(--font-display)",
             fontWeight: 600,
-            fontSize: isWordmark ? "0.95rem" : "1.7rem",
+            fontSize: isWordmark ? "1rem" : "1.8125rem",
             letterSpacing: isWordmark ? "0.08em" : "-0.01em",
             textTransform: isWordmark ? "uppercase" : "none",
             textAlign: "center",
@@ -77,7 +86,7 @@ export function ItemCard({ item }: { item: ItemSummary }) {
   return (
     <Link href={`/items/${item.slug}`} className="d4p-card">
       <CardFrame
-        ratio="4 / 3"
+        ratio="1 / 1"
         src={item.image}
         alt={item.name}
         fallback={item.name.charAt(0) || "DESIGN4PUBLIC"}
@@ -112,7 +121,7 @@ export function BrandCard({ brand }: { brand: BrandSummary }) {
               style={{
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "1.4rem",
+                fontSize: "1.5rem",
                 lineHeight: 1.2,
                 color: "#fff",
                 letterSpacing: "-0.01em",

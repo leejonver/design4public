@@ -20,10 +20,11 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
   // Against `next dev`, many workers hitting cold (not-yet-compiled) routes at
-  // once make the compiler queue requests until they time out — the residual
-  // flake source once auth/session issues are fixed. Cap concurrency so
-  // first-hit compiles stay fast; the suite still runs comfortably under 2min.
-  workers: 2,
+  // once make the compiler queue requests until they time out. Since M13's
+  // next/image conversion, dev renders also fan out image-optimizer requests,
+  // which pushed 2-worker runs into 10+ navigation timeouts per run while
+  // serial runs stay green in 3-7min. Determinism beats speed here.
+  workers: 1,
   reporter: 'html',
   // The suite runs against `next dev`, which compiles each route on its first
   // hit. Give web-first assertions (e.g. toHaveURL after a nav click) headroom

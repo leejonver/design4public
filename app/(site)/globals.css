@@ -109,18 +109,18 @@
   --fw-heavy: 800;
 
   /* ---- Display scale ---- */
-  --fs-display: clamp(2.75rem, 5.5vw, 4.5rem);
-  --fs-h1: clamp(2rem, 3.6vw, 3rem);
-  --fs-h2: clamp(1.5rem, 2.4vw, 2rem);
-  --fs-h3: 1.375rem;
-  --fs-h4: 1.125rem;
+  --fs-display: clamp(3rem, 5.8vw, 4.75rem);
+  --fs-h1: clamp(2.125rem, 3.8vw, 3.25rem);
+  --fs-h2: clamp(1.625rem, 2.6vw, 2.125rem);
+  --fs-h3: 1.5rem;
+  --fs-h4: 1.1875rem;
 
   /* ---- Text scale ---- */
-  --fs-lead: 1.25rem;
-  --fs-body: 1rem;
-  --fs-sm: 0.875rem;
-  --fs-xs: 0.75rem;
-  --fs-label: 0.6875rem;
+  --fs-lead: 1.375rem;
+  --fs-body: 1.0625rem;
+  --fs-sm: 0.9375rem;
+  --fs-xs: 0.8125rem;
+  --fs-label: 0.75rem;
 
   /* ---- Line heights ---- */
   --lh-tight: 1.05;
@@ -439,7 +439,7 @@ img {
   bottom: 0;
   padding: 22px 14px 11px;
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: 13.5px;
   color: #fff;
   text-align: left;
   background: var(--scrim-bottom);
@@ -484,7 +484,7 @@ img {
 }
 .d4p-card-overline {
   font-family: var(--font-sans);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -493,7 +493,7 @@ img {
 .d4p-card-title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 15.5px;
+  font-size: 17px;
   color: var(--ink-900);
   margin-top: 6px;
   letter-spacing: -0.01em;
@@ -502,7 +502,7 @@ img {
 }
 .d4p-card-meta {
   font-family: var(--font-sans);
-  font-size: 13px;
+  font-size: 14.5px;
   color: var(--ink-500);
   margin-top: 5px;
 }
@@ -513,7 +513,7 @@ img {
 .d4p-textarea {
   width: 100%;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: 16.5px;
   color: var(--ink-900);
   background: var(--white);
   padding: 12px 14px;
@@ -593,7 +593,7 @@ img {
   left: 16px;
   bottom: 16px;
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13.5px;
   letter-spacing: 0.08em;
   color: #fff;
   background: rgba(0, 0, 0, 0.4);
@@ -758,7 +758,7 @@ img {
 }
 .d4p-srch-sec {
   font-family: var(--font-sans);
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -772,7 +772,7 @@ img {
 }
 .d4p-srch-chip {
   font-family: var(--font-sans);
-  font-size: 12.5px;
+  font-size: 14px;
   color: var(--ink-700);
   cursor: pointer;
   background: var(--ink-50);
@@ -807,6 +807,7 @@ img {
 .d4p-srch-thumb {
   width: 42px;
   height: 42px;
+  position: relative;
   flex: none;
   overflow: hidden;
   background: var(--sunken);
@@ -875,7 +876,7 @@ img {
   align-items: center;
   gap: 8px;
   font-family: var(--font-sans);
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -899,7 +900,7 @@ img {
   font-weight: 700;
   color: #fff;
   margin: 12px 0 0;
-  font-size: clamp(1.7rem, 3.4vw, 3rem);
+  font-size: clamp(1.8125rem, 3.4vw, 3.25rem);
   line-height: 1.08;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -915,7 +916,7 @@ img {
 }
 .d4p-hero-counter {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13.5px;
   letter-spacing: 0.08em;
   color: #fff;
 }
@@ -1012,6 +1013,7 @@ img {
   flex: 0 0 100%;
   height: 100%;
   min-height: inherit;
+  position: relative;
   overflow: hidden;
 }
 .d4p-pmast-slide img {
@@ -1024,7 +1026,7 @@ img {
   font-weight: 700;
   color: var(--ink-900);
   margin: 12px 0 0;
-  font-size: clamp(1.6rem, 2.2vw, 2.1rem);
+  font-size: clamp(1.75rem, 2.2vw, 2.25rem);
   line-height: 1.14;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -1035,7 +1037,7 @@ img {
   right: var(--sp-5);
   bottom: var(--sp-5);
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: 13.5px;
   letter-spacing: 0.08em;
   color: #fff;
   background: rgba(0, 0, 0, 0.4);
@@ -1116,6 +1118,7 @@ img {
 }
 .d4p-detailhero-slide {
   flex: 0 0 100%;
+  position: relative;
 }
 .d4p-detailhero-slide img {
   width: 100%;
@@ -1129,8 +1132,9 @@ img {
   flex-wrap: wrap;
 }
 .d4p-detailhero-thumb {
-  width: 72px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
+  position: relative;
   flex: none;
   overflow: hidden;
   border-radius: var(--radius-sm);
@@ -1168,7 +1172,7 @@ img {
   gap: 14px;
   padding: 13px 16px;
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: 15px;
 }
 .d4p-spec-row + .d4p-spec-row {
   border-top: 1px solid var(--border-hair);

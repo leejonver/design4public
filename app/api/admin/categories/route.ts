@@ -4,6 +4,7 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import { mapCategory } from '@/lib/dto'
 import type { CategoryType } from '@/lib/database.types'
 import { revalidateEntity } from '@/lib/revalidation'
+import { parseListQuery } from '@/lib/list-query'
 
 const CATEGORY_TYPES: readonly CategoryType[] = ['project', 'item']
 
@@ -18,18 +19,13 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const type = searchParams.get('type')
     const search = searchParams.get('search')
-    const page = parseInt(searchParams.get('page') || '1')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = (page - 1) * limit
-
-    const SORTABLE = ['name', 'created_at'] as const
-    const sortParam = searchParams.get('sort')
-    const sortCol = SORTABLE.includes(sortParam as (typeof SORTABLE)[number])
-      ? (sortParam as (typeof SORTABLE)[number])
-      : 'name'
-    const dir = searchParams.get('dir')
     // categories default to name asc; honor explicit dir, otherwise asc
-    const ascending = dir ? dir === 'asc' : true
+    const { page, limit, offset, sortCol, ascending } = parseListQuery(searchParams, {
+      sortable: ['name', 'created_at'],
+      defaultSort: 'name',
+      defaultLimit: 50,
+      defaultAscending: true,
+    })
 
     let query = supabase
       .from('categories')

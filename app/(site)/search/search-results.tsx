@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { EntityType, SearchGroups } from "@/lib/search/query";
 import { Container } from "@/components/site/primitives";
@@ -24,12 +25,12 @@ export function SearchResults({ query, groups }: { query: string; groups: Search
       />
       <Container style={{ padding: "var(--sp-6) var(--gutter) var(--sp-9)" }}>
         {query && total === 0 && (
-          <p style={{ color: "var(--ink-400)", fontSize: 15 }}>검색 결과가 없습니다.</p>
+          <p style={{ color: "var(--ink-400)", fontSize: 16.5 }}>검색 결과가 없습니다.</p>
         )}
         {SECTION_ORDER.map((sec) =>
           groups[sec].length > 0 ? (
             <section key={sec} style={{ marginBottom: "var(--sp-8)" }}>
-              <h2 style={{ fontSize: 13, fontWeight: 700, letterSpacing: "0.1em", color: "var(--ink-500)", marginBottom: "var(--sp-3)" }}>
+              <h2 style={{ fontSize: 14.5, fontWeight: 700, letterSpacing: "0.1em", color: "var(--ink-500)", marginBottom: "var(--sp-3)" }}>
                 {SECTION_LABEL[sec]} ({groups[sec].length})
               </h2>
               <ul style={{ display: "grid", gap: "var(--sp-2)", listStyle: "none", padding: 0, margin: 0 }}>
@@ -45,8 +46,13 @@ export function SearchResults({ query, groups }: { query: string; groups: Search
                         style={{ borderRadius: hit.entityType === "brand" ? "var(--radius-pill)" : "var(--radius-sm)" }}
                       >
                         {hit.imageUrl ? (
-                          /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-                          <img src={hit.imageUrl} alt="" loading="lazy" />
+                          <Image
+                            src={hit.imageUrl}
+                            alt=""
+                            fill
+                            sizes="42px"
+                            style={{ objectFit: "cover" }}
+                          />
                         ) : (
                           <span
                             style={{
@@ -63,7 +69,7 @@ export function SearchResults({ query, groups }: { query: string; groups: Search
                           </span>
                         )}
                       </span>
-                      <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink-900)" }}>{hit.title}</span>
+                      <span style={{ fontSize: 16, fontWeight: 600, color: "var(--ink-900)" }}>{hit.title}</span>
                     </Link>
                   </li>
                 ))}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Container } from "@/components/site/primitives";
 import { PageHero, FilterBar } from "@/components/site/page-chrome";
 import {
@@ -13,7 +14,7 @@ import {
 import { ProjectCard } from "@/components/site/cards";
 import type { ProjectSummary } from "@/lib/types";
 
-export function ProjectsView({
+function ProjectsListView({
   projects,
   categories,
   count,
@@ -30,11 +31,23 @@ export function ProjectsView({
 
   const chips = ["All", ...categories];
 
+  // Same substring predicate fetchProjects() used server-side, now applied client-side.
+  const queried = useMemo(() => {
+    if (!query) return projects;
+    const k = query.toLowerCase();
+    return projects.filter((p) =>
+      [p.title, p.description, p.location, p.client, ...p.categories]
+        .join(" ")
+        .toLowerCase()
+        .includes(k),
+    );
+  }, [projects, query]);
+
   const list = useMemo(() => {
     const filtered =
       category === "All"
-        ? projects
-        : projects.filter((p) => p.categories.includes(category));
+        ? queried
+        : queried.filter((p) => p.categories.includes(category));
     const sorted = [...filtered];
     if (sort === "최신순") {
       sorted.sort((a, b) => (b.year ?? 0) - (a.year ?? 0));
@@ -42,7 +55,7 @@ export function ProjectsView({
       sorted.sort((a, b) => a.title.localeCompare(b.title));
     }
     return sorted;
-  }, [projects, category, sort]);
+  }, [queried, category, sort]);
 
   return (
     <div>
@@ -52,7 +65,7 @@ export function ProjectsView({
         count={count}
         lead={
           query
-            ? `‘${query}’ 검색 결과 ${count}건`
+            ? `‘${query}’ 검색 결과 ${queried.length}건`
             : "공공·업무 공간에 실제로 도입된 프로젝트를 둘러보세요."
         }
       />
@@ -75,5 +88,27 @@ export function ProjectsView({
         </div>
       </Container>
     </div>
+  );
+}
+
+function ProjectsViewInner(props: {
+  projects: ProjectSummary[];
+  categories: string[];
+  count: number;
+}) {
+  const searchParams = useSearchParams();
+  const query = searchParams.get("q")?.trim() || undefined;
+  return <ProjectsListView {...props} query={query} />;
+}
+
+export function ProjectsView(props: {
+  projects: ProjectSummary[];
+  categories: string[];
+  count: number;
+}) {
+  return (
+    <Suspense fallback={<ProjectsListView {...props} />}>
+      <ProjectsViewInner {...props} />
+    </Suspense>
   );
 }

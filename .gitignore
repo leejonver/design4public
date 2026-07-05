@@ -18,3 +18,4 @@ tsconfig.tsbuildinfo
 
 .env.test.local
 tests/e2e/.auth/
+scripts/__pycache__/

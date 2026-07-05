@@ -16,7 +16,7 @@ const INQUIRY_TYPES = ["프로젝트 문의", "아이템 문의", "브랜드 입
 
 const fieldLabelStyle: React.CSSProperties = {
     fontFamily: "var(--font-sans)",
-    fontSize: 10.5,
+    fontSize: 12,
     fontWeight: 700,
     letterSpacing: "0.16em",
     textTransform: "uppercase",
@@ -163,7 +163,7 @@ function ContactModal({
                             style={{
                                 fontFamily: "var(--font-display)",
                                 fontWeight: 600,
-                                fontSize: 24,
+                                fontSize: 26,
                                 color: "var(--ink-900)",
                                 margin: "10px 0 0",
                             }}
@@ -212,7 +212,7 @@ function ContactModal({
                             style={{
                                 fontFamily: "var(--font-display)",
                                 fontWeight: 600,
-                                fontSize: 19,
+                                fontSize: 21,
                                 color: "var(--ink-900)",
                                 margin: "18px 0 0",
                             }}
@@ -222,7 +222,7 @@ function ContactModal({
                         <p
                             style={{
                                 fontFamily: "var(--font-sans)",
-                                fontSize: 14,
+                                fontSize: 15.5,
                                 color: "var(--ink-500)",
                                 margin: "8px 0 22px",
                             }}
@@ -277,7 +277,7 @@ function ContactModal({
                             <p
                                 style={{
                                     fontFamily: "var(--font-sans)",
-                                    fontSize: 13,
+                                    fontSize: 14.5,
                                     color: "var(--ink-600)",
                                     margin: "var(--sp-3) 0 0",
                                 }}

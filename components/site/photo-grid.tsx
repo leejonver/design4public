@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight, X } from "lucide-react";
 import { FilterChip } from "@/components/site/ui";
 import { Overline, Badge } from "@/components/site/primitives";
 import type { PhotoFeedItem } from "@/lib/types";
+
+const MASONRY_SIZES =
+  "(max-width:460px) 100vw, (max-width:720px) 50vw, (max-width:1080px) 33vw, (max-width:1500px) 25vw, (max-width:1980px) 20vw, 16vw";
 
 export function PhotosView({
   photos,
@@ -52,8 +56,13 @@ export function PhotosView({
               style={{ aspectRatio: idx % 7 === 6 ? "4 / 5" : "4 / 3" }}
             >
               {ph.url ? (
-                /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-                <img src={ph.url} alt={ph.alt ?? ""} loading="lazy" />
+                <Image
+                  src={ph.url}
+                  alt={ph.alt ?? ""}
+                  fill
+                  sizes={MASONRY_SIZES}
+                  style={{ objectFit: "cover" }}
+                />
               ) : (
                 <div
                   style={{
@@ -66,7 +75,7 @@ export function PhotosView({
                     color: "var(--ink-400)",
                     fontFamily: "var(--font-display)",
                     fontWeight: 600,
-                    fontSize: "1.7rem",
+                    fontSize: "1.8125rem",
                   }}
                 >
                   {(caption ?? "DESIGN4PUBLIC").charAt(0)}
@@ -127,8 +136,13 @@ function PhotoModal({
       <div className="d4p-photo-modal" onClick={(e) => e.stopPropagation()}>
         <div className="d4p-photo-stage">
           {ph.url ? (
-            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-            <img src={ph.url} alt={ph.alt ?? ""} />
+            <Image
+              src={ph.url}
+              alt={ph.alt ?? ""}
+              fill
+              sizes="(max-width:860px) 92vw, 820px"
+              style={{ objectFit: "contain" }}
+            />
           ) : (
             <div
               style={{
@@ -140,7 +154,7 @@ function PhotoModal({
                 color: "rgba(255,255,255,.5)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "2rem",
+                fontSize: "2.1875rem",
               }}
             >
               {(title || "DESIGN4PUBLIC").charAt(0)}
@@ -197,7 +211,7 @@ function PhotoModal({
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 600,
-              fontSize: 22,
+              fontSize: 24,
               color: "var(--ink-900)",
               margin: "14px 0 0",
             }}
@@ -215,14 +229,14 @@ function PhotoModal({
             <Link href={`/projects/${ph.projectSlug}`} className="d4p-side-link" onClick={onClose}>
               <div>
                 <span
-                  style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-400)" }}
+                  style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-400)" }}
                 >
                   프로젝트
                 </span>
                 <div
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: 14.5,
+                    fontSize: 16,
                     fontWeight: 600,
                     color: "var(--ink-900)",
                     marginTop: 3,
@@ -236,10 +250,10 @@ function PhotoModal({
           )}
           <Link href={`/photos/${ph.id}`} className="d4p-side-link" onClick={onClose}>
             <div>
-              <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-400)" }}>
+              <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-400)" }}>
                 사진
               </span>
-              <div style={{ fontFamily: "var(--font-sans)", fontSize: 14.5, fontWeight: 600, color: "var(--ink-900)", marginTop: 3 }}>
+              <div style={{ fontFamily: "var(--font-sans)", fontSize: 16, fontWeight: 600, color: "var(--ink-900)", marginTop: 3 }}>
                 상세 페이지 열기
               </div>
             </div>

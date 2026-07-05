@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { fetchBrandBySlug } from "@/lib/api";
 import type { BrandDetail } from "@/lib/types";
@@ -33,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const sectionHeading: React.CSSProperties = {
   fontFamily: "var(--font-display)",
   fontWeight: 600,
-  fontSize: 20,
+  fontSize: 22,
   margin: "8px 0 22px",
   color: "var(--ink-900)",
 };
@@ -97,12 +98,13 @@ export default async function BrandDetailPage({ params }: Props) {
           }}
         >
           {brand.cover ? (
-            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-            <img
+            <Image
               src={brand.cover}
               alt={brand.nameKo}
-              loading="lazy"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              fill
+              sizes="100vw"
+              priority
+              style={{ objectFit: "cover" }}
             />
           ) : (
             <div
@@ -116,7 +118,7 @@ export default async function BrandDetailPage({ params }: Props) {
                 color: "var(--ink-400)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "2rem",
+                fontSize: "2.1875rem",
               }}
             >
               {brand.nameKo.charAt(0) || "DESIGN4PUBLIC"}
@@ -128,7 +130,7 @@ export default async function BrandDetailPage({ params }: Props) {
               <div
                 style={{
                   fontFamily: "var(--font-sans)",
-                  fontSize: 10,
+                  fontSize: 11.5,
                   fontWeight: 700,
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
@@ -141,7 +143,7 @@ export default async function BrandDetailPage({ params }: Props) {
             <h1
               style={{
                 fontFamily: "var(--font-sans)",
-                fontSize: "clamp(2rem,4vw,3rem)",
+                fontSize: "clamp(2.1875rem,4vw,3.25rem)",
                 fontWeight: 700,
                 letterSpacing: "0.02em",
                 color: "var(--white)",
@@ -170,7 +172,7 @@ export default async function BrandDetailPage({ params }: Props) {
               <p
                 style={{
                   fontFamily: "var(--font-sans)",
-                  fontSize: 16,
+                  fontSize: 17.5,
                   lineHeight: 1.7,
                   color: "var(--ink-700)",
                   margin: "18px 0 0",
@@ -200,7 +202,7 @@ export default async function BrandDetailPage({ params }: Props) {
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 600,
-                    fontSize: 28,
+                    fontSize: 30,
                     color: "var(--ink-900)",
                     letterSpacing: "-0.01em",
                   }}
@@ -210,7 +212,7 @@ export default async function BrandDetailPage({ params }: Props) {
                 <div
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: 13,
+                    fontSize: 14.5,
                     color: "var(--ink-500)",
                     marginTop: 3,
                   }}

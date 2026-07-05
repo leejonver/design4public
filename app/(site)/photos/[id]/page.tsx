@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
@@ -85,8 +86,16 @@ export default async function PhotoDetailPage({ params }: Props) {
 
       <div className="d4p-detail-split" style={{ alignItems: "start", gap: "var(--sp-8)" }}>
         <div className="d4p-photo-tile" style={{ aspectRatio: "4 / 3" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */}
-          {photo.url && <img src={photo.url} alt={photo.alt ?? title} />}
+          {photo.url && (
+            <Image
+              src={photo.url}
+              alt={photo.alt ?? title}
+              fill
+              sizes="(max-width:860px) 100vw, 60vw"
+              priority
+              style={{ objectFit: "cover" }}
+            />
+          )}
         </div>
 
         <div>
@@ -95,7 +104,7 @@ export default async function PhotoDetailPage({ params }: Props) {
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 600,
-              fontSize: "clamp(1.7rem,2.4vw,2.1rem)",
+              fontSize: "clamp(1.8125rem,2.4vw,2.25rem)",
               letterSpacing: "-0.02em",
               color: "var(--ink-900)",
               margin: "12px 0 0",
@@ -108,7 +117,7 @@ export default async function PhotoDetailPage({ params }: Props) {
             <p
               style={{
                 fontFamily: "var(--font-sans)",
-                fontSize: 16,
+                fontSize: 17.5,
                 lineHeight: 1.7,
                 color: "var(--ink-700)",
                 margin: "16px 0 0",
@@ -130,13 +139,13 @@ export default async function PhotoDetailPage({ params }: Props) {
           {photo.projectSlug && (
             <Link href={`/projects/${photo.projectSlug}`} className="d4p-side-link" style={{ marginTop: 24 }}>
               <div>
-                <span style={{ fontFamily: "var(--font-sans)", fontSize: 11, color: "var(--ink-400)" }}>
+                <span style={{ fontFamily: "var(--font-sans)", fontSize: 12.5, color: "var(--ink-400)" }}>
                   프로젝트
                 </span>
                 <div
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: 14.5,
+                    fontSize: 16,
                     fontWeight: 600,
                     color: "var(--ink-900)",
                     marginTop: 3,
@@ -164,7 +173,7 @@ export default async function PhotoDetailPage({ params }: Props) {
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 600,
-              fontSize: 20,
+              fontSize: 22,
               margin: "8px 0 22px",
               color: "var(--ink-900)",
             }}

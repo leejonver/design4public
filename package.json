@@ -12,7 +12,9 @@
     "test:e2e": "playwright test",
     "gen:types": "supabase gen types typescript --local > lib/database.types.ts && node scripts/postprocess-types.mjs",
     "backfill:search": "node scripts/backfill-search.mjs",
-    "backfill:captions": "node scripts/backfill-captions.mjs"
+    "backfill:captions": "node scripts/backfill-captions.mjs",
+    "db:reset": "supabase db reset && docker restart supabase_kong_design4public && npm run gen:types",
+    "gate": "tsc --noEmit && npm run lint && vitest run && next build && playwright test && playwright test"
   },
   "dependencies": {
     "@radix-ui/react-checkbox": "^1.0.4",

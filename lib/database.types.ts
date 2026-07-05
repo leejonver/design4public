@@ -695,6 +695,7 @@ export type Database = {
       }
     }
     Functions: {
+      has_role: { Args: { min_role: string }; Returns: boolean }
       hybrid_search: {
         Args: {
           match_limit?: number
@@ -1406,4 +1407,3 @@ export type ProjectStatus = 'draft' | 'published' | 'hidden'
 export type ItemStatus = 'available' | 'discontinued' | 'hidden'
 export type BrandStatus = 'visible' | 'hidden'
 export type CategoryType = 'project' | 'item'
-

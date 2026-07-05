@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect } from "react";
+import Image from "next/image";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import { ButtonLink } from "@/components/site/ui";
 import type { ProjectDetail } from "@/lib/types";
@@ -36,11 +37,16 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
       {imgs.map((src, idx) => (
         <div key={idx} className="d4p-hero-slide" style={{ opacity: idx === i ? 1 : 0 }}>
           {src ? (
-            /* eslint-disable-next-line @next/next/no-img-element -- remote, dynamic-aspect Supabase storage image rendered CSS-fill; next/image (fill) would change the tuned layout. */
-            <img
+            <Image
               src={src}
               alt=""
-              style={{ transform: idx === i ? "scale(1.06)" : "scale(1)" }}
+              fill
+              sizes="100vw"
+              priority={idx === 0}
+              style={{
+                objectFit: "cover",
+                transform: idx === i ? "scale(1.06)" : "scale(1)",
+              }}
             />
           ) : (
             <div
@@ -54,7 +60,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
                 color: "var(--ink-400)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "2rem",
+                fontSize: "2.1875rem",
               }}
             >
               {project.title.charAt(0) || "DESIGN4PUBLIC"}
@@ -75,7 +81,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
         <div
           style={{
             fontFamily: "var(--font-sans)",
-            fontSize: 12,
+            fontSize: 13.5,
             fontWeight: 700,
             letterSpacing: "0.16em",
             textTransform: "uppercase",
@@ -89,7 +95,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
           <div
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 15,
+              fontSize: 16.5,
               color: "rgba(255,255,255,.8)",
               marginTop: 10,
             }}

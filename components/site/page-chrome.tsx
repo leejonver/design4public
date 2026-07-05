@@ -8,7 +8,7 @@ type Crumb = { label: string; href?: string };
 
 export function Breadcrumb({ items }: { items: Crumb[] }) {
   return (
-    <nav style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-sans)", fontSize: 12, color: "var(--ink-400)", flexWrap: "wrap" }}>
+    <nav style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "var(--font-sans)", fontSize: 13.5, color: "var(--ink-400)", flexWrap: "wrap" }}>
       {items.map((it, i) => {
         const last = i === items.length - 1;
         return (
@@ -32,14 +32,14 @@ export function PageHero({ breadcrumb, title, count, lead }: { breadcrumb?: Crum
       <Container style={{ padding: "var(--sp-5) var(--gutter) var(--sp-4)" }}>
         {breadcrumb && <Breadcrumb items={breadcrumb} />}
         <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 20, marginTop: breadcrumb ? 10 : 0 }}>
-          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.6rem, 2.5vw, 2.1rem)", letterSpacing: "0.01em", textTransform: "uppercase", color: "var(--ink-900)", margin: 0 }}>{title}</h1>
+          <h1 style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.75rem, 2.5vw, 2.25rem)", letterSpacing: "0.01em", textTransform: "uppercase", color: "var(--ink-900)", margin: 0 }}>{title}</h1>
           {count != null && (
-            <span style={{ fontFamily: "var(--font-sans)", fontSize: 14, color: "var(--ink-500)", whiteSpace: "nowrap", paddingBottom: 4, flex: "none" }}>
+            <span style={{ fontFamily: "var(--font-sans)", fontSize: 15.5, color: "var(--ink-500)", whiteSpace: "nowrap", paddingBottom: 4, flex: "none" }}>
               <strong style={{ color: "var(--ink-900)", fontWeight: 700 }}>{count.toLocaleString()}</strong>개
             </span>
           )}
         </div>
-        {lead && <p style={{ fontFamily: "var(--font-sans)", fontSize: 14.5, color: "var(--ink-500)", margin: "7px 0 0", maxWidth: "54ch", lineHeight: 1.5 }}>{lead}</p>}
+        {lead && <p style={{ fontFamily: "var(--font-sans)", fontSize: 16, color: "var(--ink-500)", margin: "7px 0 0", maxWidth: "54ch", lineHeight: 1.5 }}>{lead}</p>}
       </Container>
     </section>
   );
