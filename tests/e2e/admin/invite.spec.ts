@@ -3,26 +3,27 @@ import { createClient } from '@supabase/supabase-js'
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!
-const INBUCKET = 'http://127.0.0.1:54324'
+const MAILPIT = 'http://127.0.0.1:54324'
 
 const admin = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { autoRefreshToken: false, persistSession: false },
 })
 
-// Poll Inbucket for the newest message in a mailbox; return its HTML (or text).
-async function latestEmailBody(mailbox: string): Promise<string> {
+// Poll Mailpit (the local stack's mail server) for the newest message to an
+// address; return its HTML (or text).
+async function latestEmailBody(email: string): Promise<string> {
   for (let i = 0; i < 20; i++) {
-    const listRes = await fetch(`${INBUCKET}/api/v1/mailbox/${mailbox}`)
-    const list = (await listRes.json()) as Array<{ id: string; date: string }>
-    if (list.length > 0) {
-      const newest = [...list].sort((a, b) => b.date.localeCompare(a.date))[0]
-      const msgRes = await fetch(`${INBUCKET}/api/v1/mailbox/${mailbox}/${newest.id}`)
-      const msg = (await msgRes.json()) as { body: { html?: string; text?: string } }
-      return msg.body.html || msg.body.text || ''
+    const listRes = await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`)
+    const list = (await listRes.json()) as { messages: Array<{ ID: string; Created: string }> }
+    if (list.messages?.length > 0) {
+      const newest = [...list.messages].sort((a, b) => b.Created.localeCompare(a.Created))[0]
+      const msgRes = await fetch(`${MAILPIT}/api/v1/message/${newest.ID}`)
+      const msg = (await msgRes.json()) as { HTML?: string; Text?: string }
+      return msg.HTML || msg.Text || ''
     }
     await new Promise((r) => setTimeout(r, 500))
   }
-  throw new Error(`no email arrived for mailbox ${mailbox}`)
+  throw new Error(`no email arrived for ${email}`)
 }
 
 function extractLink(html: string): string {
@@ -35,7 +36,6 @@ function extractLink(html: string): string {
 
 test.describe('관리자 초대 플로우', () => {
   const email = `invitee_${Date.now()}@d4p.test`
-  const mailbox = email.split('@')[0]
   const password = 'Invite123!@#'
 
   test.afterAll(async () => {
@@ -53,7 +53,7 @@ test.describe('관리자 초대 플로우', () => {
     await expect(page.getByText('초대 메일을 발송했습니다.')).toBeVisible()
 
     // 2) pull the invite email + open its link with a fresh (invitee) session.
-    const link = extractLink(await latestEmailBody(mailbox))
+    const link = extractLink(await latestEmailBody(email))
     await page.context().clearCookies()
     await page.goto(link)
 
