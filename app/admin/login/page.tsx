@@ -4,7 +4,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button, Callout, Card, Field, Spinner, Text, TextInput } from '@vapor-ui/core';
 import { LockOutlineIcon, MailOutlineIcon } from '@vapor-ui/icons';
 import { useAuth } from '@/components/admin/AuthContext';
@@ -130,16 +129,6 @@ export default function LoginPage() {
               {loading ? '로그인 중...' : '로그인'}
             </Button>
           </form>
-
-          {/* 회원가입 링크 */}
-          <div className="mt-6 text-center">
-            <Text typography="body2" render={<span />} className="text-gray-500">
-              계정이 없으신가요?{' '}
-            </Text>
-            <Link href="/admin/signup" className="text-v-primary-100 hover:underline">
-              회원가입
-            </Link>
-          </div>
         </Card.Body>
       </Card.Root>
     </div>
