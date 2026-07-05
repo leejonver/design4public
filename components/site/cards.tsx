@@ -77,7 +77,7 @@ export function ItemCard({ item }: { item: ItemSummary }) {
   return (
     <Link href={`/items/${item.slug}`} className="d4p-card">
       <CardFrame
-        ratio="4 / 3"
+        ratio="1 / 1"
         src={item.image}
         alt={item.name}
         fallback={item.name.charAt(0) || "DESIGN4PUBLIC"}

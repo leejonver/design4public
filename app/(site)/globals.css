@@ -1129,8 +1129,9 @@ img {
   flex-wrap: wrap;
 }
 .d4p-detailhero-thumb {
-  width: 72px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
+  position: relative;
   flex: none;
   overflow: hidden;
   border-radius: var(--radius-sm);

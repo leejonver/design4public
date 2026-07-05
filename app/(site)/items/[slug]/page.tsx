@@ -87,7 +87,7 @@ export default async function ItemDetailPage({ params }: Props) {
 
         <div className="d4p-detail-split" style={{ alignItems: "start", gap: "var(--sp-8)" }}>
           <div>
-            <DetailHero images={item.gallery} ratio="4 / 3" />
+            <DetailHero images={item.gallery} ratio="1 / 1" />
           </div>
 
           <div>
