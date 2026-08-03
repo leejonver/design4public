@@ -24,7 +24,7 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./vitest.setup.ts"],
-    reporters: process.env.CI ? ["github", "default"] : ["default"],
+    reporters: process.env.CI ? ["github-actions", "default"] : ["default"],
     include: ["tests/**/*.test.{ts,tsx}"],
     exclude: ["tests/e2e/**", "node_modules/**"],
   },

@@ -20,12 +20,16 @@ RLS-scoped) · Tailwind v4 · @vapor-ui/core (admin) · Vitest · Playwright.
 ## Develop
 ```bash
 npm ci
-cp .env.example .env.local          # fill Supabase + OPENAI_API_KEY
 supabase start
-supabase db reset
-docker restart supabase_kong_design4public   # see docs/testing.md (Kong quirk)
+npm run db:sync:prod                # read-only remote dump; excludes profiles/inquiries
 npm run dev
 ```
+
+`.env.local` points the app at the local Supabase stack. The production sync
+command verifies the linked project ref, reads public production content, and
+replaces only local content tables. It never writes to the linked database.
+Use `npm run db:reset` instead when you need the deterministic synthetic seed
+for E2E tests.
 
 ## Verify
 ```bash
@@ -43,5 +47,6 @@ are present. Enum unions live here; `lib/admin-types.ts` re-exports them.
 
 ## Runbooks
 - E2E harness: `docs/testing.md`
+- Production-safe local data sync: `docs/local-development.md`
 - Backfill (captions → search): `docs/runbooks/backfill.md`
 - Production cutover (M7): `docs/runbooks/cutover.md`

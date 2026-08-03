@@ -14,6 +14,7 @@
     "backfill:search": "node scripts/backfill-search.mjs",
     "backfill:captions": "node scripts/backfill-captions.mjs",
     "db:reset": "supabase db reset && docker restart supabase_kong_design4public && npm run gen:types",
+    "db:sync:prod": "bash scripts/sync-prod-to-local.sh",
     "gate": "tsc --noEmit && npm run lint && vitest run && next build && playwright test && playwright test"
   },
   "dependencies": {
@@ -29,7 +30,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "lucide-react": "^0.441.0",
-    "next": "15.5.20",
+    "next": "15.5.22",
     "react": "^19",
     "react-dom": "^19",
     "resend": "^6.6.0",
@@ -51,7 +52,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.4.2",
     "eslint": "^9",
-    "eslint-config-next": "15.5.20",
+    "eslint-config-next": "15.5.22",
     "jsdom": "^27.0.0",
     "node-fetch": "^3.3.2",
     "pg": "^8.21.0",
@@ -62,6 +63,6 @@
     "vitest": "^3.2.4"
   },
   "optionalDependencies": {
-    "@next/swc-darwin-arm64": "15.5.20"
+    "@next/swc-darwin-arm64": "15.5.22"
   }
 }
