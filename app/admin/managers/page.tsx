@@ -2,7 +2,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Badge, Button, Callout, Card, Dialog, Field, IconButton, Select, Spinner, Text, TextInput } from '@vapor-ui/core';
 import {
   CloseOutlineIcon,
@@ -24,6 +24,7 @@ import {
 } from '@/components/admin/ui';
 import type { DataTableColumn } from '@/components/admin/ui';
 import { api } from '@/lib/admin-api';
+import { useListController } from '@/lib/use-list-controller';
 import { useAuth } from '@/components/admin/AuthContext';
 import type { Manager, ManagerRole, ApprovalStatus } from '@/lib/admin-types';
 
@@ -104,15 +105,43 @@ const formatDate = (d?: string) => (d ? new Date(d).toLocaleDateString('ko-KR') 
 export default function ManagersPage() {
   const { user, isMaster, loading: authLoading } = useAuth();
 
-  const [managers, setManagers] = useState<Manager[]>([]);
-  const [total, setTotal] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-
-  const [search, setSearch] = useState('');
-  const [roleFilter, setRoleFilter] = useState<ManagerRole | 'all'>('all');
-  const [statusFilter, setStatusFilter] = useState<ApprovalStatus | 'all'>('all');
-  const [sort, setSort] = useState('created_at');
+  const {
+    items: managers,
+    total,
+    loading,
+    error,
+    clearError,
+    search,
+    setSearch,
+    filters,
+    setFilter,
+    sort,
+    setSort,
+    page,
+    setPage,
+    refetch,
+  } = useListController<Manager>({
+    initialFilters: { role: 'all', status: 'all' },
+    initialSort: { key: 'created_at', dir: 'desc' },
+    limit: LIMIT,
+    fetch: async (params) => {
+      if (!isMaster) return { items: [], total: 0 };
+      const res = await api.get('/managers', {
+        search: params.search || undefined,
+        role: params.role === 'all' ? undefined : params.role,
+        status: params.status === 'all' ? undefined : params.status,
+        sort: params.sort,
+        page: params.page,
+        limit: params.limit,
+      });
+      if (!res.success) throw new Error(res.error || '관리자 목록을 불러오는데 실패했습니다.');
+      const data = res.data as { items?: Manager[]; total?: number } | undefined;
+      return { items: data?.items ?? [], total: data?.total ?? 0 };
+    },
+  });
+  const roleFilter = (filters.role ?? 'all') as ManagerRole | 'all';
+  const statusFilter = (filters.status ?? 'all') as ApprovalStatus | 'all';
+  const sortValue = sort?.key ?? 'created_at';
 
   const [feedback, setFeedback] = useState<{ type: 'success' | 'danger'; text: string } | null>(null);
 
@@ -136,7 +165,7 @@ export default function ManagersPage() {
     }
     setInviting(true);
     try {
-      const res = await api.managers.invite({
+      const res = await api.post('/managers/invite', {
         email,
         role: inviteRole,
         name: inviteName.trim() || undefined,
@@ -147,7 +176,7 @@ export default function ManagersPage() {
         setInviteEmail('');
         setInviteName('');
         setInviteRole('content_manager');
-        fetchManagers();
+        refetch();
       } else {
         setFeedback({ type: 'danger', text: res.error || '초대에 실패했습니다.' });
       }
@@ -162,7 +191,7 @@ export default function ManagersPage() {
   };
 
   const resendInvite = async (m: Manager) => {
-    const res = await api.managers.invite({ email: m.email, role: m.role });
+    const res = await api.post('/managers/invite', { email: m.email, role: m.role });
     setFeedback(
       res.success
         ? { type: 'success', text: '초대 메일을 다시 발송했습니다.' }
@@ -170,54 +199,22 @@ export default function ManagersPage() {
     );
   };
 
-  const fetchManagers = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api.managers.getList({
-        search: search || undefined,
-        role: roleFilter === 'all' ? undefined : roleFilter,
-        status: statusFilter === 'all' ? undefined : statusFilter,
-        sort,
-        page,
-        limit: LIMIT,
-      });
-      if (res.success) {
-        const data = res.data as { items: Manager[]; total: number } | undefined;
-        setManagers(data?.items ?? []);
-        setTotal(data?.total ?? 0);
-      } else {
-        setFeedback({ type: 'danger', text: res.error || '관리자 목록을 불러오는데 실패했습니다.' });
-      }
-    } catch (e) {
-      setFeedback({
-        type: 'danger',
-        text: e instanceof Error ? e.message : '관리자 목록을 불러오는 중 오류가 발생했습니다.',
-      });
-    } finally {
-      setLoading(false);
-    }
-  }, [search, roleFilter, statusFilter, sort, page]);
-
   useEffect(() => {
-    if (isMaster) fetchManagers();
-  }, [isMaster, fetchManagers]);
+    if (isMaster) refetch();
+  }, [isMaster, refetch]);
 
   // 필터 변경 시 첫 페이지로 이동
   const handleSearch = (v: string) => {
     setSearch(v);
-    setPage(1);
   };
   const handleRoleFilter = (v: string) => {
-    setRoleFilter(v as ManagerRole | 'all');
-    setPage(1);
+    setFilter('role', v);
   };
   const handleStatusFilter = (v: string) => {
-    setStatusFilter(v as ApprovalStatus | 'all');
-    setPage(1);
+    setFilter('status', v);
   };
   const handleSort = (v: string) => {
-    setSort(v);
-    setPage(1);
+    setSort({ key: v, dir: 'desc' });
   };
 
   // 공통 업데이트: 서버 가드(403/409) 메시지를 Callout으로 노출한다.
@@ -227,12 +224,9 @@ export default function ManagersPage() {
     successText: string,
   ): Promise<boolean> => {
     try {
-      const res = await api.managers.update(id, patch);
+      const res = await api.put(`/managers/${id}`, patch);
       if (res.success) {
-        const updated = res.data as Manager | null;
-        if (updated) {
-          setManagers((prev) => prev.map((m) => (m.id === id ? updated : m)));
-        }
+        refetch();
         setFeedback({ type: 'success', text: successText });
         return true;
       }
@@ -272,10 +266,9 @@ export default function ManagersPage() {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const res = await api.managers.delete(deleteTarget.id);
+      const res = await api.delete(`/managers/${deleteTarget.id}`);
       if (res.success) {
-        setManagers((prev) => prev.filter((m) => m.id !== deleteTarget.id));
-        setTotal((t) => Math.max(0, t - 1));
+        refetch();
         setFeedback({ type: 'success', text: '관리자가 삭제되었습니다.' });
         setDeleteTarget(null);
       } else {
@@ -480,20 +473,23 @@ export default function ManagersPage() {
         }
       />
 
-      {feedback && (
+      {(feedback || error) && (
         <Callout.Root
-          colorPalette={feedback.type === 'success' ? 'success' : 'danger'}
+          colorPalette={error || feedback?.type !== 'success' ? 'danger' : 'success'}
           className="mb-4 flex items-start justify-between gap-2"
         >
           <Text typography="body2" render={<p />}>
-            {feedback.text}
+            {error ?? feedback?.text}
           </Text>
           <IconButton
             size="sm"
             variant="ghost"
             colorPalette="secondary"
             aria-label="알림 닫기"
-            onClick={() => setFeedback(null)}
+            onClick={() => {
+              setFeedback(null);
+              clearError();
+            }}
           >
             <CloseOutlineIcon size={16} />
           </IconButton>
@@ -526,7 +522,7 @@ export default function ManagersPage() {
             }
             sort={
               <FilterSelect
-                value={sort}
+                value={sortValue}
                 onValueChange={handleSort}
                 options={SORT_OPTIONS}
                 placeholder="가입일순"
@@ -569,7 +565,6 @@ export default function ManagersPage() {
             : undefined
         }
         confirmText={deleteTarget?.approvalStatus === 'pending' ? '초대 취소' : '삭제'}
-        danger
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

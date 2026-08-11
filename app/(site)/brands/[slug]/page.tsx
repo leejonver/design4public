@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const sectionHeading: React.CSSProperties = {
   fontFamily: "var(--font-display)",
   fontWeight: 600,
-  fontSize: 22,
+  fontSize: "var(--fs-h4)",
   margin: "8px 0 22px",
   color: "var(--ink-900)",
 };
@@ -118,7 +118,7 @@ export default async function BrandDetailPage({ params }: Props) {
                 color: "var(--ink-400)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "2.1875rem",
+                fontSize: "var(--fs-h3)",
               }}
             >
               {brand.nameKo.charAt(0) || "DESIGN4PUBLIC"}
@@ -130,7 +130,7 @@ export default async function BrandDetailPage({ params }: Props) {
               <div
                 style={{
                   fontFamily: "var(--font-sans)",
-                  fontSize: 11.5,
+                  fontSize: "var(--fs-label)",
                   fontWeight: 700,
                   letterSpacing: "0.16em",
                   textTransform: "uppercase",
@@ -143,7 +143,7 @@ export default async function BrandDetailPage({ params }: Props) {
             <h1
               style={{
                 fontFamily: "var(--font-sans)",
-                fontSize: "clamp(2.1875rem,4vw,3.25rem)",
+                fontSize: "var(--fs-h1)",
                 fontWeight: 700,
                 letterSpacing: "0.02em",
                 color: "var(--white)",
@@ -172,7 +172,7 @@ export default async function BrandDetailPage({ params }: Props) {
               <p
                 style={{
                   fontFamily: "var(--font-sans)",
-                  fontSize: 17.5,
+                  fontSize: "var(--fs-lead)",
                   lineHeight: 1.7,
                   color: "var(--ink-700)",
                   margin: "18px 0 0",
@@ -202,7 +202,7 @@ export default async function BrandDetailPage({ params }: Props) {
                   style={{
                     fontFamily: "var(--font-display)",
                     fontWeight: 600,
-                    fontSize: 30,
+                    fontSize: "var(--fs-h3)",
                     color: "var(--ink-900)",
                     letterSpacing: "-0.01em",
                   }}
@@ -212,7 +212,7 @@ export default async function BrandDetailPage({ params }: Props) {
                 <div
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: 14.5,
+                    fontSize: "var(--fs-sm)",
                     color: "var(--ink-500)",
                     marginTop: 3,
                   }}

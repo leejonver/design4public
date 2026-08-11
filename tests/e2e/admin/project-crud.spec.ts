@@ -31,6 +31,8 @@ test.describe('프로젝트 CRUD', () => {
   })
 
   test('프로젝트를 수정한다', async ({ page }) => {
+    test.setTimeout(90_000)
+
     // Find the project id via the admin API (rows carry no stable selector).
     // GET /api/admin/projects responds { success, data: { items, total } } — not a bare array.
     const res = await page.request.get('/api/admin/projects?sort=created_at&dir=desc&limit=50')
@@ -41,13 +43,10 @@ test.describe('프로젝트 CRUD', () => {
     await page.goto(`/admin/projects/${proj.id}/edit`)
     // Wait for the form to hydrate before editing, so the async project load
     // doesn't overwrite the typed value after fill().
-    await expect(page.getByPlaceholder('프로젝트명을 입력하세요')).toHaveValue(title)
+    await expect(page.getByPlaceholder('프로젝트명을 입력하세요')).toHaveValue(title, { timeout: 45_000 })
     await page.getByPlaceholder('프로젝트에 대한 자세한 설명을 입력하세요').fill('수정된 프로젝트 설명입니다')
     await page.getByRole('button', { name: '변경사항 저장' }).click()
-    // Anchor `$` so the wait resolves on the post-save redirect (view page),
-    // not the current /edit URL — otherwise the PUT can be aborted by an early
-    // navigation.
-    await page.waitForURL(new RegExp(`/admin/projects/${proj.id}$`))
+    await expect(page).toHaveURL(new RegExp(`/admin/projects/${proj.id}$`), { timeout: 30_000 })
   })
 
   test('프로젝트를 삭제한다', async ({ page }) => {

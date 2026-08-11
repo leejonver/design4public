@@ -2,15 +2,10 @@
 
 import { Suspense, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { LayoutGrid, List } from "lucide-react";
 import { Container } from "@/components/site/primitives";
 import { PageHero, FilterBar } from "@/components/site/page-chrome";
-import {
-  FacetRow,
-  FilterButton,
-  Divider,
-  SortMenu,
-  ViewToggle,
-} from "@/components/site/list-controls";
+import { FacetRow } from "@/components/site/list-controls";
 import { ProjectCard } from "@/components/site/cards";
 import type { ProjectSummary } from "@/lib/types";
 
@@ -73,10 +68,33 @@ function ProjectsListView({
         left={<FacetRow chips={chips} value={category} onChange={setCategory} />}
         right={
           <>
-            <FilterButton />
-            <Divider />
-            <SortMenu value={sort} onChange={setSort} options={["최신순", "인기순", "이름순"]} />
-            <ViewToggle view={view} onView={setView} />
+            <label className="d4p-sort">
+              <span>정렬</span>
+              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+                <option>최신순</option>
+                <option>이름순</option>
+              </select>
+            </label>
+            <span className="d4p-viewtoggle">
+              <button
+                type="button"
+                aria-label="그리드"
+                aria-pressed={view === "grid"}
+                data-active={view === "grid" ? "1" : undefined}
+                onClick={() => setView("grid")}
+              >
+                <LayoutGrid size={18} strokeWidth={1.5} />
+              </button>
+              <button
+                type="button"
+                aria-label="리스트"
+                aria-pressed={view === "list"}
+                data-active={view === "list" ? "1" : undefined}
+                onClick={() => setView("list")}
+              >
+                <List size={18} strokeWidth={1.5} />
+              </button>
+            </span>
           </>
         }
       />

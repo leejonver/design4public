@@ -106,7 +106,7 @@ export default function NewProjectPage() {
         inquiryUrl: inquiryUrl.trim(),
       };
 
-      const response = await api.projects.create(body);
+      const response = await api.post('/projects', body);
       if (response.success) {
         router.push('/admin/projects');
       } else {

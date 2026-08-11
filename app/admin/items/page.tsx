@@ -59,7 +59,7 @@ export default function ItemsPage() {
     fetch: async (params) => {
       const status = typeof params.status === 'string' ? params.status : 'all';
       const brandId = typeof params.brandId === 'string' ? params.brandId : 'all';
-      const res = await api.items.getList({
+      const res = await api.get('/items', {
         search: params.search || undefined,
         status: status !== 'all' ? status : undefined,
         brandId: brandId !== 'all' ? brandId : undefined,
@@ -77,7 +77,7 @@ export default function ItemsPage() {
   });
 
   useEffect(() => {
-    api.brands.getList({ limit: 200 }).then((res) => {
+    api.get('/brands', { limit: 200 }).then((res) => {
       if (res.success && res.data) {
         const data = res.data as { items?: Brand[] } | Brand[];
         setBrands(Array.isArray(data) ? data : data.items ?? []);
@@ -96,7 +96,7 @@ export default function ItemsPage() {
   const confirmDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const res = await api.items.delete(deleteTarget.id);
+    const res = await api.delete(`/items/${deleteTarget.id}`);
     setDeleting(false);
     setDeleteTarget(null);
     if (res.success) {
@@ -316,7 +316,6 @@ export default function ItemsPage() {
             : undefined
         }
         confirmText="삭제"
-        danger
         loading={deleting}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}

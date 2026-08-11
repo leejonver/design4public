@@ -54,7 +54,7 @@ export default function ProjectsPage() {
 
   const fetchProjects = useCallback(
     async (params: ListFetchParams): Promise<ListResult<Project>> => {
-      const response = await api.projects.getList({
+      const response = await api.get('/projects', {
         status: typeof params.status === 'string' ? params.status : undefined,
         search: params.search || undefined,
         sort: params.sort,
@@ -105,7 +105,7 @@ export default function ProjectsPage() {
     setDeleting(true);
     setActionError(null);
     try {
-      const response = await api.projects.delete(deleteTarget.id);
+      const response = await api.delete(`/projects/${deleteTarget.id}`);
       if (response.success) {
         setDeleteTarget(null);
         setSuccess('프로젝트가 삭제되었습니다.');
@@ -330,7 +330,6 @@ export default function ProjectsPage() {
             : undefined
         }
         confirmText="삭제"
-        danger
         loading={deleting}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteTarget(null)}

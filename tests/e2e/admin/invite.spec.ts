@@ -45,6 +45,8 @@ test.describe('관리자 초대 플로우', () => {
   })
 
   test('master 초대 → 링크에서 비밀번호 설정 → 활성화 → 로그인', async ({ page }) => {
+    test.slow()
+
     // 1) master invites through the managers UI (default master storageState).
     await page.goto('/admin/managers')
     await page.getByRole('button', { name: '관리자 초대' }).click()

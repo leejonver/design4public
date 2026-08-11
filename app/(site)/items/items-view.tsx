@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Container } from "@/components/site/primitives";
 import { PageHero, FilterBar } from "@/components/site/page-chrome";
-import { FacetRow, FilterButton, Divider, SortMenu, ViewToggle } from "@/components/site/list-controls";
+import { FacetRow } from "@/components/site/list-controls";
 import { ItemCard } from "@/components/site/cards";
 import type { ItemSummary } from "@/lib/types";
 
@@ -17,8 +17,6 @@ export function ItemsView({
   count: number;
 }) {
   const [category, setCategory] = useState("All");
-  const [sort, setSort] = useState("최신순");
-  const [view, setView] = useState<"grid" | "list">("grid");
 
   const chips = ["All", ...categories];
   const filtered =
@@ -34,14 +32,6 @@ export function ItemsView({
       />
       <FilterBar
         left={<FacetRow chips={chips} value={category} onChange={setCategory} />}
-        right={
-          <>
-            <FilterButton />
-            <Divider />
-            <SortMenu value={sort} onChange={setSort} options={["최신순", "인기순", "이름순"]} />
-            <ViewToggle view={view} onView={setView} />
-          </>
-        }
       />
       <Container style={{ padding: "var(--sp-6) var(--gutter) var(--sp-9)" }}>
         <div className="d4p-feed-items">

@@ -20,8 +20,8 @@ export default function FreeTagSelect({ value, onChange }: FreeTagSelectProps) {
   useEffect(() => {
     let active = true;
     setLoading(true);
-    api.tags
-      .getList({ limit: 200 })
+    api
+      .get('/tags', { limit: 200 })
       .then((res) => {
         if (!active) return;
         if (res.success && res.data) {

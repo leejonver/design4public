@@ -82,7 +82,7 @@ export default function BrandsPage() {
       if (params.sort) query.sort = params.sort;
       if (params.dir) query.dir = params.dir;
 
-      const response = await api.brands.getList(query);
+      const response = await api.get('/brands', query);
       if (!response.success || !response.data) {
         throw new Error(response.error || '브랜드 목록을 불러오는데 실패했습니다.');
       }
@@ -98,7 +98,7 @@ export default function BrandsPage() {
     setDeleting(true);
     setActionError(null);
     try {
-      const response = await api.brands.delete(deleteTarget.id);
+      const response = await api.delete(`/brands/${deleteTarget.id}`);
       if (response.success) {
         setDeleteTarget(null);
         setSuccess('브랜드가 삭제되었습니다.');
@@ -302,7 +302,6 @@ export default function BrandsPage() {
             : undefined
         }
         confirmText="삭제"
-        danger
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

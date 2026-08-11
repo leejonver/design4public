@@ -42,7 +42,7 @@ async function apiRequest<T>(
 }
 
 // GET 요청
-export async function apiGet<T>(endpoint: string, params?: Record<string, string | number>): Promise<ApiResponse<T>> {
+export async function apiGet<T>(endpoint: string, params?: Record<string, string | number | undefined>): Promise<ApiResponse<T>> {
   // API_BASE_URL이 이미 /api를 포함하고 있으면 중복 방지
   let url = endpoint.startsWith('/api') ? endpoint : `${API_BASE_URL}${endpoint}`
   
@@ -122,122 +122,10 @@ export async function apiUpload(file: File, folder?: string): Promise<ApiRespons
   }
 }
 
-// 프로젝트 관련 API
-export const projectsApi = {
-  getList: (params?: { status?: string; search?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
-    apiGet('/projects', params),
-  
-  getById: (id: string) => apiGet(`/projects/${id}`),
-  
-  create: (data: unknown) => apiPost('/projects', data),
-
-  update: (id: string, data: unknown) => apiPut(`/projects/${id}`, data),
-  
-  delete: (id: string) => apiDelete(`/projects/${id}`),
-}
-
-// 브랜드 관련 API
-export const brandsApi = {
-  getList: (params?: { status?: string; search?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
-    apiGet('/brands', params),
-  
-  getById: (id: string) => apiGet(`/brands/${id}`),
-  
-  create: (data: unknown) => apiPost('/brands', data),
-  
-  update: (id: string, data: unknown) => apiPut(`/brands/${id}`, data),
-  
-  delete: (id: string) => apiDelete(`/brands/${id}`),
-}
-
-// 아이템 관련 API
-export const itemsApi = {
-  getList: (params?: { status?: string; search?: string; brandId?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
-    apiGet('/items', params),
-  
-  getById: (id: string) => apiGet(`/items/${id}`),
-  
-  create: (data: unknown) => apiPost('/items', data),
-  
-  update: (id: string, data: unknown) => apiPut(`/items/${id}`, data),
-  
-  delete: (id: string) => apiDelete(`/items/${id}`),
-}
-
-// 카테고리 관련 API (typed classification: project | item)
-export const categoriesApi = {
-  getList: (params?: { type?: string; search?: string; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
-    apiGet('/categories', params),
-
-  getById: (id: string) => apiGet(`/categories/${id}`),
-
-  create: (data: { name: string; type: string }) => apiPost('/categories', data),
-
-  update: (id: string, data: { name?: string; type?: string }) => apiPut(`/categories/${id}`, data),
-
-  delete: (id: string) => apiDelete(`/categories/${id}`),
-}
-
-// 태그 관련 API (free-form labels, no type)
-export const tagsApi = {
-  getList: (params?: { search?: string; limit?: number }) =>
-    apiGet('/tags', params),
-
-  create: (data: { name: string }) => apiPost('/tags', data),
-
-  delete: (id: string) => apiDelete(`/tags/${id}`),
-}
-
-// 사진 관련 API (생성은 프로젝트·아이템 폼에서만 처리)
-export const photosApi = {
-  getList: (params?: { search?: string; unconnected?: boolean; sort?: string; dir?: 'asc' | 'desc'; page?: number; limit?: number }) =>
-    apiGet('/photos', {
-      ...(params?.search ? { search: params.search } : {}),
-      ...(params?.unconnected ? { unconnected: 'true' } : {}),
-      ...(params?.sort ? { sort: params.sort } : {}),
-      ...(params?.dir ? { dir: params.dir } : {}),
-      ...(params?.page ? { page: params.page } : {}),
-      ...(params?.limit ? { limit: params.limit } : {}),
-    }),
-
-  getById: (id: string) => apiGet(`/photos/${id}`),
-
-  delete: (id: string) => apiDelete(`/photos/${id}`),
-}
-
-// 관리자 관련 API
-export const managersApi = {
-  getList: (params?: { status?: string; role?: string; search?: string; sort?: string; page?: number; limit?: number }) =>
-    apiGet('/managers', params),
-  
-  getById: (id: string) => apiGet(`/managers/${id}`),
-
-  invite: (data: { email: string; role: string; name?: string }) => apiPost('/managers/invite', data),
-
-  update: (id: string, data: unknown) => apiPut(`/managers/${id}`, data),
-  
-  delete: (id: string) => apiDelete(`/managers/${id}`),
-}
-
-// 홈 화면 설정 API
-export const homeSettingsApi = {
-  get: () => apiGet('/home-settings'),
-  update: (data: unknown) => apiPut('/home-settings', data),
-}
-
-// 통합 API 객체
 export const api = {
   get: apiGet,
   post: apiPost,
   put: apiPut,
   delete: apiDelete,
   upload: apiUpload,
-  projects: projectsApi,
-  brands: brandsApi,
-  items: itemsApi,
-  categories: categoriesApi,
-  tags: tagsApi,
-  photos: photosApi,
-  managers: managersApi,
-  homeSettings: homeSettingsApi,
 }

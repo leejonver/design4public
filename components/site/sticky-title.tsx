@@ -67,7 +67,7 @@ export function StickyTitle({
             style={{
               fontFamily: "var(--font-display)",
               fontWeight: 600,
-              fontSize: 16.5,
+              fontSize: "var(--fs-body)",
               color: "var(--ink-900)",
               whiteSpace: "nowrap",
               overflow: "hidden",
@@ -80,7 +80,7 @@ export function StickyTitle({
             <div
               style={{
                 fontFamily: "var(--font-sans)",
-                fontSize: 13,
+                fontSize: "var(--fs-sm)",
                 color: "var(--ink-500)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",

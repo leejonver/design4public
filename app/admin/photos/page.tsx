@@ -48,9 +48,9 @@ export default function PhotosPage() {
 
   const fetchPhotos = useCallback(
     async (params: ListFetchParams): Promise<ListResult<Photo>> => {
-      const res = await api.photos.getList({
+      const res = await api.get('/photos', {
         search: params.search || undefined,
-        unconnected: params.connection === 'unconnected',
+        unconnected: params.connection === 'unconnected' ? 'true' : undefined,
         sort: params.sort,
         dir: params.dir,
         page: params.page,
@@ -103,7 +103,7 @@ export default function PhotosPage() {
     setDeleting(true);
     setActionError(null);
     try {
-      const res = await api.photos.delete(deleteTarget.id);
+      const res = await api.delete(`/photos/${deleteTarget.id}`);
       if (res.success) {
         setDeleteTarget(null);
         setSuccess('사진이 삭제되었습니다.');
@@ -263,7 +263,6 @@ export default function PhotosPage() {
         title="사진 삭제"
         description="이 사진을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
         confirmText="삭제"
-        danger
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setDeleteTarget(null)}

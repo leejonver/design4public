@@ -65,7 +65,7 @@ export default function CategoriesPage() {
     initialSort: { key: 'name', dir: 'asc' },
     limit: PAGE_SIZE,
     fetch: async (params) => {
-      const res = await api.categories.getList({
+      const res = await api.get('/categories', {
         type: params.type && params.type !== 'all' ? String(params.type) : undefined,
         search: params.search || undefined,
         sort: params.sort,
@@ -140,7 +140,7 @@ export default function CategoriesPage() {
 
     try {
       if (editingCategory) {
-        const res = await api.categories.update(editingCategory.id, { name, type: formType });
+        const res = await api.put(`/categories/${editingCategory.id}`, { name, type: formType });
         if (res.success) {
           refetch();
           closeDialog();
@@ -148,7 +148,7 @@ export default function CategoriesPage() {
           setFormError(res.error ?? '카테고리 수정에 실패했습니다.');
         }
       } else {
-        const res = await api.categories.create({ name, type: formType });
+        const res = await api.post('/categories', { name, type: formType });
         if (res.success) {
           refetch();
           closeDialog();
@@ -168,7 +168,7 @@ export default function CategoriesPage() {
     if (!deletingCategory) return;
     setDeleting(true);
     try {
-      const res = await api.categories.delete(deletingCategory.id);
+      const res = await api.delete(`/categories/${deletingCategory.id}`);
       if (res.success) {
         refetch();
         setDeletingCategory(null);
@@ -365,7 +365,6 @@ export default function CategoriesPage() {
         title="카테고리 삭제"
         description="이 카테고리를 삭제하시겠습니까?"
         confirmText="삭제"
-        danger
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setDeletingCategory(null)}

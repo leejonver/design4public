@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@config '../../tailwind.config.js';
 
 /* ============================================================
    DESIGN4PUBLIC — Webfonts (local, variable)
@@ -47,51 +46,28 @@
 
   /* ---- Surfaces ---- */
   --paper: #ffffff;
-  --paper-2: #ffffff;
   --white: #ffffff;
   --sunken: #f5f5f5;
 
   /* ---- Sage (brand-mark only) ---- */
   --sage-50: #f2f4ee;
-  --sage-100: #e6eadf;
   --sage-200: #ced6c2;
   --sage-300: #b1bda0;
   --sage-400: #93a17f;
-  --sage-500: #76866a;
   --sage-600: #627154;
   --sage-700: #4e5a44;
-  --sage-800: #3b4434;
-  --sage-900: #2a3025;
 
   /* ---- Semantic ---- */
   --bg-page: var(--paper);
-  --bg-raised: var(--white);
-  --bg-sunken: var(--sunken);
-  --bg-inverse: var(--ink-900);
   --surface-card: var(--white);
-  --surface-muted: var(--ink-50);
-  --surface-hover: var(--ink-50);
   --text-strong: var(--ink-900);
   --text-body: var(--ink-700);
   --text-muted: var(--ink-500);
-  --text-faint: var(--ink-400);
-  --text-inverse: var(--white);
-  --text-onaccent: var(--white);
-  --accent: var(--ink-900);
-  --accent-strong: #000000;
-  --accent-soft: var(--ink-100);
-  --accent-text: var(--ink-900);
   --brand: var(--sage-600);
-  --brand-soft: var(--sage-100);
   --border-hair: var(--ink-200);
   --border-line: var(--ink-300);
-  --border-strong: var(--ink-900);
-  --positive: #3f7a4e;
-  --caution: #a77b2e;
-  --critical: #b3402f;
 
   /* ---- Photographic overlays ---- */
-  --scrim-top: linear-gradient(180deg, rgba(15, 15, 15, 0.45) 0%, rgba(15, 15, 15, 0) 55%);
   --scrim-bottom: linear-gradient(0deg, rgba(15, 15, 15, 0.66) 0%, rgba(15, 15, 15, 0) 60%);
 
   /* ---- Type families ---- */
@@ -101,43 +77,31 @@
   --font-mono: "SFMono-Regular", ui-monospace, "Menlo", monospace;
 
   /* ---- Weights ---- */
-  --fw-light: 300;
   --fw-regular: 400;
-  --fw-medium: 500;
   --fw-semibold: 600;
-  --fw-bold: 700;
-  --fw-heavy: 800;
 
-  /* ---- Display scale ---- */
-  --fs-display: clamp(3rem, 5.8vw, 4.75rem);
-  --fs-h1: clamp(2.125rem, 3.8vw, 3.25rem);
-  --fs-h2: clamp(1.625rem, 2.6vw, 2.125rem);
-  --fs-h3: 1.5rem;
-  --fs-h4: 1.1875rem;
-
-  /* ---- Text scale ---- */
-  --fs-lead: 1.375rem;
-  --fs-body: 1.0625rem;
-  --fs-sm: 0.9375rem;
-  --fs-xs: 0.8125rem;
-  --fs-label: 0.75rem;
+  /* ---- 10-role type scale — extracted from NAVER Corp.'s published CSS ---- */
+  --fs-display: 64px;
+  --fs-h1: 48px;
+  --fs-h2: 32px;
+  --fs-h3: 26px;
+  --fs-h4: 20px;
+  --fs-lead: 18px;
+  --fs-body: 16px;
+  --fs-sm: 14px;
+  --fs-xs: 12px;
+  --fs-label: 12px;
 
   /* ---- Line heights ---- */
-  --lh-tight: 1.05;
   --lh-snug: 1.2;
   --lh-normal: 1.5;
-  --lh-relaxed: 1.7;
 
   /* ---- Letter spacing ---- */
   --ls-tight: -0.02em;
-  --ls-normal: 0;
-  --ls-wide: 0.04em;
   --ls-label: 0.18em;
   --ls-logo: 0.22em;
 
   /* ---- Spacing (4px base) ---- */
-  --sp-0: 0;
-  --sp-1: 4px;
   --sp-2: 8px;
   --sp-3: 12px;
   --sp-4: 16px;
@@ -146,25 +110,14 @@
   --sp-7: 48px;
   --sp-8: 64px;
   --sp-9: 96px;
-  --sp-10: 128px;
 
   /* ---- Radii ---- */
-  --radius-none: 0;
-  --radius-xs: 2px;
   --radius-sm: 4px;
   --radius-md: 6px;
-  --radius-lg: 10px;
   --radius-pill: 999px;
   --radius-control: 8px;
-  --radius-field: 10px;
-
-  /* ---- Borders ---- */
-  --bw-hair: 1px;
-  --bw-line: 1.5px;
 
   /* ---- Shadows ---- */
-  --shadow-none: none;
-  --shadow-sm: 0 1px 2px rgba(27, 27, 24, 0.06);
   --shadow-md: 0 6px 20px rgba(27, 27, 24, 0.08);
   --shadow-lg: 0 18px 48px rgba(27, 27, 24, 0.14);
   --shadow-focus: 0 0 0 3px rgba(24, 24, 24, 0.16);
@@ -183,27 +136,29 @@
   --dur-base: 240ms;
   --dur-slow: 480ms;
   --dur-image: 700ms;
+}
 
-  /* ---- shadcn/tailwind compatibility (kept for residual utilities) ---- */
-  --background: 0 0% 100%;
-  --foreground: 0 0% 9.5%;
-  --card: 0 0% 100%;
-  --card-foreground: 0 0% 9.5%;
-  --popover: 0 0% 100%;
-  --popover-foreground: 0 0% 9.5%;
-  --primary: 0 0% 9.5%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 0 0% 93%;
-  --secondary-foreground: 0 0% 14%;
-  --muted: 0 0% 96%;
-  --muted-foreground: 0 0% 46%;
-  --accent-foreground: 0 0% 9.5%;
-  --destructive: 9 64% 44%;
-  --destructive-foreground: 0 0% 100%;
-  --border: 0 0% 88.6%;
-  --input: 0 0% 76%;
-  --ring: 0 0% 9.5%;
-  --radius: 0.5rem;
+/* NAVER Corp. breakpoint values: 1279px and 767px. */
+@media screen and (max-width: 1279px) {
+  :root {
+    --fs-display: 48px;
+    --fs-h2: 26px;
+    --fs-h3: 20px;
+    --fs-h4: 18px;
+    --fs-lead: 16px;
+  }
+}
+
+@media screen and (max-width: 1023px) {
+  :root {
+    --fs-h1: 26px;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  :root {
+    --fs-display: 40px;
+  }
 }
 
 /* ============================================================
@@ -292,6 +247,159 @@ img {
   letter-spacing: var(--ls-logo);
   text-transform: uppercase;
   color: var(--text-strong);
+}
+
+.d4p-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 0;
+  border-radius: var(--radius-control);
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.d4p-button[data-size="sm"] {
+  padding: 8px 14px;
+  font-size: var(--fs-sm);
+}
+.d4p-button[data-size="md"] {
+  padding: 11px 18px;
+}
+.d4p-button[data-size="lg"] {
+  padding: 14px 22px;
+}
+.d4p-button[data-variant="primary"] {
+  color: #fff;
+  background: var(--ink-900);
+}
+.d4p-button[data-variant="primary"]:hover:not(:disabled) {
+  background: #000;
+}
+.d4p-button[data-variant="secondary"] {
+  color: var(--ink-900);
+  background: var(--ink-100);
+}
+.d4p-button[data-variant="secondary"]:hover:not(:disabled) {
+  background: var(--ink-200);
+}
+.d4p-button[data-variant="ghost"] {
+  color: var(--ink-700);
+  background: transparent;
+}
+.d4p-button[data-variant="ghost"]:hover:not(:disabled) {
+  background: var(--ink-50);
+}
+.d4p-button[data-variant="inverse"] {
+  color: var(--ink-900);
+  background: #fff;
+}
+.d4p-button[data-variant="inverse"]:hover:not(:disabled) {
+  background: var(--ink-50);
+}
+.d4p-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.d4p-filter-chip {
+  padding: 7px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--ink-700);
+  background: var(--ink-50);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.d4p-filter-chip:hover {
+  background: var(--ink-100);
+}
+.d4p-filter-chip[data-selected] {
+  color: #fff;
+  background: var(--ink-900);
+}
+
+.d4p-field {
+  display: block;
+}
+.d4p-field > span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--ink-400);
+  font-family: var(--font-sans);
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.d4p-field > input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 13px;
+  border: 1px solid var(--border-line);
+  border-radius: var(--radius-sm);
+  outline: none;
+  color: var(--ink-900);
+  background: #fff;
+  font-family: var(--font-sans);
+  font-size: var(--fs-body);
+  transition: border-color var(--dur-base) var(--ease-out);
+}
+.d4p-field > input:focus-visible {
+  border-color: var(--ink-900);
+}
+
+.d4p-sort {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink-500);
+  font-family: var(--font-sans);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+}
+.d4p-sort select {
+  border: 0;
+  color: var(--ink-800);
+  background: transparent;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.d4p-viewtoggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding-left: 12px;
+  border-left: 1px solid var(--border-hair);
+}
+.d4p-viewtoggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: var(--ink-700);
+  background: transparent;
+  cursor: pointer;
+}
+.d4p-viewtoggle button:hover {
+  background: var(--ink-50);
+}
+.d4p-viewtoggle button[data-active] {
+  color: #fff;
+  background: var(--ink-900);
 }
 
 /* ============================================================
@@ -439,7 +547,7 @@ img {
   bottom: 0;
   padding: 22px 14px 11px;
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: var(--fs-xs);
   color: #fff;
   text-align: left;
   background: var(--scrim-bottom);
@@ -484,7 +592,7 @@ img {
 }
 .d4p-card-overline {
   font-family: var(--font-sans);
-  font-size: 12px;
+  font-size: var(--fs-label);
   font-weight: 700;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -493,7 +601,7 @@ img {
 .d4p-card-title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 17px;
+  font-size: var(--fs-h4);
   color: var(--ink-900);
   margin-top: 6px;
   letter-spacing: -0.01em;
@@ -502,7 +610,7 @@ img {
 }
 .d4p-card-meta {
   font-family: var(--font-sans);
-  font-size: 14.5px;
+  font-size: var(--fs-sm);
   color: var(--ink-500);
   margin-top: 5px;
 }
@@ -513,7 +621,7 @@ img {
 .d4p-textarea {
   width: 100%;
   font-family: var(--font-sans);
-  font-size: 16.5px;
+  font-size: var(--fs-body);
   color: var(--ink-900);
   background: var(--white);
   padding: 12px 14px;
@@ -593,7 +701,7 @@ img {
   left: 16px;
   bottom: 16px;
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.08em;
   color: #fff;
   background: rgba(0, 0, 0, 0.4);
@@ -619,26 +727,6 @@ img {
 }
 .d4p-side-link:hover {
   background: var(--ink-50);
-}
-.d4p-side-item {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  cursor: pointer;
-  padding: 8px;
-  border-radius: var(--radius-sm);
-  transition: background var(--dur-fast) var(--ease-out);
-}
-.d4p-side-item:hover {
-  background: var(--ink-50);
-}
-.d4p-side-item img {
-  width: 46px;
-  height: 46px;
-  object-fit: cover;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border-hair);
-  flex: none;
 }
 .d4p-contact-modal {
   width: min(560px, 96vw);
@@ -758,7 +846,7 @@ img {
 }
 .d4p-srch-sec {
   font-family: var(--font-sans);
-  font-size: 11.5px;
+  font-size: var(--fs-label);
   font-weight: 700;
   letter-spacing: 0.16em;
   text-transform: uppercase;
@@ -772,7 +860,7 @@ img {
 }
 .d4p-srch-chip {
   font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: var(--fs-sm);
   color: var(--ink-700);
   cursor: pointer;
   background: var(--ink-50);
@@ -868,26 +956,6 @@ img {
     rgba(15, 15, 15, 0.72) 100%
   );
 }
-.d4p-hero-tag {
-  position: absolute;
-  top: var(--sp-5);
-  left: var(--sp-5);
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: var(--font-sans);
-  font-size: 12.5px;
-  font-weight: 700;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: #fff;
-  background: rgba(20, 20, 20, 0.32);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  padding: 8px 13px;
-  border-radius: var(--radius-pill);
-  border: 1px solid rgba(255, 255, 255, 0.18);
-}
 .d4p-hero-body {
   position: absolute;
   left: var(--sp-6);
@@ -900,7 +968,7 @@ img {
   font-weight: 700;
   color: #fff;
   margin: 12px 0 0;
-  font-size: clamp(1.8125rem, 3.4vw, 3.25rem);
+  font-size: var(--fs-display);
   line-height: 1.08;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -916,7 +984,7 @@ img {
 }
 .d4p-hero-counter {
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.08em;
   color: #fff;
 }
@@ -1026,7 +1094,7 @@ img {
   font-weight: 700;
   color: var(--ink-900);
   margin: 12px 0 0;
-  font-size: clamp(1.75rem, 2.2vw, 2.25rem);
+  font-size: var(--fs-h3);
   line-height: 1.14;
   letter-spacing: -0.02em;
   text-wrap: balance;
@@ -1037,7 +1105,7 @@ img {
   right: var(--sp-5);
   bottom: var(--sp-5);
   font-family: var(--font-mono);
-  font-size: 13.5px;
+  font-size: var(--fs-xs);
   letter-spacing: 0.08em;
   color: #fff;
   background: rgba(0, 0, 0, 0.4);
@@ -1154,13 +1222,6 @@ img {
   height: 100%;
   object-fit: cover;
 }
-.d4p-gallery {
-  column-gap: var(--grid-gap);
-}
-.d4p-gallery-item {
-  break-inside: avoid;
-  margin-bottom: var(--grid-gap);
-}
 .d4p-spec {
   border: 1px solid var(--border-hair);
   border-radius: var(--radius-sm);
@@ -1172,7 +1233,7 @@ img {
   gap: 14px;
   padding: 13px 16px;
   font-family: var(--font-sans);
-  font-size: 15px;
+  font-size: var(--fs-sm);
 }
 .d4p-spec-row + .d4p-spec-row {
   border-top: 1px solid var(--border-hair);
