@@ -45,10 +45,12 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
             발주 · {project.client}
           </div>
         )}
-        <div
+        <dl
+          className="d4p-pmast-facts"
           style={{
             display: "flex",
-            gap: 24,
+            flexDirection: "column",
+            gap: 16,
             marginTop: "var(--sp-5)",
             paddingTop: "var(--sp-5)",
             borderTop: "1px solid var(--border-hair)",
@@ -56,7 +58,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
         >
           {facts.map(([l, v]) => (
             <div key={l}>
-              <div
+              <dt
                 style={{
                   fontFamily: "var(--font-sans)",
                   fontSize: "var(--fs-label)",
@@ -67,21 +69,22 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
                 }}
               >
                 {l}
-              </div>
-              <div
+              </dt>
+              <dd
                 style={{
                   fontFamily: "var(--font-sans)",
                   fontSize: "var(--fs-body)",
                   fontWeight: 600,
                   color: "var(--ink-900)",
                   marginTop: 4,
+                  marginLeft: 0,
                 }}
               >
                 {v}
-              </div>
+              </dd>
             </div>
           ))}
-        </div>
+        </dl>
         <div style={{ display: "flex", gap: 10, marginTop: "var(--sp-6)", alignItems: "center" }}>
           <ContactButton
             variant="primary"

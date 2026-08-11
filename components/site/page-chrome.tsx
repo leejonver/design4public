@@ -52,9 +52,9 @@ export function FilterBar({ left, right }: { left?: ReactNode; right?: ReactNode
       background: "rgba(255,255,255,.9)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)",
       borderBottom: "1px solid var(--border-hair)",
     }}>
-      <Container className="d4p-filterbar" style={{ padding: "11px var(--gutter)", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 20 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0, overflowX: "auto" }}>{left}</div>
-        {right && <div style={{ display: "flex", alignItems: "center", gap: 12, flex: "none" }}>{right}</div>}
+      <Container className="d4p-filterbar" style={{ padding: "11px var(--gutter)", display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 20 }}>
+        <div className="d4p-filterbar-facets">{left}</div>
+        {right && <div className="d4p-filterbar-actions">{right}</div>}
       </Container>
     </div>
   );

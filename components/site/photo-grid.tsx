@@ -4,41 +4,19 @@ import { useState, useCallback, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronLeft, ChevronRight, ArrowRight, X } from "lucide-react";
-import { FilterChip } from "@/components/site/ui";
 import { Overline, Badge } from "@/components/site/primitives";
 import type { PhotoFeedItem } from "@/lib/types";
 
 const MASONRY_SIZES =
   "(max-width:460px) 100vw, (max-width:720px) 50vw, (max-width:1080px) 33vw, (max-width:1500px) 25vw, (max-width:1980px) 20vw, 16vw";
 
-export function PhotosView({
-  photos,
-  categories,
-}: {
-  photos: PhotoFeedItem[];
-  categories: string[];
-}) {
-  const [filter, setFilter] = useState("All");
+export function PhotosView({ photos }: { photos: PhotoFeedItem[] }) {
   const [active, setActive] = useState<number | null>(null);
-
-  const chips = ["All", ...categories];
-  const list =
-    filter === "All"
-      ? photos
-      : photos.filter((p) => p.projectCategories.includes(filter));
 
   return (
     <>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: "var(--sp-6)" }}>
-        {chips.map((c) => (
-          <FilterChip key={c} selected={filter === c} onClick={() => setFilter(c)}>
-            {c}
-          </FilterChip>
-        ))}
-      </div>
-
       <div className="d4p-masonry">
-        {list.map((ph, idx) => {
+        {photos.map((ph, idx) => {
           const caption = ph.title ?? ph.alt ?? ph.projectTitle;
           return (
             <Link
@@ -88,7 +66,7 @@ export function PhotosView({
       </div>
 
       {active !== null && (
-        <PhotoModal photos={list} initialIndex={active} onClose={() => setActive(null)} />
+        <PhotoModal photos={photos} initialIndex={active} onClose={() => setActive(null)} />
       )}
     </>
   );

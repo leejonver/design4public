@@ -189,7 +189,7 @@ export function SiteHeader() {
   return (
     <header style={headerStyle}>
       <div style={{ ...barInner, gap: 24 }}>
-        <Logo size="var(--fs-body)" />
+        <Logo size="var(--fs-h4)" />
         <div style={{ flex: 1, display: "flex", alignItems: "center", height: "100%" }}>
           <div style={{ flex: 1, display: "flex", justifyContent: "center", padding: "0 24px" }}>
             <div style={{ width: "100%", maxWidth: 480 }}>
@@ -205,7 +205,7 @@ export function SiteHeader() {
                   href={n.href}
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: "var(--fs-body)",
+                    fontSize: "var(--fs-sm)",
                     fontWeight: 700,
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",

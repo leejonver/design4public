@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { fetchBrands, fetchItems, fetchPhotos, fetchProjects } from "@/lib/api";
+import { fetchAllPhotos, fetchBrands, fetchItems, fetchProjects } from "@/lib/api";
 import { SITE_URL } from "@/lib/seo";
 
 export const revalidate = 3600;
@@ -10,7 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchProjects(),
     fetchItems(),
     fetchBrands(),
-    fetchPhotos(),
+    fetchAllPhotos(),
   ]);
 
   const legalPaths = ["/privacy", "/terms"];

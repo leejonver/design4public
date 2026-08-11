@@ -11,6 +11,7 @@ function CardFrame({
   alt,
   fallback,
   background,
+  imageFit = "cover",
   children,
 }: {
   ratio: string;
@@ -18,6 +19,7 @@ function CardFrame({
   alt: string;
   fallback: string;
   background?: string;
+  imageFit?: "cover" | "contain";
   children?: React.ReactNode;
 }) {
   const isWordmark = fallback.length > 3;
@@ -32,7 +34,7 @@ function CardFrame({
           alt={alt}
           fill
           sizes={CARD_FRAME_SIZES}
-          style={{ objectFit: "cover" }}
+          style={{ objectFit: imageFit }}
         />
       ) : (
         <div
@@ -102,36 +104,40 @@ export function ItemCard({ item }: { item: ItemSummary }) {
 }
 
 export function BrandCard({ brand }: { brand: BrandSummary }) {
-  const cover = brand.cover ?? brand.logo;
   return (
     <Link href={`/brands/${brand.slug}`} className="d4p-card">
-      <CardFrame ratio="4 / 3" src={cover} alt={brand.nameKo} fallback={brand.nameKo}>
-        {cover && (
-          <div
+      <CardFrame
+        ratio="4 / 3"
+        src={brand.logo}
+        alt={`${brand.nameKo} 로고`}
+        fallback={brand.nameEn ?? brand.nameKo}
+        background="var(--sunken)"
+        imageFit="contain"
+      >
+        <div
+          style={{
+            position: "absolute",
+            inset: 0,
+            display: "flex",
+            alignItems: "flex-end",
+            background: "var(--scrim-bottom)",
+            padding: "16px 18px",
+          }}
+        >
+          <span
             style={{
-              position: "absolute",
-              inset: 0,
-              display: "flex",
-              alignItems: "flex-end",
-              background: "var(--scrim-bottom)",
-              padding: "16px 18px",
+              fontFamily: "var(--font-display)",
+              fontWeight: 600,
+              fontSize: "var(--fs-body)",
+              lineHeight: 1.2,
+              color: "#fff",
+              letterSpacing: "-0.01em",
+              wordBreak: "keep-all",
             }}
           >
-            <span
-              style={{
-                fontFamily: "var(--font-display)",
-                fontWeight: 600,
-                fontSize: "var(--fs-h4)",
-                lineHeight: 1.2,
-                color: "#fff",
-                letterSpacing: "-0.01em",
-                wordBreak: "keep-all",
-              }}
-            >
-              {brand.nameKo}
-            </span>
-          </div>
-        )}
+            {brand.nameKo}
+          </span>
+        </div>
       </CardFrame>
     </Link>
   );

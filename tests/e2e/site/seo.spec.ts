@@ -25,12 +25,12 @@ test.describe('SEO 산출물', () => {
     expect(JSON.stringify(json)).toMatch(/WebSite|Organization/)
   })
 
-  test('sitemap.xml 이 공개 사진 URL을 포함하고 아이템 갤러리 전용 사진은 제외한다', async ({
+  test('sitemap.xml 이 프로젝트와 아이템의 공개 사진 URL을 포함한다', async ({
     request,
   }) => {
     const body = await (await request.get('/sitemap.xml')).text()
     expect(body).toContain('/photos/55555555-0000-0000-0000-000000000001')
-    expect(body).not.toContain('/photos/55555555-0000-0000-0000-000000000006')
+    expect(body).toContain('/photos/55555555-0000-0000-0000-000000000006')
   })
 
   test('manifest.webmanifest 가 사이트 이름을 응답한다', async ({ request }) => {
@@ -106,9 +106,10 @@ test.describe('사진 상세', () => {
     ).toBeVisible()
   })
 
-  test('아이템 갤러리 전용(비공개) 사진은 404', async ({ page }) => {
+  test('아이템 갤러리 전용 사진도 200과 가구 블록을 표시한다', async ({ page }) => {
     const res = await page.goto('/photos/55555555-0000-0000-0000-000000000006')
-    expect(res?.status()).toBe(404)
+    expect(res?.status()).toBe(200)
+    await expect(page.getByText('이 사진 속 가구')).toBeVisible()
   })
 })
 

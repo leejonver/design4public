@@ -6,7 +6,7 @@ import { fetchItemBySlug } from "@/lib/api";
 import type { ItemDetail } from "@/lib/types";
 import { JsonLd } from "@/components/json-ld";
 import { createPageMetadata, productSchema, breadcrumbSchema, jsonLdGraph } from "@/lib/seo";
-import { Container, Overline, SpecSheet } from "@/components/site/primitives";
+import { Container, Overline } from "@/components/site/primitives";
 import { Breadcrumb } from "@/components/site/page-chrome";
 import { StickyTitle } from "@/components/site/sticky-title";
 import { DetailHero } from "@/components/site/gallery";
@@ -57,11 +57,6 @@ export default async function ItemDetailPage({ params }: Props) {
   const categoriesLabel = item.categories.join(" · ");
   const stickyMeta = [brandLabel, categoriesLabel].filter(Boolean).join(" · ");
 
-  const specRows = [
-    { label: "브랜드", value: brandLabel },
-    { label: "분류", value: categoriesLabel },
-  ].filter((r): r is { label: string; value: string } => Boolean(r.value));
-
   return (
     <div>
       <JsonLd data={jsonLd} />
@@ -85,8 +80,8 @@ export default async function ItemDetailPage({ params }: Props) {
           />
         </div>
 
-        <div className="d4p-detail-split" style={{ alignItems: "start", gap: "var(--sp-8)" }}>
-          <div>
+        <div className="d4p-detail-split d4p-item-detail" style={{ alignItems: "start", gap: "var(--sp-8)" }}>
+          <div className="d4p-item-media">
             <DetailHero images={item.gallery} ratio="1 / 1" />
           </div>
 
@@ -141,7 +136,20 @@ export default async function ItemDetailPage({ params }: Props) {
               )}
             </div>
 
-            <SpecSheet title="사양" rows={specRows} />
+            {item.description && (
+              <p
+                style={{
+                  fontFamily: "var(--font-sans)",
+                  fontSize: "var(--fs-body)",
+                  lineHeight: 1.7,
+                  color: "var(--ink-700)",
+                  margin: 0,
+                  whiteSpace: "pre-wrap",
+                }}
+              >
+                {item.description}
+              </p>
+            )}
           </div>
         </div>
 

@@ -14,6 +14,9 @@ describe("ProjectsView", () => {
   it("filters, sorts, and exposes the selected view toggle", () => {
     const { container } = render(<ProjectsView projects={projects} categories={["오피스", "공공"]} count={2} />);
 
+    expect(screen.getByText("공간을 변화시킨 다양한 프로젝트를 만나보세요.")).toBeVisible();
+    expect(screen.getByRole("group", { name: "카테고리 필터" })).toBeVisible();
+
     fireEvent.click(screen.getByRole("button", { name: "오피스" }));
     expect(screen.getByRole("link", { name: /Older office/ })).toBeVisible();
     expect(screen.queryByRole("link", { name: /Newer public/ })).not.toBeInTheDocument();
