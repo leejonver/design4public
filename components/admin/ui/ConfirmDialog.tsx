@@ -10,7 +10,6 @@ export interface ConfirmDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
   loading?: boolean;
-  danger?: boolean;
 }
 
 export default function ConfirmDialog({
@@ -21,7 +20,6 @@ export default function ConfirmDialog({
   onConfirm,
   onCancel,
   loading = false,
-  danger = false,
 }: ConfirmDialogProps) {
   return (
     <Dialog.Root
@@ -45,7 +43,7 @@ export default function ConfirmDialog({
           </Button>
           <Button
             variant="fill"
-            colorPalette={danger ? 'danger' : 'primary'}
+            colorPalette="danger"
             onClick={onConfirm}
             disabled={loading}
           >

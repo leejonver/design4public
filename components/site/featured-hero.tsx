@@ -60,7 +60,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
                 color: "var(--ink-400)",
                 fontFamily: "var(--font-display)",
                 fontWeight: 600,
-                fontSize: "2.1875rem",
+                fontSize: "var(--fs-h3)",
               }}
             >
               {project.title.charAt(0) || "DESIGN4PUBLIC"}
@@ -70,18 +70,11 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
       ))}
       <div className="d4p-hero-scrim" />
 
-      <div className="d4p-hero-tag">
-        <span
-          style={{ width: 6, height: 6, borderRadius: "50%", background: "var(--sage-300)" }}
-        />
-        FEATURED PROJECT
-      </div>
-
       <div className="d4p-hero-body">
         <div
           style={{
             fontFamily: "var(--font-sans)",
-            fontSize: 13.5,
+            fontSize: "var(--fs-xs)",
             fontWeight: 700,
             letterSpacing: "0.16em",
             textTransform: "uppercase",
@@ -95,7 +88,7 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
           <div
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 16.5,
+              fontSize: "var(--fs-body)",
               color: "rgba(255,255,255,.8)",
               marginTop: 10,
             }}

@@ -50,7 +50,7 @@ export default function EditItemPage() {
   };
 
   useEffect(() => {
-    api.brands.getList({ limit: 200 }).then((res) => {
+    api.get('/brands', { limit: 200 }).then((res) => {
       if (res.success && res.data) {
         const data = res.data as { items?: Brand[] } | Brand[];
         setBrands(Array.isArray(data) ? data : data.items ?? []);

@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { CSSProperties } from "react";
 import { fetchHomeData } from "@/lib/api";
@@ -8,12 +7,9 @@ import { ProjectCard, ItemCard, BrandCard } from "@/components/site/cards";
 
 export const revalidate = 3600;
 
-const LATEST_PHOTOS_SIZES =
-  "(max-width:560px) 100vw, (max-width:860px) 50vw, (max-width:1080px) 33vw, 25vw";
-
 const moreLink: CSSProperties = {
   fontFamily: "var(--font-sans)",
-  fontSize: 13.5,
+  fontSize: "var(--fs-sm)",
   fontWeight: 700,
   letterSpacing: "0.1em",
   textTransform: "uppercase",
@@ -21,7 +17,17 @@ const moreLink: CSSProperties = {
   flex: "none",
 };
 
-function SectionHead({ overline, title, href }: { overline: string; title: string; href: string }) {
+function SectionHead({
+  overline,
+  title,
+  href,
+  linkLabel = "전체보기 →",
+}: {
+  overline: string;
+  title: string;
+  href: string;
+  linkLabel?: string;
+}) {
   return (
     <div
       style={{
@@ -38,7 +44,7 @@ function SectionHead({ overline, title, href }: { overline: string; title: strin
           style={{
             fontFamily: "var(--font-display)",
             fontWeight: 600,
-            fontSize: "clamp(1.5rem,2.2vw,1.8125rem)",
+            fontSize: "var(--fs-h3)",
             marginTop: 8,
             color: "var(--ink-900)",
           }}
@@ -47,7 +53,7 @@ function SectionHead({ overline, title, href }: { overline: string; title: strin
         </h2>
       </div>
       <Link href={href} style={moreLink}>
-        전체보기 →
+        {linkLabel}
       </Link>
     </div>
   );
@@ -66,7 +72,12 @@ export default async function HomePage() {
       )}
 
       <Container style={{ padding: "var(--sp-7) var(--gutter)" }}>
-        <SectionHead overline="Projects" title="주목할 만한 프로젝트" href="/projects" />
+        <SectionHead
+          overline="Projects"
+          title="주요 프로젝트"
+          href="/projects"
+          linkLabel="더보기 →"
+        />
         <div className="d4p-grid-3">
           {data.projects.map((p) => (
             <ProjectCard key={p.id} project={p} />
@@ -75,29 +86,7 @@ export default async function HomePage() {
       </Container>
 
       <Container style={{ padding: "var(--sp-7) var(--gutter)" }}>
-        <SectionHead overline="Latest Photos" title="최근 등록된 포토" href="/photos" />
-        <div className="d4p-grid-4">
-          {data.photos.slice(0, 8).map((ph) => (
-            <Link
-              key={ph.id}
-              href="/photos"
-              className="d4p-photo-tile"
-              style={{ aspectRatio: "1 / 1" }}
-            >
-              <Image
-                src={ph.url}
-                alt={ph.alt ?? ph.title ?? ""}
-                fill
-                sizes={LATEST_PHOTOS_SIZES}
-                style={{ objectFit: "cover" }}
-              />
-            </Link>
-          ))}
-        </div>
-      </Container>
-
-      <Container style={{ padding: "var(--sp-7) var(--gutter)" }}>
-        <SectionHead overline="Items" title="인기 아이템" href="/items" />
+        <SectionHead overline="Items" title="주요 아이템" href="/items" />
         <div className="d4p-grid-4">
           {data.items.map((it) => (
             <ItemCard key={it.id} item={it} />
@@ -106,7 +95,7 @@ export default async function HomePage() {
       </Container>
 
       <Container style={{ padding: "var(--sp-7) var(--gutter) var(--sp-8)" }}>
-        <SectionHead overline="Brands" title="등록된 브랜드" href="/brands" />
+        <SectionHead overline="Brands" title="협력사" href="/brands" linkLabel="더 보기 →" />
         <div className="d4p-grid-4">
           {data.brands.map((b) => (
             <BrandCard key={b.id} brand={b} />

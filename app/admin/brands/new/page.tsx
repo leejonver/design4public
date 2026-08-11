@@ -179,7 +179,7 @@ export default function NewBrandPage() {
                   <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
                     로고 이미지
                   </Text>
-                  <ImageUploader value={logo} onChange={setLogo} folder="brands" multiple={false} />
+                  <ImageUploader value={logo} onChange={setLogo} folder="brands" />
                   <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
                     1:1 비율의 이미지를 권장합니다.
                   </Text>
@@ -188,7 +188,7 @@ export default function NewBrandPage() {
                   <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
                     커버 이미지
                   </Text>
-                  <ImageUploader value={cover} onChange={setCover} folder="brands" multiple={false} />
+                  <ImageUploader value={cover} onChange={setCover} folder="brands" />
                   <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
                     2:1 비율의 이미지를 권장합니다.
                   </Text>

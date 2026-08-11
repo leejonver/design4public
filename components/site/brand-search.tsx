@@ -50,7 +50,7 @@ function Thumb({ img, title, square }: { img: string | null; title: string; squa
             height: "100%",
             alignItems: "center",
             justifyContent: "center",
-            fontSize: 15.5,
+            fontSize: "var(--fs-body)",
             fontWeight: 700,
             color: "var(--ink-400)",
           }}
@@ -87,7 +87,7 @@ function ResultRow({
         <span
           style={{
             display: "block",
-            fontSize: 15,
+            fontSize: "var(--fs-sm)",
             fontWeight: 600,
             color: "var(--ink-900)",
             whiteSpace: "nowrap",
@@ -242,7 +242,7 @@ export function BrandSearch({
             outline: "none",
             background: "transparent",
             fontFamily: "var(--font-sans)",
-            fontSize: lg ? 17.5 : 16,
+            fontSize: "var(--fs-body)",
             color: "var(--ink-900)",
           }}
         />
@@ -312,7 +312,7 @@ export function BrandSearch({
                     <span className="d4p-srch-catico">
                       <c.Icon size={16} strokeWidth={1.5} />
                     </span>
-                    <span style={{ flex: 1, textAlign: "left", fontSize: 15, fontWeight: 600, color: "var(--ink-800)" }}>
+                    <span style={{ flex: 1, textAlign: "left", fontSize: "var(--fs-sm)", fontWeight: 600, color: "var(--ink-800)" }}>
                       {c.label}
                     </span>
                     <ArrowUpRight size={15} strokeWidth={1.5} style={{ color: "var(--ink-300)" }} />
@@ -333,7 +333,7 @@ export function BrandSearch({
                 <span className="d4p-srch-catico">
                   <Search size={15} strokeWidth={1.5} />
                 </span>
-                <span style={{ flex: 1, textAlign: "left", fontSize: 15, color: "var(--ink-700)" }}>
+                <span style={{ flex: 1, textAlign: "left", fontSize: "var(--fs-sm)", color: "var(--ink-700)" }}>
                   ‘<strong style={{ color: "var(--ink-900)" }}>{ql}</strong>’ 전체 검색
                 </span>
               </button>
@@ -360,7 +360,7 @@ export function BrandSearch({
               )}
 
               {!loading && totalHits === 0 && (
-                <div style={{ padding: "22px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: 15 }}>
+                <div style={{ padding: "22px 16px", textAlign: "center", color: "var(--ink-400)", fontSize: "var(--fs-sm)" }}>
                   검색 결과가 없습니다.
                 </div>
               )}

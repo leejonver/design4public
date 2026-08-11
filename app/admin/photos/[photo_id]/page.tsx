@@ -300,7 +300,6 @@ export default function PhotoDetailPage() {
         title="사진 삭제"
         description="이 사진을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다."
         confirmText="삭제"
-        danger
         loading={deleting}
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}

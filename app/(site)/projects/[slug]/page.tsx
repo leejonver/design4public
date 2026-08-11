@@ -117,7 +117,7 @@ export default async function ProjectDetailPage({ params }: Props) {
           <p
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 17.5,
+              fontSize: "var(--fs-lead)",
               lineHeight: 1.7,
               color: "var(--ink-700)",
               margin: "18px 0 0",
@@ -153,7 +153,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                 style={{
                   fontFamily: "var(--font-display)",
                   fontWeight: 600,
-                  fontSize: 22,
+                  fontSize: "var(--fs-h4)",
                   marginTop: 8,
                   color: "var(--ink-900)",
                 }}

@@ -148,7 +148,7 @@ export default function EditProjectPage() {
         inquiryUrl: inquiryUrl.trim(),
       };
 
-      const response = await api.projects.update(project_id, body);
+      const response = await api.put(`/projects/${project_id}`, body);
       if (response.success) {
         router.push(`/admin/projects/${project_id}`);
       } else {

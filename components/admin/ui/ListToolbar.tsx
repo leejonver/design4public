@@ -11,8 +11,6 @@ export interface ListToolbarProps {
   filters?: ReactNode;
   /** Sort controls rendered on the left after the filters. */
   sort?: ReactNode;
-  /** Action controls pushed to the right edge (e.g. "추가" button). */
-  right?: ReactNode;
 }
 
 export default function ListToolbar({
@@ -21,7 +19,6 @@ export default function ListToolbar({
   searchPlaceholder,
   filters,
   sort,
-  right,
 }: ListToolbarProps) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -35,7 +32,6 @@ export default function ListToolbar({
       </div>
       {filters}
       {sort}
-      {right ? <div className="ml-auto flex items-center gap-2">{right}</div> : null}
     </div>
   );
 }

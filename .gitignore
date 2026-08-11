@@ -14,6 +14,10 @@ test-results/
 # build artifacts / local tooling
 tsconfig.tsbuildinfo
 .claude/
+.agents/
+.codex/
+AGENTS.md
+CLAUDE.md
 .playwright-mcp/
 
 .env.test.local

@@ -28,7 +28,6 @@ export interface ListResult<T> {
 
 export interface UseListControllerOptions<T> {
   fetch: (params: ListFetchParams) => Promise<ListResult<T>>;
-  initialSearch?: string;
   initialFilters?: Record<string, string>;
   initialSort?: ListSort | null;
   limit?: number;
@@ -39,6 +38,7 @@ export interface UseListController<T> {
   total: number;
   loading: boolean;
   error: string | null;
+  clearError: () => void;
   search: string;
   setSearch: (v: string) => void;
   filters: Record<string, string>;
@@ -54,10 +54,10 @@ export interface UseListController<T> {
 const DEBOUNCE_MS = 300;
 
 export function useListController<T>(options: UseListControllerOptions<T>): UseListController<T> {
-  const { initialSearch = '', initialFilters = {}, initialSort = null, limit = 20 } = options;
+  const { initialFilters = {}, initialSort = null, limit = 20 } = options;
 
-  const [search, setSearchState] = useState(initialSearch);
-  const [debouncedSearch, setDebouncedSearch] = useState(initialSearch);
+  const [search, setSearchState] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filters, setFilters] = useState<Record<string, string>>(initialFilters);
   const [sort, setSortState] = useState<ListSort | null>(initialSort);
   const [page, setPage] = useState(1);
@@ -140,12 +140,14 @@ export function useListController<T>(options: UseListControllerOptions<T>): UseL
   }, []);
 
   const refetch = useCallback(() => setRefetchToken((token) => token + 1), []);
+  const clearError = useCallback(() => setError(null), []);
 
   return {
     items,
     total,
     loading,
     error,
+    clearError,
     search,
     setSearch,
     filters,
@@ -158,5 +160,3 @@ export function useListController<T>(options: UseListControllerOptions<T>): UseL
     refetch,
   };
 }
-
-export default useListController;

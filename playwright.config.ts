@@ -25,6 +25,10 @@ export default defineConfig({
   // which pushed 2-worker runs into 10+ navigation timeouts per run while
   // serial runs stay green in 3-7min. Determinism beats speed here.
   workers: 1,
+  // A full CMS mutation test can cross several cold-compiled routes before it
+  // restores its seed data. Fresh local machines can exceed Playwright's 30s
+  // default even though each individual navigation completes successfully.
+  timeout: 60000,
   reporter: 'html',
   // The suite runs against `next dev`, which compiles each route on its first
   // hit. Give web-first assertions (e.g. toHaveURL after a nav click) headroom

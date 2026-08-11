@@ -53,7 +53,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(() => {
-      refresh()
+      // Supabase invokes auth callbacks while its internal auth lock is held.
+      // Defer getUser() until the callback returns; otherwise signOut can wait
+      // forever while this refresh waits for the same lock.
+      setTimeout(() => {
+        void refresh()
+      }, 0)
     })
     return () => subscription.unsubscribe()
   }, [])

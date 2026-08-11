@@ -7,7 +7,7 @@ import { Container } from "@/components/site/primitives";
 
 const link: CSSProperties = {
   fontFamily: "var(--font-sans)",
-  fontSize: 14.5,
+  fontSize: "var(--fs-sm)",
   color: "rgba(255,255,255,.78)",
 };
 const hair = "1px solid rgba(255,255,255,.12)";
@@ -28,7 +28,7 @@ export function SiteFooter() {
         <Link
           href="/"
           className="d4p-logotype"
-          style={{ fontSize: 17.5, color: "var(--white)", flex: "none" }}
+          style={{ fontSize: "var(--fs-body)", color: "var(--white)", flex: "none" }}
         >
           DESIGN<span style={{ color: "var(--sage-400)" }}>4</span>PUBLIC
         </Link>
@@ -44,7 +44,7 @@ export function SiteFooter() {
           <p
             style={{
               fontFamily: "var(--font-sans)",
-              fontSize: 14.5,
+              fontSize: "var(--fs-body)",
               lineHeight: 1.6,
               color: "rgba(255,255,255,.52)",
               margin: 0,
@@ -52,8 +52,8 @@ export function SiteFooter() {
               wordBreak: "keep-all",
             }}
           >
-            디자인포퍼블릭은 대한민국의 공공조달 가구납품사례들을 모아놓은 공공 디자인 카탈로그
-            서비스입니다.
+            디자인포퍼블릭은 공공서비스 공간의 제품 개발과 디자인 분야에서 다양한 수행 실적을
+            보유한 통합 디자인 브랜드입니다.
           </p>
           <div
             style={{
@@ -94,7 +94,7 @@ export function SiteFooter() {
           }}
         >
           <span
-            style={{ fontFamily: "var(--font-sans)", fontSize: 13.5, color: "rgba(255,255,255,.4)" }}
+            style={{ fontFamily: "var(--font-sans)", fontSize: "var(--fs-xs)", color: "rgba(255,255,255,.4)" }}
           >
             © 2026 DESIGN4PUBLIC. All rights reserved.
           </span>

@@ -9,20 +9,18 @@ export interface SuccessCalloutProps {
   message: string | null;
   /** Called on manual close and after the auto-dismiss timeout. */
   onClose: () => void;
-  /** Auto-dismiss delay in ms. */
-  duration?: number;
 }
 
 /** Transient success feedback shown after a mutation succeeds. Auto-dismisses. */
-export default function SuccessCallout({ message, onClose, duration = 3000 }: SuccessCalloutProps) {
+export default function SuccessCallout({ message, onClose }: SuccessCalloutProps) {
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
   useEffect(() => {
     if (!message) return;
-    const timer = setTimeout(() => onCloseRef.current(), duration);
+    const timer = setTimeout(() => onCloseRef.current(), 3000);
     return () => clearTimeout(timer);
-  }, [message, duration]);
+  }, [message]);
 
   if (!message) return null;
 

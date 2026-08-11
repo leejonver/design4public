@@ -23,8 +23,8 @@ export default function CategorySelect({ type, value, onChange }: CategorySelect
   useEffect(() => {
     let active = true;
     setLoading(true);
-    api.categories
-      .getList({ type, limit: 200 })
+    api
+      .get('/categories', { type, limit: 200 })
       .then((res) => {
         if (!active) return;
         if (res.success && res.data) {
@@ -53,7 +53,7 @@ export default function CategorySelect({ type, value, onChange }: CategorySelect
     if (!name) return;
     setCreating(true);
     setError(null);
-    const res = await api.categories.create({ name, type });
+    const res = await api.post('/categories', { name, type });
     if (res.success && res.data) {
       const created = res.data as Category;
       setCategories((prev) => [...prev, created]);

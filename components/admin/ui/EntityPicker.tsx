@@ -12,8 +12,6 @@ export interface EntityPickerProps {
   kind: 'item' | 'photo' | 'project' | 'brand';
   value: string[];
   onChange: (ids: string[]) => void;
-  mainId?: string;
-  onMainChange?: (id: string) => void;
 }
 
 interface Option {
@@ -58,8 +56,6 @@ export default function EntityPicker({
   kind,
   value,
   onChange,
-  mainId,
-  onMainChange,
 }: EntityPickerProps) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -116,7 +112,6 @@ export default function EntityPicker({
 
   const remove = (id: string) => {
     onChange(value.filter((v) => v !== id));
-    if (onMainChange && mainId === id) onMainChange('');
   };
 
   const selected: Option[] = value.map((id) => known[id] ?? { id, label: id });
@@ -136,17 +131,6 @@ export default function EntityPicker({
                 <img src={opt.thumb} alt="" className="h-8 w-8 rounded object-cover" />
               ) : null}
               <span className="max-w-[140px] truncate text-sm text-gray-700">{opt.label}</span>
-              {onMainChange ? (
-                <label className="flex items-center gap-1 text-xs text-gray-500">
-                  <input
-                    type="radio"
-                    name="entity-picker-main"
-                    checked={mainId === opt.id}
-                    onChange={() => onMainChange(opt.id)}
-                  />
-                  대표
-                </label>
-              ) : null}
               <IconButton
                 type="button"
                 size="sm"

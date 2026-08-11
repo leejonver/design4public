@@ -29,8 +29,8 @@ export default function HomeSettingsPage() {
     let active = true;
     setLoading(true);
     setLoadError(null);
-    api.homeSettings
-      .get()
+    api
+      .get('/home-settings')
       .then((res) => {
         if (!active) return;
         if (res.success && res.data) {
@@ -72,7 +72,7 @@ export default function HomeSettingsPage() {
       ...tag(mainBrands, 'brand'),
     ];
     try {
-      const res = await api.homeSettings.update({ featuredProjectId, featured });
+      const res = await api.put('/home-settings', { featuredProjectId, featured });
       if (res.success) {
         setSuccess(res.message ?? '홈 설정이 저장되었습니다.');
       } else {

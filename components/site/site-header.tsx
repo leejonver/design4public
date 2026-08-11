@@ -61,7 +61,7 @@ export function SiteHeader() {
   const scrolled = y > 8;
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
-  const Logo = ({ size = 16 }: { size?: number }) => (
+  const Logo = ({ size = "var(--fs-body)" }: { size?: CSSProperties["fontSize"] }) => (
     <Link
       href="/"
       aria-label="DESIGN4PUBLIC home"
@@ -102,7 +102,7 @@ export function SiteHeader() {
               <Search size={18} strokeWidth={1.5} />
             </button>
             <div style={{ flex: 1, display: "flex", justifyContent: "center", minWidth: 0 }}>
-              <Logo size={15.5} />
+              <Logo size="var(--fs-sm)" />
             </div>
             <button onClick={() => setMenuOpen(true)} aria-label="메뉴" style={iconBtn}>
               <Menu size={20} strokeWidth={1.5} />
@@ -147,7 +147,7 @@ export function SiteHeader() {
                     style={{
                       fontFamily: "var(--font-display)",
                       fontWeight: 600,
-                      fontSize: 32,
+                      fontSize: "var(--fs-h3)",
                       color: isActive(n.href) ? "var(--ink-900)" : "var(--ink-700)",
                       padding: "14px 0",
                       borderBottom: "1px solid var(--border-hair)",
@@ -189,7 +189,7 @@ export function SiteHeader() {
   return (
     <header style={headerStyle}>
       <div style={{ ...barInner, gap: 24 }}>
-        <Logo size={17.5} />
+        <Logo size="var(--fs-body)" />
         <div style={{ flex: 1, display: "flex", alignItems: "center", height: "100%" }}>
           <div style={{ flex: 1, display: "flex", justifyContent: "center", padding: "0 24px" }}>
             <div style={{ width: "100%", maxWidth: 480 }}>
@@ -205,7 +205,7 @@ export function SiteHeader() {
                   href={n.href}
                   style={{
                     fontFamily: "var(--font-sans)",
-                    fontSize: 13.5,
+                    fontSize: "var(--fs-body)",
                     fontWeight: 700,
                     letterSpacing: "0.14em",
                     textTransform: "uppercase",
@@ -247,7 +247,7 @@ const iconBtn: CSSProperties = {
 };
 const mLink: CSSProperties = {
   fontFamily: "var(--font-sans)",
-  fontSize: 15,
+  fontSize: "var(--fs-sm)",
   color: "var(--ink-500)",
 };
 const overlay: CSSProperties = {

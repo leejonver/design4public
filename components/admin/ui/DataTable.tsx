@@ -7,7 +7,7 @@ import { ChevronDownOutlineIcon, ChevronUpOutlineIcon } from '@vapor-ui/icons';
 export interface DataTableColumn<T> {
   key: string;
   header: string;
-  render?: (row: T) => React.ReactNode;
+  render: (row: T) => React.ReactNode;
   align?: 'left' | 'right' | 'center';
   /** Tailwind width utility class, e.g. 'w-32' | 'w-[120px]' | 'w-[30%]'. */
   width?: string;
@@ -25,7 +25,6 @@ export interface DataTableProps<T> {
   rowKey: (row: T) => string;
   loading?: boolean;
   empty?: React.ReactNode;
-  onRowClick?: (row: T) => void;
   /** Key of the currently sorted column. */
   sortKey?: string;
   /** Direction of the current sort. */
@@ -64,7 +63,6 @@ export default function DataTable<T>({
   rowKey,
   loading = false,
   empty = '데이터가 없습니다.',
-  onRowClick,
   sortKey,
   sortDir,
   onSortChange,
@@ -141,15 +139,9 @@ export default function DataTable<T>({
           </Table.Row>
         ) : (
           rows.map((row) => (
-            <Table.Row
-              key={rowKey(row)}
-              onClick={onRowClick ? () => onRowClick(row) : undefined}
-              className={onRowClick ? 'cursor-pointer hover:bg-gray-50' : undefined}
-            >
+            <Table.Row key={rowKey(row)}>
               {columns.map((col) => {
-                const content = col.render
-                  ? col.render(row)
-                  : (row as unknown as Record<string, React.ReactNode>)[col.key];
+                const content = col.render(row);
                 return (
                   <Table.Cell
                     key={col.key}
