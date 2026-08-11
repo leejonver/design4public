@@ -136,6 +136,11 @@ const ITEM_SUMMARY_SELECT = `
   item_categories(categories(id,name))
 `;
 
+const PHOTO_FEED_SELECT = `
+  id,image_url,alt_text,title,description,created_at,updated_at,
+  project_photos(order,projects(id,slug,title,year,location,status,project_categories(categories(name))))
+`;
+
 /* Project detail select: like the summary, but project photos also carry the
    items tagged on them (derived project→photo→item model). galleryFrom/coverFrom
    ignore the extra nested photo_items. */
@@ -354,17 +359,41 @@ function normalizePhotoFeed(row: Raw): PhotoFeedItem {
 export async function fetchPhotos(limit = 120): Promise<PhotoFeedItem[]> {
   const { data, error } = await supabase
     .from("photos")
-    .select(
-      `id,image_url,alt_text,title,description,created_at,updated_at,
-       project_photos(order,projects(id,slug,title,year,location,status,project_categories(categories(name))))`
-    )
+    .select(PHOTO_FEED_SELECT)
     .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
     .limit(limit);
   if (error) throw error;
-  return (data ?? [])
-    .map(normalizePhotoFeed)
-    // only show photos that belong to a published project
-    .filter((p) => p.projectSlug != null);
+  return (data ?? []).map(normalizePhotoFeed);
+}
+
+export async function fetchPhotosPage(
+  page: number,
+  pageSize: number,
+): Promise<{ photos: PhotoFeedItem[]; total: number }> {
+  const safePage = Math.max(1, Math.trunc(page) || 1);
+  const safePageSize = Math.max(1, Math.trunc(pageSize) || 1);
+  const from = (safePage - 1) * safePageSize;
+  const { data, error, count } = await supabase
+    .from("photos")
+    .select(PHOTO_FEED_SELECT, { count: "exact" })
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .range(from, from + safePageSize - 1);
+  if (error) throw error;
+  return { photos: (data ?? []).map(normalizePhotoFeed), total: count ?? 0 };
+}
+
+export async function fetchAllPhotos(): Promise<PhotoFeedItem[]> {
+  const batchSize = 1000;
+  const first = await fetchPhotosPage(1, batchSize);
+  const photos = [...first.photos];
+  for (let page = 2; photos.length < first.total; page += 1) {
+    const batch = await fetchPhotosPage(page, batchSize);
+    if (batch.photos.length === 0) break;
+    photos.push(...batch.photos);
+  }
+  return photos;
 }
 
 export async function fetchPhotoById(id: string): Promise<PhotoDetail | null> {
@@ -380,15 +409,14 @@ export async function fetchPhotoById(id: string): Promise<PhotoDetail | null> {
   if (error) throw error;
   if (!data) return null;
 
-  // Public iff the photo belongs to a PUBLISHED project (mirrors fetchPhotos).
-  // Item-gallery-only photos get no indexable detail page.
   const publishedLink = ((data as Raw).project_photos ?? []).find(
     (pp: Raw) => pp.projects?.status === "published"
   );
-  if (!publishedLink) return null;
+  const tagged = [...((data as Raw).tagged ?? [])];
+  if (!publishedLink && tagged.length === 0) return null;
 
-  const feed = normalizePhotoFeed({ ...data, project_photos: [publishedLink] });
-  const items: ItemSummary[] = [...((data as Raw).tagged ?? [])]
+  const feed = normalizePhotoFeed({ ...data, project_photos: publishedLink ? [publishedLink] : [] });
+  const items: ItemSummary[] = tagged
     .sort((a: Raw, b: Raw) => Number(!!b.is_main) - Number(!!a.is_main) || ord(a.order) - ord(b.order))
     .map((r: Raw) => r.items)
     .filter(Boolean)

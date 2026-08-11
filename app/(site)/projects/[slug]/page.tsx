@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { fetchProjectBySlug } from "@/lib/api";
-import { Container, Overline, SpecSheet } from "@/components/site/primitives";
+import { Container, Overline } from "@/components/site/primitives";
 import { Breadcrumb } from "@/components/site/page-chrome";
 import { StickyTitle } from "@/components/site/sticky-title";
 import { ProjectMasthead } from "@/components/site/project-masthead";
@@ -64,18 +64,6 @@ export default async function ProjectDetailPage({ params }: Props) {
     .filter(Boolean)
     .join(" · ");
 
-  const specRows = [
-    { label: "용도", value: project.categories.join(" · ") || "-" },
-    { label: "위치", value: project.location ?? "-" },
-    { label: "발주", value: project.client ?? "-" },
-    {
-      label: "면적",
-      value: project.area != null ? `${project.area.toLocaleString()}㎡` : "-",
-    },
-    { label: "준공", value: project.year != null ? String(project.year) : "-" },
-    { label: "사진", value: `${project.imageCount}장` },
-  ];
-
   return (
     <Container style={{ padding: "var(--sp-5) var(--gutter) var(--sp-9)" }}>
       <JsonLd data={jsonLd} />
@@ -102,32 +90,6 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       <div style={{ marginBottom: "var(--sp-8)" }}>
         <ProjectMasthead project={project} />
-      </div>
-
-      <div
-        className="d4p-detail-split"
-        style={{
-          marginBottom: "var(--sp-8)",
-          borderTop: "1px solid var(--border-hair)",
-          paddingTop: "var(--sp-7)",
-        }}
-      >
-        <div>
-          <Overline>Overview</Overline>
-          <p
-            style={{
-              fontFamily: "var(--font-sans)",
-              fontSize: "var(--fs-lead)",
-              lineHeight: 1.7,
-              color: "var(--ink-700)",
-              margin: "18px 0 0",
-              maxWidth: "46ch",
-            }}
-          >
-            {project.description}
-          </p>
-        </div>
-        <SpecSheet title="개요" rows={specRows} />
       </div>
 
       <div style={{ marginBottom: "var(--sp-8)" }}>
@@ -162,7 +124,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               </h2>
             </div>
           </div>
-          <div className="d4p-grid-4">
+          <div className="d4p-related-items">
             {project.items.map((it) => (
               <ItemCard key={it.id} item={it} />
             ))}

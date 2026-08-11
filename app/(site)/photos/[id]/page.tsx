@@ -30,11 +30,13 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const photo = await fetchPhotoById(id);
   if (!photo) return {};
   const title = photoTitle(photo);
+  const fallbackDescription = photo.projectTitle
+    ? `${photo.projectTitle} 프로젝트의 공간·가구 사진입니다.`
+    : photo.items[0]
+      ? `${photo.items[0].name} 아이템의 상세 사진입니다.`
+      : "design4public의 공간·가구 사진입니다.";
   const description = truncateDescription(
-    compactText(
-      photo.description ?? photo.alt,
-      `${photo.projectTitle ?? "design4public"} 프로젝트의 공간·가구 사진입니다.`
-    )
+    compactText(photo.description ?? photo.alt, fallbackDescription)
   );
   return createPageMetadata({
     title,

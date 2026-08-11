@@ -27,6 +27,19 @@ describe('admin UI current contracts', () => {
     expect(screen.getByText('맞춤 행')).toBeInTheDocument();
   });
 
+  it('can preview a logo without cropping it', () => {
+    render(
+      <ImageUploader
+        value={[{ id: 'logo', url: '/logo.png', alt: '브랜드 로고', isMain: true }]}
+        onChange={() => {}}
+        folder="brands"
+        previewFit="contain"
+      />,
+    );
+
+    expect(screen.getByRole('img', { name: '브랜드 로고' })).toHaveClass('object-contain');
+  });
+
   it('auto-dismisses success feedback after three seconds', () => {
     vi.useFakeTimers();
     const onClose = vi.fn();

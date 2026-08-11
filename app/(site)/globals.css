@@ -326,6 +326,22 @@ img {
   color: #fff;
   background: var(--ink-900);
 }
+.d4p-filterbar-facets {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.d4p-filterbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: none;
+}
+.d4p-facet-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
 
 .d4p-field {
   display: block;
@@ -425,6 +441,13 @@ img {
   grid-template-columns: 1.5fr 1fr;
   gap: var(--sp-7);
 }
+.d4p-item-detail {
+  grid-template-columns: minmax(0, 740px) minmax(280px, 1fr);
+}
+.d4p-item-media {
+  width: 100%;
+  max-width: 740px;
+}
 .d4p-form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -485,33 +508,47 @@ img {
 /* ============================================================
    Photo masonry (CSS columns)
    ============================================================ */
+.d4p-masonry,
+.d4p-related-items {
+  --d4p-gallery-columns: 4;
+}
 .d4p-masonry {
-  column-count: 4;
+  column-count: var(--d4p-gallery-columns);
   column-gap: var(--grid-gap);
 }
+.d4p-related-items {
+  display: grid;
+  grid-template-columns: repeat(var(--d4p-gallery-columns), minmax(0, 1fr));
+  gap: var(--grid-gap);
+}
 @media (min-width: 1500px) {
-  .d4p-masonry {
-    column-count: 5;
+  .d4p-masonry,
+  .d4p-related-items {
+    --d4p-gallery-columns: 5;
   }
 }
 @media (min-width: 1980px) {
-  .d4p-masonry {
-    column-count: 6;
+  .d4p-masonry,
+  .d4p-related-items {
+    --d4p-gallery-columns: 6;
   }
 }
 @media (max-width: 1080px) {
-  .d4p-masonry {
-    column-count: 3;
+  .d4p-masonry,
+  .d4p-related-items {
+    --d4p-gallery-columns: 3;
   }
 }
 @media (max-width: 720px) {
-  .d4p-masonry {
-    column-count: 2;
+  .d4p-masonry,
+  .d4p-related-items {
+    --d4p-gallery-columns: 2;
   }
 }
 @media (max-width: 460px) {
-  .d4p-masonry {
-    column-count: 1;
+  .d4p-masonry,
+  .d4p-related-items {
+    --d4p-gallery-columns: 1;
   }
 }
 .d4p-masonry-item {
@@ -1254,7 +1291,12 @@ img {
     display: none !important;
   }
   .d4p-filterbar {
+    flex-direction: column;
+    align-items: stretch !important;
     gap: 12px !important;
+  }
+  .d4p-filterbar-actions {
+    justify-content: flex-end;
   }
   .d4p-filterbar button {
     min-height: 38px;

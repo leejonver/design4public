@@ -177,20 +177,20 @@ export default function NewBrandPage() {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
-                    로고 이미지
+                    목록 썸네일 로고
                   </Text>
-                  <ImageUploader value={logo} onChange={setLogo} folder="brands" />
+                  <ImageUploader value={logo} onChange={setLogo} folder="brands" previewFit="contain" />
                   <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
-                    1:1 비율의 이미지를 권장합니다.
+                    미등록 시 영문 브랜드명이 썸네일 중앙에 표시됩니다.
                   </Text>
                 </div>
                 <div>
                   <Text typography="body2" render={<p />} className="mb-2 text-gray-700">
-                    커버 이미지
+                    상세 커버 이미지
                   </Text>
                   <ImageUploader value={cover} onChange={setCover} folder="brands" />
                   <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
-                    2:1 비율의 이미지를 권장합니다.
+                    브랜드 상세 상단에 표시됩니다. 21:9 비율을 권장합니다.
                   </Text>
                 </div>
               </div>

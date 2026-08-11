@@ -12,19 +12,26 @@ vi.mock('@/lib/supabase/public', () => ({
 }))
 
 import { supabase } from '@/lib/supabase/public'
-import { fetchProjectBySlug, fetchItemBySlug, fetchBrandBySlug, fetchPhotoById } from '@/lib/api'
+import {
+  fetchProjectBySlug,
+  fetchItemBySlug,
+  fetchBrandBySlug,
+  fetchPhotoById,
+  fetchPhotosPage,
+} from '@/lib/api'
 
-type QBResult = { data: unknown; error: unknown }
+type QBResult = { data: unknown; error: unknown; count?: number | null }
 
 // Chainable query builder stub: every call returns itself, `.then`/`.maybeSingle`
 // resolve the fixed result — mirrors tests/unit/admin/api/projects.test.ts.
 function makeQB(result: QBResult): Record<string, unknown> {
-  const methods = ['select', 'eq', 'neq', 'order', 'limit']
+  const methods = ['select', 'eq', 'neq', 'order', 'limit', 'range']
   const qb: Record<string, unknown> = {}
   methods.forEach((m) => {
     qb[m] = vi.fn(() => qb)
   })
   qb.maybeSingle = vi.fn(() => Promise.resolve(result))
+  qb.then = vi.fn((resolve) => Promise.resolve(result).then(resolve))
   return qb
 }
 
@@ -216,13 +223,13 @@ describe('fetchBrandBySlug — related projects union (orchestrator extension)',
 })
 
 describe('fetchPhotoById', () => {
-  it('returns null when the photo has no published project link (item-gallery-only)', async () => {
+  it('returns an item-gallery-only photo without project metadata', async () => {
     fromMock.mockReturnValue(
       makeQB({
         data: {
           ...photo('ph-1'),
-          project_photos: [{ order: 0, projects: { ...project('draft-1'), status: 'draft' } }],
-          tagged: [],
+          project_photos: [],
+          tagged: [{ is_main: true, order: 0, items: item('a') }],
         },
         error: null,
       })
@@ -230,7 +237,8 @@ describe('fetchPhotoById', () => {
 
     const result = await fetchPhotoById('ph-1')
 
-    expect(result).toBeNull()
+    expect(result?.projectSlug).toBeNull()
+    expect(result?.items.map((i) => i.id)).toEqual(['a'])
   })
 
   it('maps tagged photo_items to items, main-first then by order', async () => {
@@ -252,5 +260,20 @@ describe('fetchPhotoById', () => {
 
     expect(result?.projectSlug).toBe('p-pub-1')
     expect(result?.items.map((i) => i.id)).toEqual(['a', 'b'])
+  })
+})
+
+describe('fetchPhotosPage', () => {
+  it('includes item-only photos and requests the selected page range', async () => {
+    const qb = makeQB({ data: [photo('item-only')], error: null, count: 1 })
+    fromMock.mockReturnValue(qb)
+
+    const result = await fetchPhotosPage(2, 60)
+
+    expect(result.total).toBe(1)
+    expect(result.photos.map((p) => p.id)).toEqual(['item-only'])
+    expect(qb.order).toHaveBeenNthCalledWith(1, 'created_at', { ascending: false })
+    expect(qb.order).toHaveBeenNthCalledWith(2, 'id', { ascending: false })
+    expect(qb.range).toHaveBeenCalledWith(60, 119)
   })
 })

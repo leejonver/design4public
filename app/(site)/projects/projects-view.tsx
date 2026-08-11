@@ -61,7 +61,7 @@ function ProjectsListView({
         lead={
           query
             ? `‘${query}’ 검색 결과 ${queried.length}건`
-            : "공공·업무 공간에 실제로 도입된 프로젝트를 둘러보세요."
+            : "공간을 변화시킨 다양한 프로젝트를 만나보세요."
         }
       />
       <FilterBar

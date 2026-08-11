@@ -10,12 +10,14 @@ export interface ImageUploaderProps {
   value: ImageData[];
   onChange: (images: ImageData[]) => void;
   folder: string;
+  previewFit?: 'cover' | 'contain';
 }
 
 export default function ImageUploader({
   value,
   onChange,
   folder,
+  previewFit = 'cover',
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -93,7 +95,11 @@ export default function ImageUploader({
               className="group relative overflow-hidden rounded-md border border-gray-200"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img.url} alt={img.alt} className="h-24 w-full object-cover" />
+              <img
+                src={img.url}
+                alt={img.alt}
+                className={`h-24 w-full ${previewFit === 'contain' ? 'object-contain' : 'object-cover'}`}
+              />
               <IconButton
                 type="button"
                 size="sm"

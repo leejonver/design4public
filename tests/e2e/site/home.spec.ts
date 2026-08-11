@@ -29,4 +29,13 @@ test.describe('홈', () => {
     // draft project must never surface publicly
     await expect(page.locator('a.d4p-card[href="/projects/draft-project"]')).toHaveCount(0)
   })
+
+  test('로고가 없는 브랜드 카드에 영문명과 한글명을 표시한다', async ({ page }) => {
+    await page.setViewportSize({ width: 1029, height: 779 })
+    await page.goto('/')
+
+    const card = page.locator('a.d4p-card[href="/brands/vitra"]')
+    await expect(card.getByText('Vitra', { exact: true })).toBeVisible()
+    await expect(card.getByText('비트라', { exact: true })).toHaveCSS('font-size', '16px')
+  })
 })
