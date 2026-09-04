@@ -1339,3 +1339,16 @@ img {
     opacity: 1;
   }
 }
+/* 나라장터 쇼핑몰은 모바일 UA를 m.g2b.go.kr(앱 설치 안내)로 보내므로 모바일에서만 안내. */
+.d4p-nara-pc-note {
+  display: none;
+  flex-basis: 100%;
+  font-family: var(--font-sans);
+  font-size: 13px;
+  color: var(--ink-500);
+}
+@media screen and (max-width: 767px) {
+  .d4p-nara-pc-note {
+    display: block;
+  }
+}
