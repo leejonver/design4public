@@ -134,6 +134,9 @@ export default async function ItemDetailPage({ params }: Props) {
                   나라장터에서 보기
                 </ButtonLink>
               )}
+              {item.naraUrl && (
+                <span className="d4p-nara-pc-note">나라장터 상품 페이지는 PC에서 확인 가능</span>
+              )}
             </div>
 
             {item.description && (
