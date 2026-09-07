@@ -87,7 +87,6 @@ insert into public.home_featured (entity_type, entity_id, "order") values
   ('project', '66666666-0000-0000-0000-000000000002', 1),
   ('item', '44444444-0000-0000-0000-000000000001', 0),
   ('item', '44444444-0000-0000-0000-000000000002', 1),
-  ('photo', '55555555-0000-0000-0000-000000000001', 0),
   ('brand', 'b1111111-0000-0000-0000-000000000001', 0);
 
 insert into public.site_settings (id, featured_project_id) values

@@ -6,10 +6,19 @@ import { ArrowRight, ArrowLeft } from "lucide-react";
 import { ButtonLink } from "@/components/site/ui";
 import type { ProjectDetail } from "@/lib/types";
 
-export function FeaturedHero({ project }: { project: ProjectDetail }) {
-  const imgs = project.gallery.length
-    ? project.gallery.map((g) => g.url)
-    : [project.coverImage];
+export function FeaturedHero({
+  project,
+  heroImage,
+}: {
+  project: ProjectDetail;
+  /** Dedicated hero photo (site_settings.featured_image_url); replaces the gallery slideshow when set. */
+  heroImage?: string | null;
+}) {
+  const imgs = heroImage
+    ? [heroImage]
+    : project.gallery.length
+      ? project.gallery.map((g) => g.url)
+      : [project.coverImage];
 
   const [i, setI] = useState(0);
   const [hover, setHover] = useState(false);
@@ -42,11 +51,9 @@ export function FeaturedHero({ project }: { project: ProjectDetail }) {
               alt=""
               fill
               sizes="100vw"
+              quality={90}
               priority={idx === 0}
-              style={{
-                objectFit: "cover",
-                transform: idx === i ? "scale(1.06)" : "scale(1)",
-              }}
+              style={{ objectFit: "cover" }}
             />
           ) : (
             <div

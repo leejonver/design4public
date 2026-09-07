@@ -120,8 +120,8 @@ export function BrandCard({ brand }: { brand: BrandSummary }) {
             inset: 0,
             display: "flex",
             alignItems: "flex-end",
-            background: "var(--scrim-bottom)",
             padding: "16px 18px",
+            pointerEvents: "none",
           }}
         >
           <span
@@ -130,7 +130,7 @@ export function BrandCard({ brand }: { brand: BrandSummary }) {
               fontWeight: 600,
               fontSize: "var(--fs-body)",
               lineHeight: 1.2,
-              color: "#fff",
+              color: "var(--ink-900)",
               letterSpacing: "-0.01em",
               wordBreak: "keep-all",
             }}

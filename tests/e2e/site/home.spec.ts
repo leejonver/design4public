@@ -14,10 +14,14 @@ test.describe('홈', () => {
   test('큐레이션 섹션 문구와 링크가 보인다', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { level: 2, name: '주요 프로젝트' })).toBeVisible()
-    await expect(page.getByRole('link', { name: '더보기 →', exact: true })).toHaveAttribute('href', '/projects')
     await expect(page.getByRole('heading', { level: 2, name: '주요 아이템' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: '협력사' })).toBeVisible()
-    await expect(page.getByRole('link', { name: '더 보기 →', exact: true })).toHaveAttribute('href', '/brands')
+    // Every section uses the same "더보기 →" link (client request 2026-09-04).
+    const more = page.getByRole('link', { name: '더보기 →', exact: true })
+    await expect(more).toHaveCount(3)
+    await expect(more.nth(0)).toHaveAttribute('href', '/projects')
+    await expect(more.nth(1)).toHaveAttribute('href', '/items')
+    await expect(more.nth(2)).toHaveAttribute('href', '/brands')
     await expect(page.getByRole('heading', { level: 2, name: '최근 등록된 포토' })).toHaveCount(0)
   })
 
@@ -32,7 +36,9 @@ test.describe('홈', () => {
 
   test('로고가 없는 브랜드 카드에 영문명과 한글명을 표시한다', async ({ page }) => {
     await page.setViewportSize({ width: 1029, height: 779 })
-    await page.goto('/')
+    // Home shows only the curated brand (seed: herman-miller); the logo-less
+    // vitra card renders with the same BrandCard on /brands.
+    await page.goto('/brands')
 
     const card = page.locator('a.d4p-card[href="/brands/vitra"]')
     await expect(card.getByText('Vitra', { exact: true })).toBeVisible()

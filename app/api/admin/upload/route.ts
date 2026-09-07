@@ -40,8 +40,17 @@ export async function POST(request: NextRequest) {
     // 파일 타입 체크 (MIME 타입 또는 확장자 기반)
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
     const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp', '.gif']
-    
-    const fileExt = file.name.split('.').pop()?.toLowerCase()
+
+    // 저장 확장자는 MIME 우선. 클라이언트 압축(browser-image-compression)이 이름 없는
+    // Blob을 보내면 FormData 파일명이 'blob'이 되어 확장자가 '.blob'으로 저장되던 문제.
+    const EXT_BY_MIME: Record<string, string> = {
+      'image/jpeg': 'jpg',
+      'image/png': 'png',
+      'image/webp': 'webp',
+      'image/gif': 'gif',
+    }
+    const nameExt = file.name.includes('.') ? file.name.split('.').pop()!.toLowerCase() : ''
+    const fileExt = EXT_BY_MIME[file.type] ?? nameExt
     const fileExtension = '.' + fileExt
     const isValidMimeType = allowedTypes.includes(file.type)
     const isValidExtension = allowedExtensions.includes(fileExtension)

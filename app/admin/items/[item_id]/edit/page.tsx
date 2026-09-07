@@ -32,6 +32,8 @@ export default function EditItemPage() {
   const [brandId, setBrandId] = useState('');
   const [status, setStatus] = useState<ItemStatus>('available');
   const [photos, setPhotos] = useState<ImageData[]>([]);
+  // 연관 프로젝트 사진 (project → photo → item 파생 링크): 편집/삭제 대상이 아니라 별도 보관.
+  const [linkedPhotos, setLinkedPhotos] = useState<ImageData[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
 
@@ -44,7 +46,9 @@ export default function EditItemPage() {
     setMallUrl(it.mallUrl ?? '');
     setBrandId(it.brand?.id ?? '');
     setStatus(it.status);
-    setPhotos([...(it.images ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0)));
+    const images = [...(it.images ?? [])].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    setPhotos(images.filter((img) => !img.projectId));
+    setLinkedPhotos(images.filter((img) => img.projectId));
     setCategories(it.categories?.map((category) => category.id) ?? []);
     setTags(it.tags?.map((tag) => tag.name) ?? []);
   };
@@ -112,7 +116,13 @@ export default function EditItemPage() {
       mallUrl: mallUrl.trim() || null,
       brandId,
       status,
-      images: photos.map((p, i) => ({ url: p.url, title: p.title, isMain: p.isMain, order: i })),
+      // Own photos first (carry the 대표 flag), then the untouched 연관 프로젝트 사진 links.
+      images: [...photos, ...linkedPhotos.map((p) => ({ ...p, isMain: false }))].map((p, i) => ({
+        url: p.url,
+        title: p.title,
+        isMain: p.isMain,
+        order: i,
+      })),
       categories,
       tags,
     });
@@ -218,6 +228,37 @@ export default function EditItemPage() {
               </Text>
             </Card.Body>
           </Card.Root>
+
+          {linkedPhotos.length > 0 ? (
+            <Card.Root>
+              <Card.Header>
+                <Text typography="heading5">연관 프로젝트 사진 ({linkedPhotos.length})</Text>
+              </Card.Header>
+              <Card.Body>
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                  {linkedPhotos.map((photo) => (
+                    <div key={photo.id} className="space-y-1">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={photo.url}
+                        alt={photo.alt}
+                        className="h-24 w-full rounded-md border border-gray-200 object-cover"
+                      />
+                      {photo.title ? (
+                        <p className="truncate text-xs text-gray-600" title={photo.title}>
+                          {photo.title}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+                <Text typography="body3" render={<p />} className="mt-2 text-gray-500">
+                  프로젝트 사진에 이 아이템이 태깅되어 자동으로 연결된 사진입니다. 연결을 바꾸려면 해당
+                  프로젝트 편집 화면에서 사진의 아이템 태그를 수정하세요.
+                </Text>
+              </Card.Body>
+            </Card.Root>
+          ) : null}
         </div>
 
         <div className="space-y-6">

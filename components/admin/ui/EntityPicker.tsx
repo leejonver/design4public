@@ -2,14 +2,20 @@
 
 import { useEffect, useState } from 'react';
 import { Button, Callout, Dialog, IconButton, Spinner } from '@vapor-ui/core';
-import { CloseOutlineIcon, CorrectOutlineIcon, ImageOutlineIcon } from '@vapor-ui/icons';
+import {
+  ChevronLeftOutlineIcon,
+  ChevronRightOutlineIcon,
+  CloseOutlineIcon,
+  CorrectOutlineIcon,
+  ImageOutlineIcon,
+} from '@vapor-ui/icons';
 import { api } from '@/lib/admin-api';
-import type { Brand, Item, Photo, Project } from '@/lib/admin-types';
+import type { Brand, Item, Project } from '@/lib/admin-types';
 import SearchInput from './SearchInput';
 import ImagePlaceholder from './ImagePlaceholder';
 
 export interface EntityPickerProps {
-  kind: 'item' | 'photo' | 'project' | 'brand';
+  kind: 'item' | 'project' | 'brand';
   value: string[];
   onChange: (ids: string[]) => void;
 }
@@ -25,10 +31,6 @@ function itemToOption(item: Item): Option {
   return { id: item.id, label: item.name, thumb: main?.url };
 }
 
-function photoToOption(photo: Photo): Option {
-  return { id: photo.id, label: photo.title || photo.altText || '제목 없음', thumb: photo.imageUrl };
-}
-
 function projectToOption(project: Project): Option {
   const main = project.images?.find((img) => img.isMain) ?? project.images?.[0];
   return { id: project.id, label: project.name, thumb: main?.url };
@@ -40,14 +42,12 @@ function brandToOption(brand: Brand): Option {
 
 const ENDPOINTS: Record<EntityPickerProps['kind'], string> = {
   item: '/items',
-  photo: '/photos',
   project: '/projects',
   brand: '/brands',
 };
 
 const TRIGGER_LABELS: Record<EntityPickerProps['kind'], string> = {
   item: '아이템 선택',
-  photo: '사진 선택',
   project: '프로젝트 선택',
   brand: '브랜드 선택',
 };
@@ -80,7 +80,6 @@ export default function EntityPicker({
         if (res.success && res.data) {
           let mapped: Option[];
           if (kind === 'item') mapped = (res.data.items as Item[]).map(itemToOption);
-          else if (kind === 'photo') mapped = (res.data.items as Photo[]).map(photoToOption);
           else if (kind === 'project') mapped = (res.data.items as Project[]).map(projectToOption);
           else mapped = (res.data.items as Brand[]).map(brandToOption);
           setOptions(mapped);
@@ -114,6 +113,15 @@ export default function EntityPicker({
     onChange(value.filter((v) => v !== id));
   };
 
+  // Selection order is the public display order (home curation), so chips can be reordered.
+  const move = (index: number, dir: -1 | 1) => {
+    const target = index + dir;
+    if (target < 0 || target >= value.length) return;
+    const next = [...value];
+    [next[index], next[target]] = [next[target], next[index]];
+    onChange(next);
+  };
+
   const selected: Option[] = value.map((id) => known[id] ?? { id, label: id });
   const triggerLabel = TRIGGER_LABELS[kind];
 
@@ -121,16 +129,42 @@ export default function EntityPicker({
     <div className="space-y-3">
       {selected.length > 0 ? (
         <div className="flex flex-wrap gap-2">
-          {selected.map((opt) => (
+          {selected.map((opt, index) => (
             <div
               key={opt.id}
-              className="flex items-center gap-2 rounded-md border border-gray-200 bg-white px-2 py-1"
+              className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1"
             >
+              {selected.length > 1 ? (
+                <IconButton
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  colorPalette="secondary"
+                  aria-label="앞으로 이동"
+                  disabled={index === 0}
+                  onClick={() => move(index, -1)}
+                >
+                  <ChevronLeftOutlineIcon size={14} />
+                </IconButton>
+              ) : null}
               {opt.thumb ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={opt.thumb} alt="" className="h-8 w-8 rounded object-cover" />
               ) : null}
               <span className="max-w-[140px] truncate text-sm text-gray-700">{opt.label}</span>
+              {selected.length > 1 ? (
+                <IconButton
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  colorPalette="secondary"
+                  aria-label="뒤로 이동"
+                  disabled={index === selected.length - 1}
+                  onClick={() => move(index, 1)}
+                >
+                  <ChevronRightOutlineIcon size={14} />
+                </IconButton>
+              ) : null}
               <IconButton
                 type="button"
                 size="sm"

@@ -4,7 +4,6 @@ import type {
   BrandDetail,
   BrandSummary,
   Category,
-  Counts,
   HomeData,
   ItemDetail,
   ItemSummary,
@@ -356,17 +355,6 @@ function normalizePhotoFeed(row: Raw): PhotoFeedItem {
   };
 }
 
-export async function fetchPhotos(limit = 120): Promise<PhotoFeedItem[]> {
-  const { data, error } = await supabase
-    .from("photos")
-    .select(PHOTO_FEED_SELECT)
-    .order("created_at", { ascending: false })
-    .order("id", { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []).map(normalizePhotoFeed);
-}
-
 export async function fetchPhotosPage(
   page: number,
   pageSize: number,
@@ -426,7 +414,7 @@ export async function fetchPhotoById(id: string): Promise<PhotoDetail | null> {
 }
 
 /* ============================================================
-   Categories / counts / search index / home
+   Categories / home
    ============================================================ */
 export async function fetchCategories(type: "project" | "item"): Promise<Category[]> {
   const { data, error } = await supabase
@@ -438,56 +426,41 @@ export async function fetchCategories(type: "project" | "item"): Promise<Categor
   return (data ?? []).map((c) => ({ id: c.id, name: c.name }));
 }
 
-async function count(table: "projects" | "items" | "brands" | "photos"): Promise<number> {
-  const { count: c, error } =
-    table === "projects"
-      ? await supabase.from("projects").select("id", { count: "exact", head: true }).eq("status", "published")
-      : await supabase.from(table).select("id", { count: "exact", head: true });
-  if (error) return 0;
-  return c ?? 0;
-}
-
-export async function fetchCounts(): Promise<Counts> {
-  const [projects, items, brands, photos] = await Promise.all([
-    count("projects"),
-    count("items"),
-    count("brands"),
-    count("photos"),
-  ]);
-  return { projects, items, brands, photos };
-}
-
 /* Home is curated from the admin config tables:
    - site_settings.featured_project_id → the hero project
-   - home_featured(entity_type, entity_id, order) → the project/item showcase rows */
-async function fetchSiteSettings(): Promise<{ featured_project_id: string | null } | null> {
+   - site_settings.featured_image_url → dedicated hero photo (replaces the gallery slideshow)
+   - home_featured(entity_type, entity_id, order) → the project/item/brand showcase rows */
+async function fetchSiteSettings(): Promise<{
+  featured_project_id: string | null;
+  featured_image_url: string | null;
+} | null> {
   const { data } = await supabase
     .from("site_settings")
-    .select("featured_project_id")
+    .select("featured_project_id,featured_image_url")
     .limit(1)
     .maybeSingle();
   return data ?? null;
 }
 
-async function fetchHomeFeatured(): Promise<{ projectIds: string[]; itemIds: string[] }> {
+async function fetchHomeFeatured(): Promise<{
+  projectIds: string[];
+  itemIds: string[];
+  brandIds: string[];
+}> {
   const { data } = await supabase
     .from("home_featured")
     .select("entity_type,entity_id,order")
     .order("order", { ascending: true });
   const rows = data ?? [];
-  return {
-    projectIds: rows.filter((r) => r.entity_type === "project").map((r) => r.entity_id),
-    itemIds: rows.filter((r) => r.entity_type === "item").map((r) => r.entity_id),
-  };
+  const ids = (type: string) => rows.filter((r) => r.entity_type === type).map((r) => r.entity_id);
+  return { projectIds: ids("project"), itemIds: ids("item"), brandIds: ids("brand") };
 }
 
 export async function fetchHomeData(): Promise<HomeData> {
-  const [projects, items, brands, photos, counts, settings, featuredList] = await Promise.all([
+  const [projects, items, brands, settings, featuredList] = await Promise.all([
     fetchProjects(),
     fetchItems(),
     fetchBrands(),
-    fetchPhotos(12),
-    fetchCounts(),
     fetchSiteSettings(),
     fetchHomeFeatured(),
   ]);
@@ -515,7 +488,17 @@ export async function fetchHomeData(): Promise<HomeData> {
     curatedItems.length ? curatedItems : [...items].sort((a, b) => Number(!!b.image) - Number(!!a.image))
   ).slice(0, 8);
 
-  return { featured, projects: homeProjects, items: homeItems, brands, photos, counts };
+  // Curated brands (ordered) → fall back to every brand.
+  const curatedBrands = pick(brands, featuredList.brandIds);
+  const homeBrands = curatedBrands.length ? curatedBrands : brands;
+
+  return {
+    featured,
+    projects: homeProjects,
+    items: homeItems,
+    brands: homeBrands,
+    heroImage: settings?.featured_image_url ?? null,
+  };
 }
 
 /* Inquiry form payload (consumed by the contact modal + /api/inquiry) */

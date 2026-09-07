@@ -17,7 +17,6 @@ import {
   PageHeader,
   ListToolbar,
   FilterSelect,
-  StatusBadge,
   DataTable,
   Pagination,
   ConfirmDialog,
@@ -49,6 +48,7 @@ export default function ItemsPage() {
 
   const [brands, setBrands] = useState<Brand[]>([]);
   const [success, setSuccess] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<Item | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -107,6 +107,21 @@ export default function ItemsPage() {
 
   const sortValue = list.sort?.key ?? 'created_at';
 
+  // Inline 브랜드/상태 change straight from the list (PUT only updates the fields sent).
+  // api.put throws on non-2xx, so failures surface via the catch, not res.success.
+  const patchItem = async (item: Item, patch: { brandId?: string; status?: string }) => {
+    setActionError(null);
+    try {
+      const res = await api.put(`/items/${item.id}`, patch);
+      if (!res.success) throw new Error(res.error);
+      setSuccess(`"${item.name}" 아이템이 수정되었습니다.`);
+      list.refetch();
+    } catch (err) {
+      setActionError(err instanceof Error && err.message ? err.message : '아이템 수정에 실패했습니다.');
+      list.refetch(); // snap the select back to the stored value
+    }
+  };
+
   const columns: DataTableColumn<Item>[] = [
     {
       key: 'image',
@@ -143,22 +158,35 @@ export default function ItemsPage() {
     {
       key: 'brand',
       header: '브랜드',
-      width: 'w-40',
-      render: (item) =>
-        item.brand?.name ? (
-          <span className="block truncate text-gray-700" title={item.brand.name}>
-            {item.brand.name}
-          </span>
-        ) : (
-          <span className="text-gray-300">-</span>
-        ),
+      width: 'w-44',
+      nowrap: true,
+      render: (item) => (
+        <FilterSelect
+          value={item.brand?.id ?? ''}
+          onValueChange={(v) => {
+            if (v && v !== item.brand?.id) patchItem(item, { brandId: v });
+          }}
+          options={brands.map((brand) => ({ label: brand.name, value: brand.id }))}
+          placeholder="-"
+          width="w-40"
+        />
+      ),
     },
     {
       key: 'status',
       header: '상태',
-      width: 'w-28',
+      width: 'w-32',
       nowrap: true,
-      render: (item) => <StatusBadge kind="item" value={item.status} />,
+      render: (item) => (
+        <FilterSelect
+          value={item.status}
+          onValueChange={(v) => {
+            if (v && v !== item.status) patchItem(item, { status: v });
+          }}
+          options={STATUS_OPTIONS.filter((option) => option.value !== 'all')}
+          width="w-28"
+        />
+      ),
     },
     {
       key: 'categories',
@@ -237,9 +265,9 @@ export default function ItemsPage() {
         }
       />
 
-      {list.error ? (
+      {list.error || actionError ? (
         <Callout.Root colorPalette="danger" className="mb-4">
-          {list.error}
+          {list.error ?? actionError}
         </Callout.Root>
       ) : null}
 
