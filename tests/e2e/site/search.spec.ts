@@ -28,6 +28,10 @@ test.describe('통합 검색', () => {
     await expect(page.getByRole('heading', { level: 1, name: 'SEARCH' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: /프로젝트/ })).toBeVisible()
     await expect(page.getByRole('link', { name: /강남 오피스 리노베이션/ })).toBeVisible()
+    // results render as image tiles (request 2026-09-04 #15)
+    await expect(
+      page.locator('.d4p-srch-grid[data-kind="project"] a.d4p-photo-tile[href="/projects/gangnam-office"]'),
+    ).toBeVisible()
   })
 
   test('/search 는 아이템과 파생 프로젝트를 함께 보여준다 (아에론)', async ({ page }) => {

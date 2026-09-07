@@ -12,6 +12,8 @@ const SECTION_LABEL: Record<EntityType, string> = {
 };
 const SECTION_ORDER: EntityType[] = ["project", "item", "brand", "photo"];
 
+const TILE_SIZES = "(max-width:460px) 50vw, (max-width:900px) 33vw, (max-width:1400px) 20vw, 16vw";
+
 export function SearchResults({ query, groups }: { query: string; groups: SearchGroups }) {
   const total = SECTION_ORDER.reduce((n, k) => n + groups[k].length, 0);
 
@@ -33,47 +35,43 @@ export function SearchResults({ query, groups }: { query: string; groups: Search
               <h2 style={{ fontSize: "var(--fs-sm)", fontWeight: 700, letterSpacing: "0.1em", color: "var(--ink-500)", marginBottom: "var(--sp-3)" }}>
                 {SECTION_LABEL[sec]} ({groups[sec].length})
               </h2>
-              <ul style={{ display: "grid", gap: "var(--sp-2)", listStyle: "none", padding: 0, margin: 0 }}>
+              {/* Image-led tile grid (same tile as the photo feed); the title is the
+                  hover caption + accessible name, so image-only rows stay scannable. */}
+              <div className="d4p-srch-grid" data-kind={sec}>
                 {groups[sec].map((hit) => (
-                  <li key={`${hit.entityType}-${hit.entityId}`}>
-                    <Link
-                      href={hit.href}
-                      className="d4p-srch-row"
-                      style={{ display: "flex", alignItems: "center", gap: 12, textDecoration: "none" }}
-                    >
+                  <Link
+                    key={`${hit.entityType}-${hit.entityId}`}
+                    href={hit.href}
+                    className="d4p-photo-tile"
+                    aria-label={hit.title}
+                    title={hit.title}
+                  >
+                    {hit.imageUrl ? (
+                      <Image src={hit.imageUrl} alt="" fill sizes={TILE_SIZES} />
+                    ) : (
                       <span
-                        className="d4p-srch-thumb"
-                        style={{ borderRadius: hit.entityType === "brand" ? "var(--radius-pill)" : "var(--radius-sm)" }}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: "0 12px",
+                          textAlign: "center",
+                          fontFamily: "var(--font-display)",
+                          fontWeight: 600,
+                          fontSize: "var(--fs-body)",
+                          color: "var(--ink-500)",
+                          wordBreak: "keep-all",
+                        }}
                       >
-                        {hit.imageUrl ? (
-                          <Image
-                            src={hit.imageUrl}
-                            alt=""
-                            fill
-                            sizes="42px"
-                            style={{ objectFit: "cover" }}
-                          />
-                        ) : (
-                          <span
-                            style={{
-                              display: "flex",
-                              width: "100%",
-                              height: "100%",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              fontWeight: 700,
-                              color: "var(--ink-400)",
-                            }}
-                          >
-                            {hit.title.charAt(0) || "D"}
-                          </span>
-                        )}
+                        {hit.title}
                       </span>
-                      <span style={{ fontSize: "var(--fs-body)", fontWeight: 600, color: "var(--ink-900)" }}>{hit.title}</span>
-                    </Link>
-                  </li>
+                    )}
+                    <span className="d4p-photo-cap">{hit.title}</span>
+                  </Link>
                 ))}
-              </ul>
+              </div>
             </section>
           ) : null,
         )}

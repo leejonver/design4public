@@ -27,18 +27,20 @@ export interface ImageData {
   title?: string; // 사진 제목 (선택)
   order?: number; // 표시 순서 (0-기반)
   itemIds?: string[]; // 이 사진에 태깅된 아이템 id (프로젝트→사진→아이템 파생 모델)
+  projectId?: string; // 아이템 이미지 목록에서: 이 사진이 속한 프로젝트 (연관 프로젝트 사진 → 읽기 전용)
 }
 
 /**
  * 홈 화면 설정 (Featured 프로젝트 + 메인 노출 목록)
  */
 export interface HomeFeaturedItem {
-  entityType: 'project' | 'item' | 'photo' | 'brand';
+  entityType: 'project' | 'item' | 'brand';
   entityId: string;
   order: number;
 }
 export interface HomeSettings {
   featuredProjectId: string | null;
+  featuredImageUrl: string | null; // 홈 히어로 전용 사진 (없으면 대표 프로젝트 갤러리 슬라이드)
   featured: HomeFeaturedItem[];
 }
 

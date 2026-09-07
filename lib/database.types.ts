@@ -638,16 +638,19 @@ export type Database = {
       }
       site_settings: {
         Row: {
+          featured_image_url: string | null
           featured_project_id: string | null
           id: boolean
           updated_at: string | null
         }
         Insert: {
+          featured_image_url?: string | null
           featured_project_id?: string | null
           id?: boolean
           updated_at?: string | null
         }
         Update: {
+          featured_image_url?: string | null
           featured_project_id?: string | null
           id?: boolean
           updated_at?: string | null

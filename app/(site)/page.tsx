@@ -17,17 +17,7 @@ const moreLink: CSSProperties = {
   flex: "none",
 };
 
-function SectionHead({
-  overline,
-  title,
-  href,
-  linkLabel = "전체보기 →",
-}: {
-  overline: string;
-  title: string;
-  href: string;
-  linkLabel?: string;
-}) {
+function SectionHead({ overline, title, href }: { overline: string; title: string; href: string }) {
   return (
     <div
       style={{
@@ -53,7 +43,7 @@ function SectionHead({
         </h2>
       </div>
       <Link href={href} style={moreLink}>
-        {linkLabel}
+        더보기 →
       </Link>
     </div>
   );
@@ -67,17 +57,12 @@ export default async function HomePage() {
     <div>
       {featured && (
         <Container style={{ padding: "var(--sp-6) var(--gutter) 0" }}>
-          <FeaturedHero project={featured} />
+          <FeaturedHero project={featured} heroImage={data.heroImage} />
         </Container>
       )}
 
       <Container style={{ padding: "var(--sp-7) var(--gutter)" }}>
-        <SectionHead
-          overline="Projects"
-          title="주요 프로젝트"
-          href="/projects"
-          linkLabel="더보기 →"
-        />
+        <SectionHead overline="Projects" title="주요 프로젝트" href="/projects" />
         <div className="d4p-grid-3">
           {data.projects.map((p) => (
             <ProjectCard key={p.id} project={p} />
@@ -95,7 +80,7 @@ export default async function HomePage() {
       </Container>
 
       <Container style={{ padding: "var(--sp-7) var(--gutter) var(--sp-8)" }}>
-        <SectionHead overline="Brands" title="협력사" href="/brands" linkLabel="더 보기 →" />
+        <SectionHead overline="Brands" title="협력사" href="/brands" />
         <div className="d4p-grid-4">
           {data.brands.map((b) => (
             <BrandCard key={b.id} brand={b} />

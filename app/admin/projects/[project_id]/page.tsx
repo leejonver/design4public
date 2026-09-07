@@ -111,7 +111,7 @@ export default function ProjectDetailPage() {
       key: 'name',
       header: '아이템명',
       render: (item) => (
-        <Link href={`/items/${item.id}`} className="font-medium text-v-primary-100 hover:underline">
+        <Link href={`/admin/items/${item.id}`} className="font-medium text-v-primary-100 hover:underline">
           {item.name}
         </Link>
       ),
@@ -143,7 +143,7 @@ export default function ProjectDetailPage() {
         </div>
         <div className="flex items-center gap-2">
           <Button
-            render={<Link href={`/projects/${project.id}/edit`} />}
+            render={<Link href={`/admin/projects/${project.id}/edit`} />}
             colorPalette="primary"
             variant="fill"
             size="md"

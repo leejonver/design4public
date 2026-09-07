@@ -12,7 +12,7 @@ import type { Tables } from './database.types'
 // ---- select strings ----
 export const BRAND_SELECT = '*'
 export const ITEM_SELECT =
-  '*, brands(*), item_categories(categories(*)), item_tags(tags(*)), photo_items(is_main, order, photos(*))'
+  '*, brands(*), item_categories(categories(*)), item_tags(tags(*)), photo_items(is_main, order, photos(*, project_photos(project_id)))'
 export const PROJECT_SELECT =
   '*, project_categories(categories(*)), project_tags(tags(*)), project_items(items(*, brands(*))), project_photos(is_main, order, photos(*, photo_items(items(id))))'
 export const PHOTO_SELECT =
@@ -60,6 +60,9 @@ function mapImagesFromPhotos(join: Row[] | null | undefined): ImageData[] {
         title: j.photos.title ?? undefined,
         order: j.order ?? i,
         itemIds: itemIds.length ? itemIds : undefined,
+        // ITEM_SELECT only: a photo that also belongs to a project is a derived
+        // 연관 프로젝트 사진, shown read-only in the item editor.
+        projectId: j.photos.project_photos?.[0]?.project_id ?? undefined,
       }
     })
 }

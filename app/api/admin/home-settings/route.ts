@@ -4,8 +4,8 @@ import { requireUser, requireRole, authErrorResponse } from '@/lib/auth'
 import type { HomeFeaturedItem } from '@/lib/admin-types'
 import { revalidateEntity } from '@/lib/revalidation'
 
-type EntityType = 'project' | 'item' | 'photo' | 'brand'
-const ENTITY_TYPES: EntityType[] = ['project', 'item', 'photo', 'brand']
+type EntityType = HomeFeaturedItem['entityType']
+const ENTITY_TYPES: EntityType[] = ['project', 'item', 'brand']
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
     const supabase = await createServerSupabase()
     const { data: settings } = await supabase
       .from('site_settings')
-      .select('featured_project_id')
+      .select('featured_project_id, featured_image_url')
       .eq('id', true)
       .maybeSingle()
     const { data: featured, error } = await supabase
@@ -27,6 +27,7 @@ export async function GET() {
       success: true,
       data: {
         featuredProjectId: settings?.featured_project_id ?? null,
+        featuredImageUrl: settings?.featured_image_url ?? null,
         featured: (featured ?? []).map((f) => ({
           entityType: f.entity_type,
           entityId: f.entity_id,
@@ -47,13 +48,17 @@ export async function PUT(request: NextRequest) {
     const supabase = await createServerSupabase()
     const body = await request.json()
     const featuredProjectId: string | null = body.featuredProjectId ?? null
+    const featuredImageUrl: string | null =
+      typeof body.featuredImageUrl === 'string' && body.featuredImageUrl.trim()
+        ? body.featuredImageUrl.trim()
+        : null
     const featured: { entityType: string; entityId: string }[] = Array.isArray(body.featured)
       ? body.featured
       : []
 
     const { error: sErr } = await supabase
       .from('site_settings')
-      .update({ featured_project_id: featuredProjectId })
+      .update({ featured_project_id: featuredProjectId, featured_image_url: featuredImageUrl })
       .eq('id', true)
     if (sErr) throw sErr
 

@@ -45,6 +45,21 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
             발주 · {project.client}
           </div>
         )}
+        {project.description && (
+          <p
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: "var(--fs-body)",
+              lineHeight: 1.7,
+              color: "var(--ink-700)",
+              margin: "16px 0 0",
+              whiteSpace: "pre-wrap",
+              wordBreak: "keep-all",
+            }}
+          >
+            {project.description}
+          </p>
+        )}
         <dl
           className="d4p-pmast-facts"
           style={{
@@ -116,7 +131,8 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
                   alt=""
                   fill
                   sizes="(max-width:860px) 100vw, 60vw"
-                  style={{ objectFit: "cover" }}
+                  quality={90}
+                  style={{ objectFit: "contain" }}
                   priority={idx === 0}
                 />
               ) : (

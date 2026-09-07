@@ -40,7 +40,11 @@ test.describe('프로젝트 CRUD', () => {
     const proj = data.items.find((p: any) => p.name === title)
     expect(proj, 'created project present').toBeTruthy()
 
-    await page.goto(`/admin/projects/${proj.id}/edit`)
+    // Reach the editor through the detail page's 편집 link (it 404'd on the public
+    // route before 2026-09-07).
+    await page.goto(`/admin/projects/${proj.id}`)
+    await page.getByRole('link', { name: '편집', exact: true }).click()
+    await expect(page).toHaveURL(new RegExp(`/admin/projects/${proj.id}/edit$`), { timeout: 30_000 })
     // Wait for the form to hydrate before editing, so the async project load
     // doesn't overwrite the typed value after fill().
     await expect(page.getByPlaceholder('프로젝트명을 입력하세요')).toHaveValue(title, { timeout: 45_000 })

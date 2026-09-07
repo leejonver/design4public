@@ -1,21 +1,35 @@
 @import 'tailwindcss';
 
 /* ============================================================
-   DESIGN4PUBLIC — Webfonts (local, variable)
+   DESIGN4PUBLIC — Webfonts (local)
    - Pretendard: text / UI / body (KR + Latin)
-   - NanumSquare Neo: display, lead & headings (H1–H3)
+   - NanumSquare_ac: display, lead & headings (H1–H3)
    - Montserrat: logotype / wordmark only (Latin)
    ============================================================ */
 @font-face {
-  font-family: "Pretendard Variable";
-  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
-  font-weight: 100 900;
+  font-family: "NanumSquare_ac";
+  src: url("/fonts/NanumSquareAcR.woff2") format("woff2");
+  font-weight: 400;
   font-style: normal;
   font-display: swap;
 }
 @font-face {
-  font-family: "NanumSquare Neo";
-  src: url("/fonts/NanumSquareNeo-Variable.woff2") format("woff2-variations");
+  font-family: "NanumSquare_ac";
+  src: url("/fonts/NanumSquareAcB.woff2") format("woff2");
+  font-weight: 500 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "NanumSquare_ac";
+  src: url("/fonts/NanumSquareAcEB.woff2") format("woff2");
+  font-weight: 800 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Pretendard Variable";
+  src: url("/fonts/PretendardVariable.woff2") format("woff2-variations");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
@@ -72,16 +86,15 @@
 
   /* ---- Type families ---- */
   --font-sans: "Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-  --font-display: "NanumSquare Neo", "Pretendard Variable", "Apple SD Gothic Neo", system-ui, sans-serif;
-  --font-logo: "Montserrat", "NanumSquare Neo", system-ui, sans-serif;
+  --font-display: "NanumSquare_ac", "Pretendard Variable", "Apple SD Gothic Neo", system-ui, sans-serif;
+  --font-logo: "Montserrat", "NanumSquare_ac", system-ui, sans-serif;
   --font-mono: "SFMono-Regular", ui-monospace, "Menlo", monospace;
 
   /* ---- Weights ---- */
   --fw-regular: 400;
   --fw-semibold: 600;
 
-  /* ---- 10-role type scale — extracted from NAVER Corp.'s published CSS ---- */
-  --fs-display: 64px;
+  /* ---- Type scale — extracted from NAVER Corp.'s published CSS ---- */
   --fs-h1: 48px;
   --fs-h2: 32px;
   --fs-h3: 26px;
@@ -141,7 +154,6 @@
 /* NAVER Corp. breakpoint values: 1279px and 767px. */
 @media screen and (max-width: 1279px) {
   :root {
-    --fs-display: 48px;
     --fs-h2: 26px;
     --fs-h3: 20px;
     --fs-h4: 18px;
@@ -152,12 +164,6 @@
 @media screen and (max-width: 1023px) {
   :root {
     --fs-h1: 26px;
-  }
-}
-
-@media screen and (max-width: 767px) {
-  :root {
-    --fs-display: 40px;
   }
 }
 
@@ -442,11 +448,32 @@ img {
   gap: var(--sp-7);
 }
 .d4p-item-detail {
-  grid-template-columns: minmax(0, 740px) minmax(280px, 1fr);
+  /* Item photos are uploaded at ~800×800; a 600px stage keeps them sharp. */
+  grid-template-columns: minmax(0, 600px) minmax(280px, 1fr);
 }
 .d4p-item-media {
   width: 100%;
-  max-width: 740px;
+  max-width: 600px;
+}
+/* Search results: image-led tile grid (same tile as the photo feed) */
+.d4p-srch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--grid-gap);
+}
+.d4p-srch-grid .d4p-photo-tile {
+  aspect-ratio: 4 / 3;
+}
+.d4p-srch-grid[data-kind="item"] .d4p-photo-tile,
+.d4p-srch-grid[data-kind="brand"] .d4p-photo-tile {
+  aspect-ratio: 1 / 1;
+}
+.d4p-srch-grid .d4p-photo-tile img {
+  object-fit: contain;
+}
+.d4p-srch-grid[data-kind="project"] .d4p-photo-tile img,
+.d4p-srch-grid[data-kind="photo"] .d4p-photo-tile img {
+  object-fit: cover;
 }
 .d4p-form-grid {
   display: grid;
@@ -979,7 +1006,6 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 6s var(--ease-out);
 }
 .d4p-hero-scrim {
   position: absolute;
@@ -1005,8 +1031,8 @@ img {
   font-weight: 700;
   color: #fff;
   margin: 12px 0 0;
-  font-size: var(--fs-display);
-  line-height: 1.08;
+  font-size: var(--fs-h3);
+  line-height: 1.2;
   letter-spacing: -0.02em;
   text-wrap: balance;
   word-break: keep-all;
@@ -1105,8 +1131,10 @@ img {
 .d4p-pmast-media {
   position: relative;
   overflow: hidden;
-  min-height: clamp(440px, 60vh, 620px);
-  background: var(--ink-200);
+  /* Fills the grid row (the text panel sets the height); the photo is shown
+     uncropped via object-fit: contain and letterboxed on --ink-100. */
+  min-height: 460px;
+  background: var(--ink-100);
 }
 .d4p-pmast-track {
   display: flex;
@@ -1124,7 +1152,7 @@ img {
 .d4p-pmast-slide img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .d4p-pmast-title {
   font-family: var(--font-display);
@@ -1191,14 +1219,19 @@ img {
     order: 2;
   }
   .d4p-pmast-media {
-    min-height: clamp(300px, 46vh, 440px);
+    /* Stacked layout: the stage takes the photo's own ratio (~1785×1086). */
+    aspect-ratio: 1785 / 1086;
+    min-height: 0;
     order: 1;
   }
   .d4p-pmast-nav {
     left: auto !important;
     right: var(--sp-4) !important;
     bottom: auto !important;
-    top: calc(clamp(300px, 46vh, 440px) - 66px) !important;
+    /* Sit inside the stage's bottom-right corner: a % margin on an absolutely
+       positioned box resolves against the container width = stage width. */
+    top: 0 !important;
+    margin-top: calc(100% * 1086 / 1785 - 66px);
     transform: none !important;
   }
   .d4p-pmast-nav button {
@@ -1228,13 +1261,15 @@ img {
 .d4p-detailhero-slide img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .d4p-detailhero-thumbs {
   display: flex;
   gap: 10px;
   margin-top: 12px;
-  flex-wrap: wrap;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
 }
 .d4p-detailhero-thumb {
   width: 60px;

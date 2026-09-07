@@ -56,8 +56,9 @@ export function DetailHero({
                 src={img.url}
                 alt={img.alt ?? img.title ?? ""}
                 fill
-                sizes="(max-width:860px) 100vw, 60vw"
-                style={{ objectFit: "cover" }}
+                sizes="(max-width:860px) 100vw, 600px"
+                quality={90}
+                style={{ objectFit: "contain" }}
                 priority={i === 0}
               />
             </div>
@@ -85,14 +86,7 @@ export function DetailHero({
   );
 }
 
-export function Gallery({
-  images,
-}: {
-  images: PhotoLite[];
-  /* column count is responsive via .d4p-masonry in globals.css; the
-     `columns` prop is accepted for the documented component contract but not read here. */
-  columns?: number;
-}) {
+export function Gallery({ images }: { images: PhotoLite[] }) {
   const [open, setOpen] = useState(-1);
 
   const close = useCallback(() => setOpen(-1), []);

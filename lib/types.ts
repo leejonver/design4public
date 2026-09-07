@@ -93,18 +93,11 @@ export type PhotoDetail = PhotoFeedItem & {
   items: ItemSummary[];
 };
 
-export type Counts = {
-  projects: number;
-  items: number;
-  brands: number;
-  photos: number;
-};
-
 export type HomeData = {
   featured: ProjectDetail | null;
   projects: ProjectSummary[];
   items: ItemSummary[];
   brands: BrandSummary[];
-  photos: PhotoFeedItem[];
-  counts: Counts;
+  /** Dedicated hero photo set in 홈 화면 설정; null → hero slides through the featured project's gallery. */
+  heroImage: string | null;
 };
