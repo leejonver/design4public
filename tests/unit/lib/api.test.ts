@@ -18,6 +18,7 @@ import {
   fetchBrandBySlug,
   fetchPhotoById,
   fetchPhotosPage,
+  fetchHomeData,
 } from '@/lib/api'
 
 type QBResult = { data: unknown; error: unknown; count?: number | null }
@@ -277,3 +278,30 @@ describe('fetchPhotosPage', () => {
     expect(qb.range).toHaveBeenCalledWith(60, 119)
   })
 })
+
+it('preserves project gallery order independently of the cover photo', async () => {
+  fromMock.mockReturnValue(makeQB({ data: {
+    ...project('sequence'),
+    project_photos: [
+      { order: 2, is_main: true, photos: photo('third') },
+      { order: 0, is_main: false, photos: photo('first') },
+      { order: null, is_main: false, photos: photo('last') },
+      { order: 1, is_main: false, photos: photo('second') },
+      { order: 3, is_main: false, photos: null },
+    ],
+  }, error: null }));
+  const result = await fetchProjectBySlug('sequence');
+  expect(result?.gallery.map(p => p.id)).toEqual(['first', 'second', 'third', 'last']);
+  expect(result?.coverImage).toBe('u-third');
+});
+
+it('includes newly registered brands after curated partners without duplicates', async () => {
+  const brands = ['new', 'second', 'first'].map(id => ({ id, slug: id, name_ko: id }));
+  fromMock.mockImplementation((table: string) => makeQB({ data:
+    table === 'brands' ? brands : table === 'site_settings' ? null : table === 'home_featured' ? [
+      { entity_type: 'brand', entity_id: 'first', order: 0 },
+      { entity_type: 'brand', entity_id: 'second', order: 1 },
+      { entity_type: 'brand', entity_id: 'deleted', order: 2 },
+    ] : [], error: null }));
+  expect((await fetchHomeData()).brands.map(b => b.id)).toEqual(['first', 'second', 'new']);
+});

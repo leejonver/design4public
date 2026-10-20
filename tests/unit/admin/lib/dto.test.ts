@@ -169,9 +169,9 @@ describe('mapProject', () => {
     expect(project.connectedItems[0].name).toBe('의자')
   })
 
-  it('orders project images main-first', () => {
+  it('keeps project images in saved order even when the cover is later', () => {
     const project = mapProject(projectRow)
-    expect(project.images.map((i) => i.id)).toEqual(['pp1', 'pp2'])
+    expect(project.images.map((i) => i.id)).toEqual(['pp2', 'pp1'])
   })
 
   it('maps per-photo item tags to images[].itemIds, dropping null items', () => {

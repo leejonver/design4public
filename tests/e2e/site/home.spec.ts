@@ -15,7 +15,7 @@ test.describe('홈', () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { level: 2, name: '주요 프로젝트' })).toBeVisible()
     await expect(page.getByRole('heading', { level: 2, name: '주요 아이템' })).toBeVisible()
-    await expect(page.getByRole('heading', { level: 2, name: '협력사' })).toBeVisible()
+    await expect(page.getByRole('heading', { level: 2, name: '함께하는 기업' })).toBeVisible()
     // Every section uses the same "더보기 →" link (client request 2026-09-04).
     const more = page.getByRole('link', { name: '더보기 →', exact: true })
     await expect(more).toHaveCount(3)
@@ -36,8 +36,7 @@ test.describe('홈', () => {
 
   test('로고가 없는 브랜드 카드에 영문명과 한글명을 표시한다', async ({ page }) => {
     await page.setViewportSize({ width: 1029, height: 779 })
-    // Home shows only the curated brand (seed: herman-miller); the logo-less
-    // vitra card renders with the same BrandCard on /brands.
+    // The logo-less vitra card renders with the same BrandCard on /brands.
     await page.goto('/brands')
 
     const card = page.locator('a.d4p-card[href="/brands/vitra"]')

@@ -144,6 +144,7 @@ export function SiteHeader() {
                   <Link
                     key={n.href}
                     href={n.href}
+                    onClick={() => setMenuOpen(false)}
                     style={{
                       fontFamily: "var(--font-display)",
                       fontWeight: 600,

@@ -42,12 +42,13 @@ function mapTagsJoin(join: Row[] | null | undefined): Tag[] {
   return (join ?? []).map((j) => j.tags).filter(Boolean).map(mapTag)
 }
 
-/** photo_items / project_photos join rows -> ImageData[] ordered by `order`, main first. */
-function mapImagesFromPhotos(join: Row[] | null | undefined): ImageData[] {
+/** Item images put the cover first; project images preserve the saved sequence. */
+function mapImagesFromPhotos(join: Row[] | null | undefined, mainFirst = true): ImageData[] {
   return (join ?? [])
     .filter((j) => j.photos)
     .slice()
-    .sort((a, b) => (b.is_main ? 1 : 0) - (a.is_main ? 1 : 0) || (a.order ?? 0) - (b.order ?? 0))
+    .sort((a, b) => (mainFirst ? Number(!!b.is_main) - Number(!!a.is_main) : 0)
+      || (a.order ?? Number.MAX_SAFE_INTEGER) - (b.order ?? Number.MAX_SAFE_INTEGER))
     .map((j, i) => {
       const itemIds = (j.photos.photo_items ?? [])
         .map((pi: Row) => pi.items?.id)
@@ -108,7 +109,7 @@ export function mapProject(r: Row): Project {
     location: r.location ?? '',
     completionYear: r.year ?? 0,
     area: r.area ?? undefined,
-    images: mapImagesFromPhotos(r.project_photos),
+    images: mapImagesFromPhotos(r.project_photos, false),
     categories: mapCategoriesJoin(r.project_categories),
     tags: mapTagsJoin(r.project_tags),
     connectedItems: (r.project_items ?? []).map((j: Row) => j.items).filter(Boolean).map(mapItem),

@@ -48,7 +48,7 @@ function coverFrom(rows: RawProjectPhoto[] | null | undefined): string | null {
 function galleryFrom(rows: RawProjectPhoto[] | null | undefined): PhotoLite[] {
   if (!rows?.length) return [];
   return [...rows]
-    .sort((a, b) => Number(!!b.is_main) - Number(!!a.is_main) || byOrder(a, b))
+    .sort(byOrder)
     .filter((r) => r.photos?.image_url)
     .map((r) => ({
       id: r.photos!.id,
@@ -488,9 +488,9 @@ export async function fetchHomeData(): Promise<HomeData> {
     curatedItems.length ? curatedItems : [...items].sort((a, b) => Number(!!b.image) - Number(!!a.image))
   ).slice(0, 8);
 
-  // Curated brands (ordered) → fall back to every brand.
+  // Home ordering puts selected partners first without omitting newly added brands.
   const curatedBrands = pick(brands, featuredList.brandIds);
-  const homeBrands = curatedBrands.length ? curatedBrands : brands;
+  const homeBrands = unionById(curatedBrands, brands);
 
   return {
     featured,

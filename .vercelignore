@@ -1,0 +1,6 @@
+.env*
+docs/*.pdf
+playwright-report/
+test-results/
+tests/e2e/.auth/
+tsconfig.tsbuildinfo

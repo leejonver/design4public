@@ -132,7 +132,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
                   fill
                   sizes="(max-width:860px) 100vw, 60vw"
                   quality={90}
-                  style={{ objectFit: "contain" }}
+                  style={{ objectFit: "cover" }}
                   priority={idx === 0}
                 />
               ) : (

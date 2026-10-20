@@ -1,6 +1,6 @@
 "use client";
 
-/* DESIGN4PUBLIC — detail media: DetailHero slideshow + masonry Gallery with lightbox */
+/* DESIGN4PUBLIC — detail media: DetailHero slideshow + ordered Gallery with lightbox */
 
 import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
@@ -120,7 +120,7 @@ export function Gallery({ images }: { images: PhotoLite[] }) {
 
   return (
     <>
-      <div className="d4p-masonry">
+      <div className="d4p-masonry d4p-project-gallery">
         {images.map((img, i) => (
           <button
             key={img.id}
@@ -129,8 +129,7 @@ export function Gallery({ images }: { images: PhotoLite[] }) {
             onClick={() => setOpen(i)}
             aria-label={img.title ?? img.alt ?? `사진 ${i + 1}`}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element -- masonry tile has no determinate-size ancestor (height comes from this image's own intrinsic aspect ratio); next/image `fill` would collapse the tile to 0 height. */}
-            <img src={img.url} alt={img.alt ?? img.title ?? ""} loading="lazy" />
+            <Image src={img.url} alt={img.alt ?? img.title ?? ""} fill sizes="(max-width:460px) 100vw, (max-width:720px) 50vw, (max-width:1080px) 33vw, 25vw" />
             {img.title && <span className="d4p-photo-cap">{img.title}</span>}
           </button>
         ))}

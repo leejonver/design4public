@@ -80,7 +80,7 @@ export default async function HomePage() {
       </Container>
 
       <Container style={{ padding: "var(--sp-7) var(--gutter) var(--sp-8)" }}>
-        <SectionHead overline="Brands" title="협력사" href="/brands" />
+        <SectionHead overline="Partners" title="함께하는 기업" href="/brands" />
         <div className="d4p-grid-4">
           {data.brands.map((b) => (
             <BrandCard key={b.id} brand={b} />

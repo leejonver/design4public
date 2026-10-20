@@ -183,7 +183,7 @@ export default function HomeSettingsPage() {
               </div>
               <div className="space-y-2">
                 <Text typography="body2" render={<p />} className="font-medium text-gray-700">
-                  브랜드 — 홈 &lsquo;협력사&rsquo; (비워두면 전체 브랜드 노출)
+                  브랜드 — 홈 &lsquo;함께하는 기업&rsquo; (선택한 순서대로 먼저 표시, 나머지 브랜드도 자동 노출)
                 </Text>
                 <EntityPicker kind="brand" value={mainBrands} onChange={setMainBrands} />
               </div>
