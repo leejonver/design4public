@@ -16,7 +16,7 @@ const project: ProjectDetail = {
 
 it("uses the active photo's natural ratio, including portrait photos and wraparound", async () => {
   const { container } = render(<ProjectMasthead project={project} />);
-  const stage = container.querySelector('.d4p-pmast-media') as HTMLElement;
+  const stage = container.querySelector('.d4p-pmast') as HTMLElement;
   const images = container.querySelectorAll('img');
   await act(async () => {
     [[1800, 1200], [900, 1600]].forEach(([width, height], index) => {
@@ -24,13 +24,13 @@ it("uses the active photo's natural ratio, including portrait photos and wraparo
       fireEvent.load(images[index]);
     });
   });
-  expect(stage.style.aspectRatio).toBe('1.5');
+  expect(stage.style.getPropertyValue('--pmast-ratio')).toBe('1.5');
   fireEvent.click(screen.getByRole('button', { name: '다음 사진' }));
-  expect(stage.style.aspectRatio).toBe('0.5625');
+  expect(stage.style.getPropertyValue('--pmast-ratio')).toBe('0.5625');
   fireEvent.click(screen.getByRole('button', { name: '다음 사진' }));
-  expect(stage.style.aspectRatio).toBe('1.5');
+  expect(stage.style.getPropertyValue('--pmast-ratio')).toBe('1.5');
   fireEvent.click(screen.getByRole('button', { name: '이전 사진' }));
-  expect(stage.style.aspectRatio).toBe('0.5625');
+  expect(stage.style.getPropertyValue('--pmast-ratio')).toBe('0.5625');
 });
 
 it("keeps a usable placeholder when there are no photos", () => {

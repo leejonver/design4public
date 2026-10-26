@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, type CSSProperties } from "react";
 import Image from "next/image";
 import { ChevronLeft, ChevronRight, Mail } from "lucide-react";
 import { Overline } from "@/components/site/primitives";
@@ -30,7 +30,10 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
   const facts = rawFacts.filter((f): f is [string, string] => Boolean(f[1]));
 
   return (
-    <div className="d4p-pmast">
+    <div
+      className="d4p-pmast"
+      style={{ "--pmast-ratio": ratios[imgs[i] ?? ""] ?? 3 / 2 } as CSSProperties}
+    >
       <div className="d4p-pmast-panel">
         <Overline>{overline}</Overline>
         <h1 className="d4p-pmast-title">{project.title}</h1>
@@ -101,7 +104,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
             </div>
           ))}
         </dl>
-        <div style={{ display: "flex", gap: 10, marginTop: "var(--sp-6)", alignItems: "center" }}>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 10, marginTop: "var(--sp-6)", alignItems: "center" }}>
           <ContactButton
             variant="primary"
             iconLeft={<Mail size={16} strokeWidth={1.5} />}
@@ -122,7 +125,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
         </div>
       </div>
 
-      <div className="d4p-pmast-media" style={{ aspectRatio: ratios[imgs[i] ?? ""] ?? 3 / 2 }}>
+      <div className="d4p-pmast-media">
         <div className="d4p-pmast-viewport">
           <div className="d4p-pmast-track" style={{ transform: `translateX(-${i * 100}%)` }}>
             {imgs.map((src, idx) => (

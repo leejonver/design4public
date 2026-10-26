@@ -1124,23 +1124,30 @@ img {
 .d4p-pmast {
   position: relative;
   display: grid;
-  grid-template-columns: 40% minmax(0, 1fr);
+  --pmast-height: 520px;
+  --pmast-panel-min: 320px;
+  grid-template-columns: minmax(var(--pmast-panel-min), 1fr) min(calc(var(--pmast-height) * var(--pmast-ratio)), calc(100% - var(--pmast-panel-min)));
+  grid-template-rows: var(--pmast-height);
   border: 1px solid var(--border-hair);
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--white);
 }
 .d4p-pmast-panel {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
   border-right: 1px solid var(--border-hair);
   padding: var(--sp-7);
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: safe center;
 }
 .d4p-pmast-media {
   position: relative;
-  align-self: start;
-  /* The active image sets the height at the existing column width. */
+  min-width: 0;
+  height: 100%;
+  /* Keep the stage height stable; the active photo ratio moves the divider. */
   background: var(--white);
 }
 .d4p-pmast-viewport {
@@ -1224,7 +1231,8 @@ img {
 }
 @media (max-width: 860px) {
   .d4p-pmast {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto auto;
   }
   .d4p-pmast-panel {
     border-right: none;
@@ -1233,6 +1241,8 @@ img {
     order: 2;
   }
   .d4p-pmast-media {
+    height: auto;
+    aspect-ratio: var(--pmast-ratio);
     order: 1;
   }
   .d4p-pmast-nav {
