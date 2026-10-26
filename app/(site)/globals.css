@@ -1139,10 +1139,14 @@ img {
 }
 .d4p-pmast-media {
   position: relative;
-  overflow: hidden;
-  /* Fill the photo stage without letterboxing; originals remain in the gallery. */
-  min-height: 460px;
+  align-self: start;
+  /* The active image sets the height at the existing column width. */
   background: var(--white);
+}
+.d4p-pmast-viewport {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
 }
 .d4p-pmast-track {
   position: absolute;
@@ -1162,7 +1166,7 @@ img {
 .d4p-pmast-slide img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .d4p-pmast-title {
   font-family: var(--font-display);
@@ -1189,7 +1193,7 @@ img {
 }
 .d4p-pmast-nav {
   position: absolute;
-  left: 40%;
+  left: 0;
   bottom: var(--sp-7);
   transform: translateX(-50%);
   display: flex;
@@ -1229,20 +1233,13 @@ img {
     order: 2;
   }
   .d4p-pmast-media {
-    /* Stacked layout: the stage takes the photo's own ratio (~1785×1086). */
-    aspect-ratio: 1785 / 1086;
-    min-height: 0;
     order: 1;
   }
   .d4p-pmast-nav {
-    left: auto !important;
-    right: var(--sp-4) !important;
-    bottom: auto !important;
-    /* Sit inside the stage's bottom-right corner: a % margin on an absolutely
-       positioned box resolves against the container width = stage width. */
-    top: 0 !important;
-    margin-top: calc(100% * 1086 / 1785 - 66px);
-    transform: none !important;
+    left: auto;
+    right: var(--sp-4);
+    bottom: var(--sp-4);
+    transform: none;
   }
   .d4p-pmast-nav button {
     width: 44px;

@@ -14,6 +14,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
     : [project.coverImage];
 
   const [i, setI] = useState(0);
+  const [ratios, setRatios] = useState<Record<string, number>>({});
   const go = useCallback(
     (d: number) => setI((v) => (v + d + imgs.length) % imgs.length),
     [imgs.length],
@@ -121,40 +122,48 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
         </div>
       </div>
 
-      <div className="d4p-pmast-media">
-        <div className="d4p-pmast-track" style={{ transform: `translateX(-${i * 100}%)` }}>
-          {imgs.map((src, idx) => (
-            <div key={idx} className="d4p-pmast-slide">
-              {src ? (
-                <Image
-                  src={src}
-                  alt=""
-                  fill
-                  sizes="(max-width:860px) 100vw, 60vw"
-                  quality={90}
-                  style={{ objectFit: "cover" }}
-                  priority={idx === 0}
-                />
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "100%",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "var(--sunken)",
-                    color: "var(--ink-400)",
-                    fontFamily: "var(--font-display)",
-                    fontWeight: 600,
-                    fontSize: "var(--fs-h3)",
-                  }}
-                >
-                  {project.title.charAt(0) || "DESIGN4PUBLIC"}
-                </div>
-              )}
-            </div>
-          ))}
+      <div className="d4p-pmast-media" style={{ aspectRatio: ratios[imgs[i] ?? ""] ?? 3 / 2 }}>
+        <div className="d4p-pmast-viewport">
+          <div className="d4p-pmast-track" style={{ transform: `translateX(-${i * 100}%)` }}>
+            {imgs.map((src, idx) => (
+              <div key={idx} className="d4p-pmast-slide">
+                {src ? (
+                  <Image
+                    src={src}
+                    alt=""
+                    fill
+                    sizes="(max-width:860px) 100vw, 60vw"
+                    quality={90}
+                    style={{ objectFit: "contain" }}
+                    onLoad={(event) => {
+                      const { naturalWidth, naturalHeight } = event.currentTarget;
+                      if (naturalWidth && naturalHeight) {
+                        setRatios((current) => ({ ...current, [src]: naturalWidth / naturalHeight }));
+                      }
+                    }}
+                    priority={idx === 0}
+                  />
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      background: "var(--sunken)",
+                      color: "var(--ink-400)",
+                      fontFamily: "var(--font-display)",
+                      fontWeight: 600,
+                      fontSize: "var(--fs-h3)",
+                    }}
+                  >
+                    {project.title.charAt(0) || "DESIGN4PUBLIC"}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
         {imgs.length > 1 && (
           <div className="d4p-pmast-count">
@@ -162,18 +171,18 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
             <span style={{ opacity: 0.5 }}>/ {String(imgs.length).padStart(2, "0")}</span>
           </div>
         )}
-      </div>
 
-      {imgs.length > 1 && (
-        <div className="d4p-pmast-nav">
-          <button onClick={() => go(-1)} aria-label="이전 사진">
-            <ChevronLeft size={20} strokeWidth={1.5} />
-          </button>
-          <button onClick={() => go(1)} aria-label="다음 사진">
-            <ChevronRight size={20} strokeWidth={1.5} />
-          </button>
-        </div>
-      )}
+        {imgs.length > 1 && (
+          <div className="d4p-pmast-nav">
+            <button onClick={() => go(-1)} aria-label="이전 사진">
+              <ChevronLeft size={20} strokeWidth={1.5} />
+            </button>
+            <button onClick={() => go(1)} aria-label="다음 사진">
+              <ChevronRight size={20} strokeWidth={1.5} />
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
