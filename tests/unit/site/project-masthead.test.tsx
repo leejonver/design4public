@@ -38,3 +38,12 @@ it("keeps a usable placeholder when there are no photos", () => {
   expect(screen.getByText('T')).toBeVisible();
   expect(screen.queryByRole('button', { name: '다음 사진' })).not.toBeInTheDocument();
 });
+
+it("describes project photos using authored text before the project fallback", () => {
+  render(<ProjectMasthead project={{ ...project, gallery: [
+    { ...project.gallery[0], alt: "라운지 테이블과 의자" },
+    { ...project.gallery[1], alt: "  " },
+  ] }} />);
+  expect(screen.getByRole('img', { name: '라운지 테이블과 의자' })).toBeInTheDocument();
+  expect(screen.getByRole('img', { name: 'Test 사진 2' })).toBeInTheDocument();
+});

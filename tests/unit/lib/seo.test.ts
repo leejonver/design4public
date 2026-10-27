@@ -1,5 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
+  compactText,
+  getSeoImages,
   articleSchema,
   productSchema,
   brandSchema,
@@ -76,5 +78,19 @@ describe("JSON-LD schema helpers", () => {
     const g = jsonLdGraph([articleSchema({ headline: "h", description: null, images: [], datePublished: undefined, dateModified: undefined, path: "/projects/x" })]);
     expect(g["@context"]).toBe("https://schema.org");
     expect(Array.isArray(g["@graph"])).toBe(true);
+  });
+});
+
+
+describe("metadata facts", () => {
+  it("does not declare invented dimensions for source images", () => {
+    expect(getSeoImages([null, "https://cdn/photo.jpg?v=1"])).toEqual([
+      { url: "https://cdn/photo.jpg" },
+    ]);
+  });
+
+  it("uses the description fallback for blank CMS fields", () => {
+    expect(compactText("  ", "실제 페이지 설명")).toBe("실제 페이지 설명");
+    expect(compactText("  회의실\n 가구  ", "fallback")).toBe("회의실 가구");
   });
 });

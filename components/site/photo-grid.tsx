@@ -36,7 +36,7 @@ export function PhotosView({ photos }: { photos: PhotoFeedItem[] }) {
               {ph.url ? (
                 <Image
                   src={ph.url}
-                  alt={ph.alt ?? ""}
+                  alt={ph.alt?.trim() || ph.title?.trim() || ph.projectTitle || "공간·가구 사진"}
                   fill
                   sizes={MASONRY_SIZES}
                   style={{ objectFit: "cover" }}
@@ -116,7 +116,7 @@ function PhotoModal({
           {ph.url ? (
             <Image
               src={ph.url}
-              alt={ph.alt ?? ""}
+              alt={ph.alt?.trim() || ph.title?.trim() || ph.projectTitle || "공간·가구 사진"}
               fill
               sizes="(max-width:860px) 92vw, 820px"
               style={{ objectFit: "contain" }}

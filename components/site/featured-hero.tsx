@@ -48,7 +48,7 @@ export function FeaturedHero({
           {src ? (
             <Image
               src={src}
-              alt=""
+              alt={(!heroImage && (project.gallery[idx]?.alt?.trim() || project.gallery[idx]?.title?.trim())) || `${project.title} 대표 사진`}
               fill
               sizes="100vw"
               quality={90}

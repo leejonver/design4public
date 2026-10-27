@@ -15,7 +15,7 @@ import {
 
 export const metadata: Metadata = {
   title: {
-    default: "design4public | 공공조달 가구 납품사례",
+    default: "공공조달 가구 납품사례",
     template: `%s | ${SITE_NAME}`,
   },
   description: SITE_DESCRIPTION,

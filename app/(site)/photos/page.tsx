@@ -10,19 +10,23 @@ import { createPageMetadata } from "@/lib/seo";
 export const revalidate = 3600;
 const PAGE_SIZE = 60;
 
-export const metadata: Metadata = createPageMetadata({
-  title: "포토 · 공공공간 가구 사진",
-  description: "프로젝트와 아이템의 공간·가구 사진을 한눈에 둘러보세요.",
-  path: "/photos",
-});
+type Props = { searchParams: Promise<{ page?: string }> };
 
-export default async function PhotosPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ page?: string }>;
-}) {
-  const { page: rawPage } = await searchParams;
-  const page = Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1);
+function pageNumber(rawPage?: string) {
+  return Math.max(1, Number.parseInt(rawPage ?? "1", 10) || 1);
+}
+
+export async function generateMetadata({ searchParams }: Props): Promise<Metadata> {
+  const page = pageNumber((await searchParams).page);
+  return createPageMetadata({
+    title: `포토 · 공공공간 가구 사진${page > 1 ? ` · ${page}페이지` : ""}`,
+    description: "프로젝트와 아이템의 공간·가구 사진을 한눈에 둘러보세요.",
+    path: page > 1 ? `/photos?page=${page}` : "/photos",
+  });
+}
+
+export default async function PhotosPage({ searchParams }: Props) {
+  const page = pageNumber((await searchParams).page);
   const { photos, total } = await fetchPhotosPage(page, PAGE_SIZE);
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
   if (total > 0 && page > totalPages) notFound();

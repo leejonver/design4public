@@ -133,7 +133,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
                 {src ? (
                   <Image
                     src={src}
-                    alt=""
+                    alt={project.gallery[idx]?.alt?.trim() || project.gallery[idx]?.title?.trim() || `${project.title} 사진 ${idx + 1}`}
                     fill
                     sizes="(max-width:860px) 100vw, (min-width:2240px) 1792px, 80vw"
                     quality={90}

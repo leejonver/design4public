@@ -19,7 +19,7 @@ export function stripCacheBuster(url: string | null | undefined) {
 }
 
 export function compactText(value: string | null | undefined, fallback: string) {
-  return (value ?? fallback).replace(/\s+/g, " ").trim();
+  return (value?.trim() || fallback).replace(/\s+/g, " ").trim();
 }
 
 export function truncateDescription(value: string, maxLength = 155) {
@@ -33,8 +33,6 @@ export function getSeoImages(images: Array<string | null | undefined>) {
     .filter((url): url is string => Boolean(url))
     .map((url) => ({
       url,
-      width: 1200,
-      height: 630,
     }));
 }
 

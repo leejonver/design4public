@@ -5,7 +5,6 @@ import { SITE_URL } from "@/lib/seo";
 export const revalidate = 3600;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
   const [projects, items, brands, photos] = await Promise.all([
     fetchProjects(),
     fetchItems(),
@@ -18,7 +17,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     ...otherStaticPaths.map((path) => ({
       url: `${SITE_URL}${path === "/" ? "" : path}`,
-      lastModified: now,
     })),
     ...legalPaths.map((path) => ({
       url: `${SITE_URL}${path}`,
