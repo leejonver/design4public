@@ -65,7 +65,7 @@ export default async function ProjectDetailPage({ params }: Props) {
     .join(" · ");
 
   return (
-    <Container style={{ padding: "var(--sp-5) var(--gutter) var(--sp-9)" }}>
+    <Container className="d4p-project-detail" style={{ padding: "var(--sp-5) var(--gutter) var(--sp-9)" }}>
       <JsonLd data={jsonLd} />
       <div style={{ marginBottom: "var(--sp-5)" }}>
         <Breadcrumb

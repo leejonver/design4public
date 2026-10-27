@@ -135,7 +135,7 @@ export function ProjectMasthead({ project }: { project: ProjectDetail }) {
                     src={src}
                     alt=""
                     fill
-                    sizes="(max-width:860px) 100vw, 60vw"
+                    sizes="(max-width:860px) 100vw, (min-width:2240px) 1792px, 80vw"
                     quality={90}
                     style={{ objectFit: "contain" }}
                     onLoad={(event) => {

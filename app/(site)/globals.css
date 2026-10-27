@@ -1121,12 +1121,16 @@ img {
 /* ============================================================
    Project detail masthead (split panel | image, nav on seam)
    ============================================================ */
+.d4p-project-detail {
+  --container: 2240px;
+  container-type: inline-size;
+}
 .d4p-pmast {
   position: relative;
   display: grid;
-  --pmast-height: 520px;
+  --pmast-height: clamp(440px, min(45cqw, 80svh), 960px);
   --pmast-panel-min: 320px;
-  grid-template-columns: minmax(var(--pmast-panel-min), 1fr) min(calc(var(--pmast-height) * var(--pmast-ratio)), calc(100% - var(--pmast-panel-min)));
+  grid-template-columns: minmax(var(--pmast-panel-min), 1fr) clamp(60%, calc(var(--pmast-height) * var(--pmast-ratio)), calc(100% - var(--pmast-panel-min)));
   grid-template-rows: var(--pmast-height);
   border: 1px solid var(--border-hair);
   border-radius: var(--radius-md);
