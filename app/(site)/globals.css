@@ -1128,7 +1128,7 @@ img {
 .d4p-pmast {
   position: relative;
   display: grid;
-  --pmast-height: clamp(440px, min(45cqw, 80svh), 960px);
+  --pmast-height: clamp(440px, min(38cqw, 68svh), 810px);
   --pmast-panel-min: 320px;
   grid-template-columns: minmax(var(--pmast-panel-min), 1fr) clamp(60%, calc(var(--pmast-height) * var(--pmast-ratio)), calc(100% - var(--pmast-panel-min)));
   grid-template-rows: var(--pmast-height);
