@@ -1,9 +1,9 @@
 {
   "phase": "before",
-  "captured_at": "2026-10-27T00:24:56.809996+00:00",
+  "captured_at": "2026-10-27T00:20:22.014354+00:00",
   "tool": "AgriciDaniel/chatgpt-seo SEO-pro 0.2.16",
   "tool_commit": "b9dd5c8fab722c7610184927a902ca689165d322",
-  "method": "analyze_html.py on public response HTML; separate HTTP status capture; deterministic summaries only",
+  "method": "analyze_html.py on public response HTML; separate HTTP status and OG metadata capture; deterministic summaries only",
   "coverage": "17 selected URLs; not a full crawl, rendered audit or search-performance measurement",
   "pages": [
     {
@@ -56,6 +56,28 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image:alt",
+          "content": "design4public"
+        },
+        {
+          "property": "og:image:type",
+          "content": "image/png"
+        },
+        {
+          "property": "og:image",
+          "content": "https://www.design4public.com/opengraph-image-12o0cb?a34343cf9cf83832"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 17,
@@ -100,6 +122,7 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 87,
@@ -144,6 +167,7 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 229,
@@ -188,6 +212,7 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 6,
@@ -232,6 +257,7 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 60,
@@ -320,6 +346,7 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 0,
@@ -404,6 +431,7 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 0,
@@ -463,6 +491,32 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782786290625_7xhk0yoep3.blob"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782786278574_lvrrkkicmu.blob"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 15,
@@ -522,6 +576,32 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782722865363_wn4iuy0252r.blob"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782722865363_wn4iuy0252r.blob"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 15,
@@ -577,6 +657,56 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745746683_sf6647r1c69.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745746683_sf6647r1c69.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745749354_d154fp3y2a4.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745751130_1yqdb9nuuyn.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 6,
@@ -632,6 +762,44 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792743704074_ywhgtu27g88.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792743704074_ywhgtu27g88.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792743706038_e17xczf1luf.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 4,
@@ -694,6 +862,32 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1788851691926_rg8s0z4rm7.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1791794182021_ky62k2wwjpp.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 275,
@@ -748,6 +942,32 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1788852000706_dqtkwt9ccka.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1791793983799_698s64w3d96.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 1,
@@ -806,6 +1026,20 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792993236226_47k3nvtjal6.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 2,
@@ -864,6 +1098,20 @@
         "other": 2
       },
       "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792993233360_meprh2bspxf.jpg"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 2,
@@ -921,6 +1169,7 @@
           "resolved_canonical": "https://www.design4public.com/photos"
         }
       ],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 60,
@@ -978,6 +1227,7 @@
           "resolved_canonical": "https://www.design4public.com/photos"
         }
       ],
+      "og_image_metadata": [],
       "http_status": 200,
       "x_robots_tag": null,
       "image_count": 60,

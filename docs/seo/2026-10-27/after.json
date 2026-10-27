@@ -1,0 +1,1076 @@
+{
+  "phase": "after",
+  "captured_at": "2026-10-27T00:31:33.293409+00:00",
+  "tool": "AgriciDaniel/chatgpt-seo SEO-pro 0.2.16",
+  "tool_commit": "b9dd5c8fab722c7610184927a902ca689165d322",
+  "method": "analyze_html.py on public response HTML; separate HTTP status and OG metadata capture; deterministic summaries only",
+  "coverage": "17 selected URLs; not a full crawl, rendered audit or search-performance measurement",
+  "pages": [
+    {
+      "url": "https://www.design4public.com",
+      "source_sha256": "06c293cae96420a8a40ae29496c1c81077d8d8cf76f6ce69e84ed8ed774fe7b0",
+      "titles": [
+        "공공조달 가구 납품사례 | design4public"
+      ],
+      "descriptions": [
+        "공공조달 가구 납품사례와 제품, 브랜드 정보를 탐색하는 design4public 콘텐츠 사이트입니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "SK바이오사이언스 Lounge"
+        },
+        {
+          "level": 2,
+          "text": "주요 프로젝트"
+        },
+        {
+          "level": 2,
+          "text": "주요 아이템"
+        },
+        {
+          "level": 2,
+          "text": "함께하는 기업"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 28,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image:alt",
+          "content": "design4public"
+        },
+        {
+          "property": "og:image:type",
+          "content": "image/png"
+        },
+        {
+          "property": "og:image",
+          "content": "https://www.design4public.com/opengraph-image-12o0cb?a34343cf9cf83832"
+        },
+        {
+          "property": "og:image:width",
+          "content": "1200"
+        },
+        {
+          "property": "og:image:height",
+          "content": "630"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 17,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/projects",
+      "source_sha256": "e812687d816d919c74188b6e476c827fd156e3d2cec9d866b53de6d99a25b0b7",
+      "titles": [
+        "프로젝트 · 공공조달 가구 납품사례 | design4public"
+      ],
+      "descriptions": [
+        "공공기관·공공공간에 납품된 가구 프로젝트 사례를 브랜드·연도·카테고리별로 살펴봅니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/projects"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "PROJECTS"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 96,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 87,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/items",
+      "source_sha256": "dc8fd796d7577f823eaf6b8c72ae1cdea78d5bffe60315b8b2d70c56a76ac9d5",
+      "titles": [
+        "아이템 · 오피스·공공가구 제품 | design4public"
+      ],
+      "descriptions": [
+        "브랜드별 오피스 가구 아이템을 사양과 함께 살펴보세요."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/items"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "ITEMS"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 238,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 229,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/brands",
+      "source_sha256": "95e4b7072d6ee375f7f971543ca9b542df247e2ed40e768cf5066803fafced3d",
+      "titles": [
+        "브랜드 · 가구 제조사 | design4public"
+      ],
+      "descriptions": [
+        "국내외 오피스 가구 브랜드를 한곳에서."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/brands"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "BRANDS"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 15,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 6,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/photos",
+      "source_sha256": "7be8df5a7b7c29a44e6d42f5b4cd5b019f99747ab563da849a5bd39199319b47",
+      "titles": [
+        "포토 · 공공공간 가구 사진 | design4public"
+      ],
+      "descriptions": [
+        "프로젝트와 아이템의 공간·가구 사진을 한눈에 둘러보세요."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/photos"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "PHOTOS"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 70,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 60,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/privacy",
+      "source_sha256": "e37e95e22041d92977587addb6c707aa06f6ebb5d189bb2a6165015b55c7f93b",
+      "titles": [
+        "개인정보처리방침 | design4public"
+      ],
+      "descriptions": [
+        "DESIGN4PUBLIC은 이용자의 개인정보를 중요하게 생각하며, 관련 법령에 따라 안전하게 관리합니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/privacy"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "개인정보처리방침"
+        },
+        {
+          "level": 2,
+          "text": "제1조 (개인정보의 처리 목적)"
+        },
+        {
+          "level": 2,
+          "text": "제2조 (처리하는 개인정보의 항목)"
+        },
+        {
+          "level": 2,
+          "text": "제3조 (개인정보의 처리 및 보유 기간)"
+        },
+        {
+          "level": 2,
+          "text": "제4조 (개인정보의 제3자 제공)"
+        },
+        {
+          "level": 2,
+          "text": "제5조 (개인정보 처리의 위탁)"
+        },
+        {
+          "level": 2,
+          "text": "제6조 (개인정보의 국외 이전)"
+        },
+        {
+          "level": 2,
+          "text": "제7조 (정보주체의 권리·의무 및 행사 방법)"
+        },
+        {
+          "level": 2,
+          "text": "제8조 (개인정보의 안전성 확보 조치)"
+        },
+        {
+          "level": 2,
+          "text": "제9조 (쿠키 등 자동 수집 장치의 운영)"
+        },
+        {
+          "level": 2,
+          "text": "제10조 (개인정보 보호책임자)"
+        },
+        {
+          "level": 2,
+          "text": "제11조 (개인정보처리방침의 변경)"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 10,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 0,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/terms",
+      "source_sha256": "430ce1c714e0c1eeb81c293fe5a7390ee4e8e5f724ec69e80a2ac6f98d76e277",
+      "titles": [
+        "이용약관 | design4public"
+      ],
+      "descriptions": [
+        "본 약관은 DESIGN4PUBLIC 서비스 이용에 관한 기본적인 사항을 규정합니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/terms"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "이용약관"
+        },
+        {
+          "level": 2,
+          "text": "제1조 (목적)"
+        },
+        {
+          "level": 2,
+          "text": "제2조 (정의)"
+        },
+        {
+          "level": 2,
+          "text": "제3조 (약관의 효력 및 변경)"
+        },
+        {
+          "level": 2,
+          "text": "제4조 (서비스의 제공 및 변경)"
+        },
+        {
+          "level": 2,
+          "text": "제5조 (서비스 이용)"
+        },
+        {
+          "level": 2,
+          "text": "제6조 (콘텐츠의 저작권 및 지식재산권)"
+        },
+        {
+          "level": 2,
+          "text": "제7조 (이용자의 의무)"
+        },
+        {
+          "level": 2,
+          "text": "제8조 (외부 링크)"
+        },
+        {
+          "level": 2,
+          "text": "제9조 (면책 조항)"
+        },
+        {
+          "level": 2,
+          "text": "제10조 (준거법 및 관할)"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 10,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 0,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/projects/sk%EB%B0%94%EC%9D%B4%EC%98%A4%EC%82%AC%EC%9D%B4%EC%96%B8%EC%8A%A4-lounge",
+      "source_sha256": "795386dd4012d4adff5cfa07b6f6b132613aaccfadef21a724301be11a864c3a",
+      "titles": [
+        "SK바이오사이언스 Lounge | design4public"
+      ],
+      "descriptions": [
+        "SK바이오사이언스/라운지"
+      ],
+      "canonicals": [
+        "https://www.design4public.com/projects/sk%EB%B0%94%EC%9D%B4%EC%98%A4%EC%82%AC%EC%9D%B4%EC%96%B8%EC%8A%A4-lounge"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "SK바이오사이언스 Lounge"
+        },
+        {
+          "level": 2,
+          "text": "이 공간에 사용된 가구"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "Article",
+            "BreadcrumbList",
+            "ImageObject",
+            "ListItem"
+          ],
+          "fingerprint": "7c9edf2c9dfb2ec5c00d44aa811e7e379d0e33c6199ec3fb72066a6dd0a6f657",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 14,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782786290625_7xhk0yoep3.blob"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782786278574_lvrrkkicmu.blob"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 15,
+      "empty_alt_count": 6,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/projects/sk%EB%B0%94%EC%9D%B4%EC%98%A4%EC%82%AC%EC%9D%B4%EC%96%B8%EC%8A%A4",
+      "source_sha256": "4a023fa22a063ce6cc041f1d8df1975d1183366e995c72d39e4cb840a69dfe24",
+      "titles": [
+        "SK바이오사이언스 Office | design4public"
+      ],
+      "descriptions": [
+        "SK바이오사이언스/오피스/회의실"
+      ],
+      "canonicals": [
+        "https://www.design4public.com/projects/sk%EB%B0%94%EC%9D%B4%EC%98%A4%EC%82%AC%EC%9D%B4%EC%96%B8%EC%8A%A4"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "SK바이오사이언스 Office"
+        },
+        {
+          "level": 2,
+          "text": "이 공간에 사용된 가구"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "Article",
+            "BreadcrumbList",
+            "ImageObject",
+            "ListItem"
+          ],
+          "fingerprint": "b5312b999bd6334b1b58d666610dee37c1e8c0328431f2660fef130578cde725",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 14,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782722865363_wn4iuy0252r.blob"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/projects/1782722865363_wn4iuy0252r.blob"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 15,
+      "empty_alt_count": 6,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/items/%EB%8D%B0%EC%8A%A4%ED%81%AC-%EB%86%92%EC%9D%80-%EC%B9%B8%EB%A7%89%EC%9D%B4%ED%98%95-%EB%8B%A8%EB%A9%B4-1%EC%9D%B8",
+      "source_sha256": "8e525c9397764c82160c7ee50af762c9ebf23e4f127ea0bd369149d3c2ebc5bf",
+      "titles": [
+        "데스크(높은 칸막이형 단면 1인) | design4public"
+      ],
+      "descriptions": [
+        "G2B 등록예정 / DD1810VWH / 1855×1090×730/2400 / 측면파티션: 45T MDF, 무늬목, 우레탄 도장 + 책상상판: 30T MDF, PET"
+      ],
+      "canonicals": [
+        "https://www.design4public.com/items/%EB%8D%B0%EC%8A%A4%ED%81%AC-%EB%86%92%EC%9D%80-%EC%B9%B8%EB%A7%89%EC%9D%B4%ED%98%95-%EB%8B%A8%EB%A9%B4-1%EC%9D%B8"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "데스크(높은 칸막이형 단면 1인)"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "Brand",
+            "BreadcrumbList",
+            "ListItem",
+            "Product"
+          ],
+          "fingerprint": "7cbba66839c3563a1f7375de64667148ee097f5fb41d64cda0f82d2d552f63de",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 11,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745746683_sf6647r1c69.jpg"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745746683_sf6647r1c69.jpg"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745749354_d154fp3y2a4.jpg"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792745751130_1yqdb9nuuyn.jpg"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 6,
+      "empty_alt_count": 3,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/items/%EB%8D%B0%EC%8A%A4%ED%81%AC-%EB%B6%80%EC%8A%A4%ED%98%95-%EB%8B%A8%EB%A9%B4-1%EC%9D%B8",
+      "source_sha256": "35f8e3bf45169e29ac4bdf22bac049d10fb06902f16ab29534452c8e92d41f6b",
+      "titles": [
+        "데스크(부스형 단면 1인) | design4public"
+      ],
+      "descriptions": [
+        "G2B 등록예정 / DD1411VWS / 1440×1100×730/1200 / 상판: 18+12T MDF, 무늬목, 우레탄 도장 + 소파등, 좌판: 패브릭"
+      ],
+      "canonicals": [
+        "https://www.design4public.com/items/%EB%8D%B0%EC%8A%A4%ED%81%AC-%EB%B6%80%EC%8A%A4%ED%98%95-%EB%8B%A8%EB%A9%B4-1%EC%9D%B8"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "데스크(부스형 단면 1인)"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "Brand",
+            "BreadcrumbList",
+            "ListItem",
+            "Product"
+          ],
+          "fingerprint": "f85b1fd094766a1a8bbdeaaede5d4ecd1d4b27a4dd0cec96debe1188bdf38b64",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 11,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792743704074_ywhgtu27g88.jpg"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792743704074_ywhgtu27g88.jpg"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792743706038_e17xczf1luf.jpg"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 4,
+      "empty_alt_count": 2,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/brands/%EB%94%94%EC%9E%90%EC%9D%B8%ED%8F%AC%ED%8D%BC%EB%B8%94%EB%A6%AD",
+      "source_sha256": "e1768934df86f8da2d12d90c0fd877e4eb06d745979368c08af0544d0a8a7d95",
+      "titles": [
+        "디자인포퍼블릭 | design4public"
+      ],
+      "descriptions": [
+        "디자인포퍼블릭은 지속적인 연구와 고민을 바탕으로, 신뢰할 수 있는 품질의 다양한 가구 및 공간 솔루션을 선보이고 있습니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/brands/%EB%94%94%EC%9E%90%EC%9D%B8%ED%8F%AC%ED%8D%BC%EB%B8%94%EB%A6%AD"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "디자인포퍼블릭"
+        },
+        {
+          "level": 2,
+          "text": "대표 아이템"
+        },
+        {
+          "level": 2,
+          "text": "도입 프로젝트"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "Brand",
+            "BreadcrumbList",
+            "ListItem"
+          ],
+          "fingerprint": "54fb7437824262edd3a4946be71db5473a147d24ba9ab059c17e1b8684aecde8",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 285,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1788851691926_rg8s0z4rm7.jpg"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1791794182021_ky62k2wwjpp.jpg"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 275,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/brands/bestuhl",
+      "source_sha256": "e855c88d492009c664833bc71272711595acbe61e1a68788696515bf08f10fec",
+      "titles": [
+        "베스툴 | design4public"
+      ],
+      "descriptions": [
+        "베스툴은 의자 전문업체입니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/brands/bestuhl"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "베스툴"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "Brand",
+            "BreadcrumbList",
+            "ListItem"
+          ],
+          "fingerprint": "2fd4359a35a3ed5eeb494676172a1290691e9c775058cbe9f97eedbd6dfa4e2b",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 10,
+        "external": 1,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1788852000706_dqtkwt9ccka.jpg"
+        },
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/brands/1791793983799_698s64w3d96.jpg"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 1,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/photos/6612ba36-6bea-433a-8c5f-8fb625f34520",
+      "source_sha256": "feb968cf3425f335ac32d11ef837f8ec313e56d7a2e65ea2ff9d2209e1d522c2",
+      "titles": [
+        "데스크(칸막이형 단면 1인) | design4public"
+      ],
+      "descriptions": [
+        "데스크(칸막이형 단면 1인) 아이템의 상세 사진입니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/photos/6612ba36-6bea-433a-8c5f-8fb625f34520"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "데스크(칸막이형 단면 1인)"
+        },
+        {
+          "level": 2,
+          "text": "이 사진 속 가구"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "BreadcrumbList",
+            "ImageObject",
+            "ListItem"
+          ],
+          "fingerprint": "711cf3696b7dac2d75b994396de2df90295a41894f5941385a8f56d7d8a3864d",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 11,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792993236226_47k3nvtjal6.jpg"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 2,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/photos/f3d3a441-c42c-49a6-aecf-3644d49d7d39",
+      "source_sha256": "1c3e34f2d83702251e36120756aa5cb16bcb04add376b5bbe62bca5f6405cdcc",
+      "titles": [
+        "데스크(칸막이형 단면 1인) | design4public"
+      ],
+      "descriptions": [
+        "데스크(칸막이형 단면 1인) 아이템의 상세 사진입니다."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/photos/f3d3a441-c42c-49a6-aecf-3644d49d7d39"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "데스크(칸막이형 단면 1인)"
+        },
+        {
+          "level": 2,
+          "text": "이 사진 속 가구"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        },
+        {
+          "parse_status": "parsed",
+          "types": [
+            "BreadcrumbList",
+            "ImageObject",
+            "ListItem"
+          ],
+          "fingerprint": "53c80ac2b39f4709253cc9bb4253894c3d4b12cd1842a2b05a77df5975a09a0b",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 11,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [
+        {
+          "property": "og:image",
+          "content": "https://ftuudbxhffnbzjxgqagp.supabase.co/storage/v1/object/public/images/items/1792993233360_meprh2bspxf.jpg"
+        }
+      ],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 2,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/photos?page=2",
+      "source_sha256": "3835ee7d1eeed111736550036215ba68b17256ccbc319a6646a85321c7fa3fe2",
+      "titles": [
+        "포토 · 공공공간 가구 사진 · 2페이지 | design4public"
+      ],
+      "descriptions": [
+        "프로젝트와 아이템의 공간·가구 사진을 한눈에 둘러보세요."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/photos?page=2"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "PHOTOS"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 71,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 60,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    },
+    {
+      "url": "https://www.design4public.com/photos?page=3",
+      "source_sha256": "7f475c3b229ddf3e5c24e705d573144a0ec467fbe588ee7f1953e3d49df825eb",
+      "titles": [
+        "포토 · 공공공간 가구 사진 · 3페이지 | design4public"
+      ],
+      "descriptions": [
+        "프로젝트와 아이템의 공간·가구 사진을 한눈에 둘러보세요."
+      ],
+      "canonicals": [
+        "https://www.design4public.com/photos?page=3"
+      ],
+      "robots": {},
+      "noindex_observed": false,
+      "headings": [
+        {
+          "level": 1,
+          "text": "PHOTOS"
+        }
+      ],
+      "json_ld": [
+        {
+          "parse_status": "parsed",
+          "types": [
+            "ContactPoint",
+            "Organization",
+            "WebSite"
+          ],
+          "fingerprint": "07f3bd03afe24634d136e11470de6932f60ed08b7b30ecf75e1730a24fdc558a",
+          "eligibility_validated": false
+        }
+      ],
+      "link_counts": {
+        "internal": 71,
+        "external": 0,
+        "other": 2
+      },
+      "findings": [],
+      "og_image_metadata": [],
+      "http_status": 200,
+      "x_robots_tag": null,
+      "image_count": 60,
+      "empty_alt_count": 0,
+      "missing_alt_count": 0
+    }
+  ]
+}

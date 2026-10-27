@@ -1,0 +1,136 @@
+{
+  "tool": "compare_snapshots.py from SEO-pro 0.2.16",
+  "scope": "before/after public source HTML for matching URLs",
+  "comparisons": [
+    {
+      "url": "https://www.design4public.com",
+      "changed_fields": [
+        "titles",
+        "images"
+      ],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/projects",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/items",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/brands",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/photos",
+      "changed_fields": [
+        "images"
+      ],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/privacy",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/terms",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/projects/sk%EB%B0%94%EC%9D%B4%EC%98%A4%EC%82%AC%EC%9D%B4%EC%96%B8%EC%8A%A4-lounge",
+      "changed_fields": [
+        "images"
+      ],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/projects/sk%EB%B0%94%EC%9D%B4%EC%98%A4%EC%82%AC%EC%9D%B4%EC%96%B8%EC%8A%A4",
+      "changed_fields": [
+        "images"
+      ],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/items/%EB%8D%B0%EC%8A%A4%ED%81%AC-%EB%86%92%EC%9D%80-%EC%B9%B8%EB%A7%89%EC%9D%B4%ED%98%95-%EB%8B%A8%EB%A9%B4-1%EC%9D%B8",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/items/%EB%8D%B0%EC%8A%A4%ED%81%AC-%EB%B6%80%EC%8A%A4%ED%98%95-%EB%8B%A8%EB%A9%B4-1%EC%9D%B8",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/brands/%EB%94%94%EC%9E%90%EC%9D%B8%ED%8F%AC%ED%8D%BC%EB%B8%94%EB%A6%AD",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/brands/bestuhl",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/photos/6612ba36-6bea-433a-8c5f-8fb625f34520",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/photos/f3d3a441-c42c-49a6-aecf-3644d49d7d39",
+      "changed_fields": [],
+      "control_changes": []
+    },
+    {
+      "url": "https://www.design4public.com/photos?page=2",
+      "changed_fields": [
+        "titles",
+        "canonicals",
+        "images"
+      ],
+      "control_changes": [
+        {
+          "field": "canonicals",
+          "before": [
+            "https://www.design4public.com/photos"
+          ],
+          "after": [
+            "https://www.design4public.com/photos?page=2"
+          ],
+          "priority": "high_review",
+          "verification": "Confirm intended behavior, indexing intent and applicable crawler observations"
+        }
+      ]
+    },
+    {
+      "url": "https://www.design4public.com/photos?page=3",
+      "changed_fields": [
+        "titles",
+        "canonicals",
+        "images"
+      ],
+      "control_changes": [
+        {
+          "field": "canonicals",
+          "before": [
+            "https://www.design4public.com/photos"
+          ],
+          "after": [
+            "https://www.design4public.com/photos?page=3"
+          ],
+          "priority": "high_review",
+          "verification": "Confirm intended behavior, indexing intent and applicable crawler observations"
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Not evidence of ranking or traffic causation",
+    "Source changes require contextual review"
+  ]
+}
