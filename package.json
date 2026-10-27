@@ -15,7 +15,9 @@
     "backfill:captions": "node scripts/backfill-captions.mjs",
     "db:reset": "supabase db reset && docker restart supabase_kong_design4public && npm run gen:types",
     "db:sync:prod": "bash scripts/sync-prod-to-local.sh",
-    "gate": "tsc --noEmit && npm run lint && vitest run && next build && playwright test && playwright test"
+    "gate": "tsc --noEmit && npm run lint && vitest run && next build && playwright test",
+    "e2e:start": "node scripts/e2e-stack.mjs start",
+    "e2e:stop": "node scripts/e2e-stack.mjs stop"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",

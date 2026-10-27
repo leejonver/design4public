@@ -1,84 +1,68 @@
-# E2E Testing (Local Supabase)
+# E2E testing
 
-The E2E harness runs entirely against a **local** Supabase stack (Docker). It never
-touches production — `tests/e2e/global.setup.ts` hard-fails if the Supabase URL host
-is not `127.0.0.1`/`localhost`.
+The suite covers public browsing, admin CRUD/uploads/invites, content propagation,
+and REST-level RLS. Use an isolated local Supabase project so the development DB
+can retain its production-copy content.
 
-## Prerequisites
-- Docker running
-- Supabase CLI ≥ 2.98.2 (`supabase --version`)
-- `npm ci`
-- Chromium for Playwright: `npx playwright install chromium`
-- After `supabase db reset`, run `npm run gen:types` against the fully-migrated
-  DB so `lib/database.types.ts` includes real columns before
-  `scripts/postprocess-types.mjs` runs (chained automatically by `gen:types`).
+## Setup and run
 
-## One-time / per-session
-```bash
-supabase start          # boots Postgres(54322) + API(54321) + Storage
-supabase db reset       # applies supabase/migrations/* then supabase/seed.sql
-docker restart supabase_kong_design4public   # REQUIRED after every db reset:
-                        # reset restarts GoTrue but leaves Kong on the stale
-                        # upstream → 502 on all /auth/v1 until Kong is restarted.
-```
-
-## First live run
-The `admin` and `integration` Playwright projects depend on the `setup` project,
-which provisions the `master`/`content_manager` test users and writes their
-storage state to `tests/e2e/.auth/*.json` (gitignored). Run the full sequence
-in order the first time (and any time the local stack is reset):
+Prerequisites: Docker/Colima, Supabase CLI, `npm ci`, and
+`npx playwright install chromium`.
 
 ```bash
-supabase start
-supabase db reset
-docker restart supabase_kong_design4public   # REQUIRED after every db reset:
-                        # reset restarts GoTrue but leaves Kong on the stale
-                        # upstream → 502 on all /auth/v1 until Kong is restarted.
-npx playwright test --project=setup   # writes tests/e2e/.auth/master.json, manager.json
+npm run e2e:start
+npm run test:e2e
+npm run e2e:stop
 ```
 
-After that, `npx playwright test` (or any single project) picks up the saved
-auth state automatically.
+`e2e:start` copies migrations and synthetic seed data into ignored `.e2e-stack/`
+inside the workspace (Colima must be able to mount it). It starts project
+`design4public-e2e` on API **55321**, DB **55322**, and Mailpit **55324**, writes
+ignored `.env.test.local`, and uploads the six fixture images. It never resets
+the development DB. Existing isolated volumes are preserved across starts/stops.
+For schema changes, apply migrations explicitly with
+`supabase migration up --workdir .e2e-stack`; this does not reseed existing data.
 
-## Run everything
-```bash
-npm run lint
-npx tsc --noEmit
-npm test -- --run        # vitest unit suite
-npx playwright test      # setup → site (parallel) + admin/integration (serial)
-```
+Playwright builds and owns its Next production server on **3100** and uses `.next-e2e/`, leaving the
+normal server/build alone. An occupied port fails instead of reusing an unknown
+server. `.env.test.local` overrides committed `.env.test`; shell variables take
+precedence. Remote Supabase hosts are rejected. OpenAI and Resend keys are blank
+in the test server; invitations go to local Mailpit.
 
-## Run one suite
+Setup provisions three synthetic users and saves ignored browser auth states.
+Every project depends on setup, so a single-suite run also prepares its users:
+
 ```bash
 npx playwright test --project=site
 npx playwright test --project=admin
 npx playwright test --project=integration
+npx playwright test --project=security
 ```
 
-## Teardown
+The HTML report is in `playwright-report/`; failures include screenshots and
+first-retry traces under `test-results/`. Never commit auth state or local keys.
+
+## Full verification
+
 ```bash
-supabase stop
+npm run e2e:start
+npm run gate
+npm run e2e:stop
 ```
 
-## Env
-`.env.test` (committed; local dev keys only) points the E2E `next dev` server at the
-local stack. Playwright's `webServer.env` forwards these so a stray `.env.local` cannot
-redirect the server at a remote DB.
+The gate runs TypeScript, ESLint, unit tests, a production build, then E2E once.
+E2E builds separately with synthetic local data to exercise production caching.
+Do not use `db:reset` on a development DB containing a production copy just to run
+tests. Normal local migration/type generation is documented in [recipes](recipes.md).
 
-`dotenv` v17 prints promotional tips to stdout on load, which pollutes Playwright's
-output. Silence them by exporting `DOTENV_CONFIG_QUIET=true` in your shell (or CI env)
-before running `npx playwright test`.
+## Fixtures
 
-## Reading emails in tests (Mailpit)
-`invite.spec.ts` verifies the invite flow end to end by polling Mailpit's REST API
-instead of a UI mailbox. It searches by recipient with
-`GET /api/v1/search?query=to:<email>`, fetches the newest message with
-`GET /api/v1/message/<id>`, and extracts the accept link from its HTML or text body.
-The poll retries every 500ms up to 20 times to absorb local delivery lag.
-
-## Seed data (assert against these)
 - Published projects: `gangnam-office` (featured), `pangyo-library`
-- Draft (never public): `draft-project`
+- Draft: `draft-project`
 - Brands: `herman-miller`, `vitra`
 - Items: `aeron-chair`, `eames-lounge`, `hidden-desk`
-- Test users: `master@e2e.local` (master) / `cm@e2e.local` (content_manager)
+- Master/content manager/logout credentials: `.env.test` (local fixtures only)
+
+Invite tests poll Mailpit's `/api/v1/search` and `/api/v1/message/<id>` endpoints.
+`E2E_MAILPIT_URL` selects the isolated mailbox. Storage fixtures are small synthetic
+images; live visual checks are still needed for real project photography.

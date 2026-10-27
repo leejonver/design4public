@@ -20,7 +20,7 @@ test.describe('프로젝트 사진 아이템 태깅', () => {
   test('사진에 아이템을 태깅하면 파생 연결이 저장된다', async ({ page }, testInfo) => {
     // Unique per concurrent run so no two runs ever share a project/photo row.
     const nonce = `${Date.now()}-${testInfo.workerIndex}-${testInfo.repeatEachIndex}`
-    const photoUrl = `http://127.0.0.1:54321/storage/v1/object/public/images/seed/office-2.jpg?e2e=${nonce}`
+    const photoUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/images/seed/office-2.jpg?e2e=${nonce}`
 
     const createRes = await page.request.post('/api/admin/projects', {
       data: {

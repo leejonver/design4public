@@ -40,11 +40,13 @@ The E2E suite must use the committed synthetic seed instead of production
 content:
 
 ```bash
-npm run db:reset
-npx playwright test
+npm run e2e:start
+npm run test:e2e
+npm run e2e:stop
 ```
 
-The Playwright configuration hard-fails unless its Supabase URL is loopback.
+This uses a separate DB on 55322 and preserves the development DB on 54322.
+See [testing](testing.md). The Playwright configuration rejects remote Supabase URLs.
 
 ## Schema drift
 

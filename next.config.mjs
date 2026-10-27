@@ -7,19 +7,21 @@ const remotePatterns = [
   },
 ];
 
-// Local Supabase storage serves images over http from 127.0.0.1:54321 (E2E /
-// local dev only). Production images come from `**.supabase.co`, so this host
-// is never present in a production build.
-if (process.env.NODE_ENV !== 'production') {
-  remotePatterns.push({
-    protocol: 'http',
-    hostname: '127.0.0.1',
-    port: '54321',
-    pathname: '/storage/v1/object/public/**',
-  });
+// Local development and isolated E2E builds allow their local Storage endpoint.
+if (process.env.NODE_ENV !== 'production' || process.env.E2E === '1') {
+  const localStorage = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? 'http://127.0.0.1:54321');
+  if (['127.0.0.1', 'localhost'].includes(localStorage.hostname)) {
+    remotePatterns.push({
+      protocol: 'http',
+      hostname: localStorage.hostname,
+      port: localStorage.port,
+      pathname: '/storage/v1/object/public/**',
+    });
+  }
 }
 
 const nextConfig = {
+  distDir: process.env.E2E === '1' ? '.next-e2e' : '.next',
   images: {
     remotePatterns,
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],

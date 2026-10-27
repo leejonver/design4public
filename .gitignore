@@ -1,5 +1,6 @@
 node_modules
 .next
+.next-e2e
 out
 dist
 .DS_Store
@@ -23,3 +24,5 @@ CLAUDE.md
 .env.test.local
 tests/e2e/.auth/
 scripts/__pycache__/
+
+.e2e-stack/

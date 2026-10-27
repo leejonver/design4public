@@ -4,3 +4,6 @@ playwright-report/
 test-results/
 tests/e2e/.auth/
 tsconfig.tsbuildinfo
+
+.e2e-stack/
+.next-e2e/

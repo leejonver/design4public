@@ -40,7 +40,7 @@ async function provision(email: string, password: string, role: 'master' | 'cont
   return userId
 }
 
-setup('provision users and save auth state', async ({ browser }) => {
+setup('provision users and save auth state', async ({ browser, baseURL }) => {
   await provision(process.env.E2E_MASTER_EMAIL!, process.env.E2E_MASTER_PASSWORD!, 'master')
   await provision(process.env.E2E_CM_EMAIL!, process.env.E2E_CM_PASSWORD!, 'content_manager')
   // Dedicated session for the logout test only (see .env.test note).
@@ -53,14 +53,12 @@ setup('provision users and save auth state', async ({ browser }) => {
     [process.env.E2E_CM_EMAIL!, process.env.E2E_CM_PASSWORD!, 'tests/e2e/.auth/manager.json'],
     [process.env.E2E_LOGOUT_EMAIL!, process.env.E2E_LOGOUT_PASSWORD!, 'tests/e2e/.auth/logout.json'],
   ] as const) {
-    const context = await browser.newContext()
+    const context = await browser.newContext({ baseURL })
     const page = await context.newPage()
-    await page.goto('http://127.0.0.1:3000/admin/login')
+    await page.goto('/admin/login')
     await page.getByPlaceholder('이메일 주소').fill(email)
     await page.getByPlaceholder('비밀번호').fill(password)
     await page.getByRole('button', { name: /로그인/ }).click()
-    // Generous timeout: this is the first hit to the admin routes, so the Next
-    // dev server compiles /admin/login + /admin/projects on demand here.
     await page.waitForURL(/\/admin\/projects/, { timeout: 30000 })
     await context.storageState({ path: path.resolve(__dirname, '..', '..', file) })
     await context.close()

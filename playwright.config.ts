@@ -3,11 +3,22 @@ import { config as loadEnv } from 'dotenv'
 import path from 'node:path'
 
 // Load the local-stack env BEFORE building config so webServer.env can forward
-// it to `next dev`. Shell/process env wins over Next's .env.local, so this
+// it to `next build/start`. Shell/process env wins over Next's .env.local, so this
 // keeps the E2E server on the local Supabase regardless of a stray .env.local.
+loadEnv({ path: path.resolve(__dirname, '.env.test.local'), quiet: true })
 loadEnv({ path: path.resolve(__dirname, '.env.test'), quiet: true })
 
+const port = Number(process.env.E2E_PORT ?? 3100)
+if (!Number.isInteger(port) || port < 1024 || port > 65535) throw new Error('Invalid E2E_PORT')
+const baseURL = `http://127.0.0.1:${port}`
+if (process.env.NEXT_PUBLIC_SUPABASE_URL !== 'http://127.0.0.1:55321') {
+  throw new Error('E2E requires the isolated Supabase stack on 55321. Run npm run e2e:start first.')
+}
+
 const E2E_ENV = {
+  E2E: '1',
+  OPENAI_API_KEY: '',
+  RESEND_API_KEY: '',
   NEXT_PUBLIC_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL!,
   NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY!,
@@ -19,23 +30,12 @@ export default defineConfig({
   testDir: './tests/e2e',
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 1,
-  // Against `next dev`, many workers hitting cold (not-yet-compiled) routes at
-  // once make the compiler queue requests until they time out. Since M13's
-  // next/image conversion, dev renders also fan out image-optimizer requests,
-  // which pushed 2-worker runs into 10+ navigation timeouts per run while
-  // serial runs stay green in 3-7min. Determinism beats speed here.
   workers: 1,
-  // A full CMS mutation test can cross several cold-compiled routes before it
-  // restores its seed data. Fresh local machines can exceed Playwright's 30s
-  // default even though each individual navigation completes successfully.
   timeout: 60000,
   reporter: 'html',
-  // The suite runs against `next dev`, which compiles each route on its first
-  // hit. Give web-first assertions (e.g. toHaveURL after a nav click) headroom
-  // for that cold compile so the gate doesn't flake on the default 5s.
   expect: { timeout: 10000 },
   use: {
-    baseURL: 'http://127.0.0.1:3000',
+    baseURL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
@@ -73,10 +73,10 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'npm run dev',
-    url: 'http://127.0.0.1:3000',
-    reuseExistingServer: !process.env.CI,
-    timeout: 120000,
+    command: `npm run build && npm run start -- --port ${port}`,
+    url: baseURL,
+    reuseExistingServer: false,
+    timeout: 300000,
     env: E2E_ENV,
   },
 })

@@ -70,7 +70,7 @@ export default function Sidebar({ collapsed, onToggle, counts }: SidebarProps) {
         collapsed ? 'w-[72px]' : 'w-[280px]'
       }`}
     >
-      <div className="flex items-center gap-2 border-b border-gray-200 px-4 py-4">
+      <div className={`flex items-center gap-2 border-b border-gray-200 py-4 ${collapsed ? 'flex-col px-2' : 'px-4'}`}>
         {collapsed ? (
           <span className="flex-1 text-center text-lg font-bold text-v-primary-100">D4P</span>
         ) : (

@@ -22,7 +22,7 @@ export default function ListToolbar({
 }: ListToolbarProps) {
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">
-      <div className="max-w-sm flex-1">
+      <div className="w-full min-w-0 sm:max-w-sm sm:flex-1">
         <SearchInput
           value={search}
           onChange={onSearchChange}

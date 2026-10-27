@@ -13,7 +13,11 @@ export default function MainLayout({ children }: { children: ReactNode }) {
 
   // Restore persisted collapse state (client-only, avoids hydration mismatch).
   useEffect(() => {
-    if (localStorage.getItem(COLLAPSE_KEY) === 'true') setCollapsed(true);
+    const mobile = window.matchMedia('(max-width: 767px)');
+    const sync = () => setCollapsed(mobile.matches || localStorage.getItem(COLLAPSE_KEY) === 'true');
+    sync();
+    mobile.addEventListener('change', sync);
+    return () => mobile.removeEventListener('change', sync);
   }, []);
 
   const toggleCollapsed = () => {
@@ -56,11 +60,11 @@ export default function MainLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-gray-50">
       <Sidebar collapsed={collapsed} onToggle={toggleCollapsed} counts={counts} />
       <main
-        className={`min-h-screen p-6 transition-[margin] duration-200 ${
-          collapsed ? 'ml-[72px]' : 'ml-[280px]'
+        className={`min-h-screen ml-[72px] p-3 md:p-6 transition-[margin] duration-200 ${
+          collapsed ? 'md:ml-[72px]' : 'md:ml-[280px]'
         }`}
       >
-        <div className="min-h-[calc(100vh-48px)] rounded-lg bg-white p-6 shadow-sm">{children}</div>
+        <div className="min-h-[calc(100vh-48px)] min-w-0 rounded-lg bg-white p-3 md:p-6 shadow-sm">{children}</div>
       </main>
     </div>
   );

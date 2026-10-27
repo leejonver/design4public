@@ -1321,30 +1321,6 @@ body:has(.d4p-project-detail) {
   height: 100%;
   object-fit: cover;
 }
-.d4p-spec {
-  border: 1px solid var(--border-hair);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-}
-.d4p-spec-row {
-  display: grid;
-  grid-template-columns: 110px 1fr;
-  gap: 14px;
-  padding: 13px 16px;
-  font-family: var(--font-sans);
-  font-size: var(--fs-sm);
-}
-.d4p-spec-row + .d4p-spec-row {
-  border-top: 1px solid var(--border-hair);
-}
-.d4p-spec-label {
-  color: var(--ink-500);
-}
-.d4p-spec-value {
-  color: var(--ink-900);
-  font-weight: 600;
-}
-
 /* ============================================================
    Mobile optimizations
    ============================================================ */
