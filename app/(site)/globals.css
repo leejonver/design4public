@@ -1121,8 +1121,10 @@ img {
 /* ============================================================
    Project detail masthead (split panel | image, nav on seam)
    ============================================================ */
-.d4p-project-detail {
+body:has(.d4p-project-detail) {
   --container: 2240px;
+}
+.d4p-project-detail {
   container-type: inline-size;
 }
 .d4p-pmast {
